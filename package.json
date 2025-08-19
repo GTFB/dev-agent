@@ -1,0 +1,35 @@
+{
+  "name": "dev-agent",
+  "version": "2.0.0",
+  "description": "CLI assistant for automating the High-Efficiency Standard Operating Protocol.",
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun run src/index.ts",
+    "build": "bun build src/index.ts --outfile dist/dev --compile --minify",
+    "test": "bun test",
+    "test:coverage": "bun test --coverage",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --write .",
+    "quality": "bun run lint && bun run test",
+    "docs:generate": "typedoc src/index.ts --out docs/api"
+  },
+  "bin": {
+    "dev": "./src/index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.56.0",
+    "eslint-plugin-jsdoc": "^48.2.0",
+    "prettier": "^3.2.5",
+    "typedoc": "^0.25.0",
+    "typescript": "^5.4.0"
+  },
+  "dependencies": {
+    "commander": "^12.0.0",
+    "simple-git": "^3.24.0",
+    "@octokit/rest": "^20.1.0"
+  }
+}
