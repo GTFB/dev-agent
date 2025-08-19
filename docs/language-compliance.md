@@ -190,7 +190,7 @@ git commit -m "Add new feature"
 
 ### Customizing File Types
 
-Edit `scripts/check-language-advanced.js` to modify:
+Edit `src/scripts/check-language.ts` to modify:
 
 - File extensions to check
 - Files to ignore
