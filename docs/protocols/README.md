@@ -14,6 +14,32 @@ The core development and release management protocol that defines:
 - **Quality Assurance**: Automated testing and code review requirements
 - **Task Management**: Systematic approach to task tracking and completion
 
+### [Code Refactoring Protocol](refactoring.md)
+
+Standardized workflow for code refactoring that ensures:
+
+- **Purpose-Driven Changes**: Clear, measurable refactoring goals
+- **Incremental Approach**: Small, atomic changes with frequent commits
+- **Test Safety Net**: Robust test suite validation before and after changes
+- **Quality Maintenance**: No new functionality introduced during refactoring
+
+### [Automatic Protocol Enforcer](auto-protocol-enforcer.md) 🚨 **ЖЕЛЕЗНОЕ ПРАВИЛО**
+
+**Автоматически определяет тип задачи и применяет соответствующий протокол:**
+
+- **Новые задачи** → `high-efficiency-sop.md`
+- **Рефакторинг** → `refactoring.md`
+
+**Dev Agent ВСЕГДА следует этому правилу автоматически!**
+
+The core development and release management protocol that defines:
+
+- **Branch Management**: Structured Git workflow with protected branches
+- **Developer Workflow**: 5-phase feature development process
+- **Release Management**: Standardized version release procedures
+- **Quality Assurance**: Automated testing and code review requirements
+- **Task Management**: Systematic approach to task tracking and completion
+
 ## 🎯 Protocol Goals
 
 1. **Consistency**: Standardized workflows across all team members
@@ -23,6 +49,28 @@ The core development and release management protocol that defines:
 5. **Collaboration**: Clear communication and handoff procedures
 
 ## 🔄 How Dev Agent Implements These Protocols
+
+Dev Agent automatically determines and applies the correct protocol for every user request:
+
+### **🚨 Автоматическое применение протоколов**
+
+1. **Анализ сообщения пользователя** - Определение ключевых слов
+2. **Классификация задачи** - Новые задачи vs Рефакторинг
+3. **Применение протокола** - Автоматическое следование Phase 0-5 или Phase 0-3
+4. **Выполнение шагов** - Пошаговое выполнение всех требований протокола
+5. **Логирование прогресса** - Отчет о каждом этапе выполнения
+
+### **📊 Логика определения типа задачи**
+
+```typescript
+// Ключевые слова для новых задач
+const newTaskKeywords = ['создать', 'добавить', 'реализовать', 'сделать', 'настроить', 'новый', 'функция', 'задача'];
+
+// Ключевые слова для рефакторинга  
+const refactorKeywords = ['рефакторинг', 'улучшить', 'оптимизировать', 'код', 'структура', 'архитектура'];
+
+// Автоматический подсчет и выбор протокола
+```
 
 Dev Agent automates key aspects of these protocols:
 

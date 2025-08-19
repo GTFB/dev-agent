@@ -97,10 +97,10 @@ export class StorageService {
     } catch (error) {
       logger.error(`Failed to get goal ${id}`, error as Error);
       throw error;
-    }
   }
+}
 
-  /**
+/**
    * Update goal
    */
   async updateGoal(

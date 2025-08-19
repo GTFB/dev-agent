@@ -61,7 +61,7 @@ export const SCHEMA_MIGRATIONS = {
       value TEXT
     );
   `,
-
+  
   "003": `
     -- Schema migrations tracking table
     CREATE TABLE IF NOT EXISTS schema_migrations (
