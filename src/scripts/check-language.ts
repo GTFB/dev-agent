@@ -3,11 +3,13 @@
 /**
  * Language Check Script for Git Hooks
  * Automatically checks language compliance in staged files
+ * Also pre-installs configurations in database on first run
  */
 
 import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import { Database } from 'bun:sqlite';
 
 // File extensions to check
 const TEXT_EXTENSIONS = [
@@ -20,6 +22,102 @@ const IGNORE_FILES = [
   'node_modules', '.git', 'dist', 'build', 'coverage', '.next', '.nuxt',
   'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'bun.lock'
 ];
+
+// Database path
+const DB_PATH = path.join(process.cwd(), 'dev-agent.db');
+
+/**
+ * Pre-install configurations in database
+ */
+function preInstallConfigs(): void {
+  try {
+    if (!fs.existsSync(DB_PATH)) {
+      console.log('📊 Database not found, skipping config pre-installation');
+      return;
+    }
+
+    const db = new Database(DB_PATH);
+    
+    // Check if configs already exist
+    const configCount = db.prepare("SELECT COUNT(*) as count FROM config").get() as { count: number };
+    
+    if (configCount.count === 0) {
+      console.log('⚙️  Pre-installing configurations in database...');
+      
+      // Create config table if it doesn't exist
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS config (
+          key TEXT PRIMARY KEY NOT NULL,
+          value TEXT NOT NULL,
+          type TEXT NOT NULL DEFAULT 'string',
+          description TEXT,
+          category TEXT NOT NULL,
+          required BOOLEAN NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+          updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+        )
+      `);
+
+      // Create llm table if it doesn't exist
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS llm (
+          provider TEXT PRIMARY KEY NOT NULL,
+          api_key TEXT NOT NULL,
+          api_base TEXT,
+          model TEXT NOT NULL,
+          config TEXT,
+          is_default BOOLEAN NOT NULL DEFAULT 0,
+          status TEXT NOT NULL DEFAULT 'active',
+          created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+          updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+        )
+      `);
+
+      // Insert default configurations
+      const defaultConfigs = [
+        // Database config
+        ['database.path', DB_PATH, 'string', 'Database file path', 'database'],
+        ['database.type', 'sqlite', 'string', 'Database type', 'database'],
+        
+        // Project config
+        ['project.name', 'Dev Agent', 'string', 'Project name', 'project'],
+        ['project.version', '2.0.0', 'string', 'Project version', 'project'],
+        ['project.description', 'CLI assistant for automating the High-Efficiency Standard Operating Protocol', 'string', 'Project description', 'project'],
+        ['project.author', 'Dev Agent Team', 'string', 'Project author', 'project'],
+        ['project.license', 'MIT', 'string', 'Project license', 'project'],
+        ['project.repository', 'https://github.com/dev-agent/dev-agent', 'string', 'Project repository', 'project'],
+        
+        // Logging config
+        ['logging.level', 'info', 'string', 'Logging level', 'logging'],
+        ['logging.console', 'true', 'boolean', 'Console logging enabled', 'logging'],
+        
+        // Storage config - changed to root directory
+        ['storage.dataDir', process.cwd(), 'string', 'Data directory', 'storage'],
+        ['storage.backupDir', path.join(process.cwd(), 'backups'), 'string', 'Backup directory', 'storage'],
+        
+        // LLM config
+        ['llm.defaultProvider', 'openai', 'string', 'Default LLM provider', 'llm'],
+        ['llm.maxTokens', '4096', 'number', 'Maximum tokens for LLM', 'llm'],
+        ['llm.temperature', '0.7', 'number', 'LLM temperature', 'llm']
+      ];
+
+      const insertStmt = db.prepare(`
+        INSERT OR REPLACE INTO config (key, value, type, description, category, updated_at)
+        VALUES (?, ?, ?, ?, ?, (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')))
+      `);
+
+      for (const config of defaultConfigs) {
+        insertStmt.run(...config);
+      }
+
+      console.log('✅ Configurations pre-installed successfully');
+    }
+    
+    db.close();
+  } catch (error) {
+    console.warn('⚠️  Failed to pre-install configurations:', error);
+  }
+}
 
 function isTextFile(filePath: string): boolean {
   const ext = path.extname(filePath).toLowerCase();
@@ -93,6 +191,9 @@ function checkFileLanguage(filePath: string): LanguageCheckResult {
 
 function main(): number {
   console.log('🔍 Checking language compliance in staged files...\n');
+  
+  // Pre-install configurations on first run
+  preInstallConfigs();
   
   const stagedFiles = getStagedFiles();
   if (stagedFiles.length === 0) {

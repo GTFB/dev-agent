@@ -133,7 +133,7 @@ export class ConfigManager {
       this.setConfig('logging.console', defaultConfig.logging.console.toString(), 'boolean', 'Console logging enabled', 'logging');
       
       // Insert storage config
-      this.setConfig('storage.dataDir', defaultConfig.storage.dataDir, 'string', 'Data directory', 'storage');
+      this.setConfig('storage.dataDir', process.cwd(), 'string', 'Data directory (root)', 'storage');
       this.setConfig('storage.backupDir', defaultConfig.storage.backupDir, 'string', 'Backup directory', 'storage');
       
       // Insert LLM config
@@ -177,7 +177,7 @@ export class ConfigManager {
         console: true
       },
       storage: {
-        dataDir: join(process.cwd(), "data"),
+        dataDir: process.cwd(),
         tempDir: join(process.cwd(), "temp"),
         backupDir: join(process.cwd(), "backups")
       }
@@ -361,7 +361,7 @@ export class ConfigManager {
     const config = this.getConfigByCategory('storage');
     
     return {
-      dataDir: config['storage.dataDir'] || join(process.cwd(), "data"),
+      dataDir: config['storage.dataDir'] || process.cwd(),
       backupDir: config['storage.backupDir'] || join(process.cwd(), "backups")
     };
   }

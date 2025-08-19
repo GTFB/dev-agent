@@ -31,12 +31,12 @@ export class LanguageDetectionService {
   ];
 
   private readonly russianPatterns = [
-    /\b(и|в|на|с|по|для|от|до|из|за|под|над|между|через)\b/i,
-    /\b(это|то|эти|те|он|она|оно|они|его|её|их|себя)\b/i,
-    /\b(есть|быть|был|была|были|стать|становиться)\b/i,
-    /\b(функция|класс|интерфейс|тип|константа|переменная)\b/i,
-    /\b(если|иначе|для|пока|переключатель|случай|возврат)\b/i,
-    /\b(тест|автоматический|перевод|система|работа|проект)\b/i,
+    /\b(and|in|on|with|by|for|from|to|out|behind|under|above|between|through)\b/i,
+    /\b(this|that|these|those|he|she|it|they|his|her|their|self)\b/i,
+    /\b(is|are|was|were|been|become|becoming)\b/i,
+    /\b(function|class|interface|type|constant|variable)\b/i,
+    /\b(if|else|for|while|switch|case|return)\b/i,
+    /\b(test|automatic|translation|system|work|project)\b/i,
   ];
 
   /**
@@ -62,7 +62,7 @@ export class LanguageDetectionService {
     );
 
     // Additional heuristics
-    const hasCyrillic = /[а-яё]/i.test(text);
+    const hasCyrillic = /[\u0400-\u04FF\u0500-\u052F]/i.test(text);
     const hasLatin = /[a-z]/i.test(text);
 
     let detectedLanguage = "unknown";
