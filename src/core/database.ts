@@ -5,69 +5,8 @@
 
 import { Database } from "bun:sqlite";
 import { logger } from "../utils/logger.js";
-
-/**
- * Extended migration interface for internal use
- */
-interface InternalMigration {
-  version: string;
-  description: string;
-  up: string;
-  down: string;
-}
-
-/**
- * Database schema migrations
- */
-const SCHEMA_MIGRATIONS: InternalMigration[] = [
-  {
-    version: "1",
-    description: "Initial schema",
-    up: `
-      CREATE TABLE IF NOT EXISTS goals (
-        id TEXT PRIMARY KEY,
-        github_issue_id INTEGER,
-        title TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'todo',
-        branch_name TEXT,
-        description TEXT,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL
-      );
-
-      CREATE TABLE IF NOT EXISTS project_config (
-        key TEXT PRIMARY KEY,
-        value TEXT NOT NULL
-      );
-
-      CREATE INDEX IF NOT EXISTS idx_goals_status ON goals(status);
-      CREATE INDEX IF NOT EXISTS idx_goals_github_issue ON goals(github_issue_id);
-      CREATE INDEX IF NOT EXISTS idx_goals_branch ON goals(branch_name);
-    `,
-    down: `
-      DROP TABLE IF EXISTS goals;
-      DROP TABLE IF EXISTS project_config;
-    `,
-  },
-];
-
-/**
- * Get migration versions
- */
-function getMigrationVersions(): string[] {
-  return SCHEMA_MIGRATIONS.map((m) => m.version).sort((a, b) => parseInt(a) - parseInt(b));
-}
-
-/**
- * Get migration SQL
- */
-function getMigrationSQL(version: string): string {
-  const migration = SCHEMA_MIGRATIONS.find((m) => m.version === version);
-  if (!migration) {
-    throw new Error(`Migration version ${version} not found`);
-  }
-  return migration.up;
-}
+import { configManager } from "../config/config.js";
+import { SCHEMA_MIGRATIONS, getMigrationVersions, getMigrationSQL } from "./schema.js";
 
 /**
  * Database Manager class
@@ -76,8 +15,8 @@ export class DatabaseManager {
   private dbPath: string;
   private db: Database | null = null;
 
-  constructor(dbPath: string) {
-    this.dbPath = dbPath;
+  constructor(dbPath?: string) {
+    this.dbPath = dbPath || configManager.getDatabaseConfig().path;
   }
 
   /**
@@ -85,6 +24,12 @@ export class DatabaseManager {
    */
   async initialize(): Promise<void> {
     try {
+      // Ensure parent directory exists
+      const dir = this.dbPath.substring(0, this.dbPath.lastIndexOf('/'));
+      if (dir) {
+        await Bun.write(dir + '/.gitkeep', '');
+      }
+
       this.db = new Database(this.dbPath);
       
       // Run migrations
@@ -105,34 +50,36 @@ export class DatabaseManager {
 
     // Create migrations table if it doesn't exist
     this.db.exec(`
-      CREATE TABLE IF NOT EXISTS migrations (
-        version INTEGER PRIMARY KEY,
-        applied_at TEXT NOT NULL
+      CREATE TABLE IF NOT EXISTS schema_migrations (
+        version TEXT PRIMARY KEY NOT NULL,
+        applied_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
       );
     `);
 
     // Get applied migrations
     const appliedMigrations = this.db
-      .prepare("SELECT version FROM migrations ORDER BY version")
-      .all() as { version: number }[];
+      .prepare("SELECT version FROM schema_migrations ORDER BY version")
+      .all() as { version: string }[];
 
     const appliedVersions = appliedMigrations.map((m) => m.version);
     const pendingVersions = getMigrationVersions().filter(
-      (v) => !appliedVersions.includes(parseInt(v)),
+      (v) => !appliedVersions.includes(v)
     );
 
     // Apply pending migrations
     for (const version of pendingVersions) {
       try {
         const sql = getMigrationSQL(version);
-        this.db.exec(sql);
-        
-        // Record migration
-        this.db
-          .prepare("INSERT INTO migrations (version, applied_at) VALUES (?, ?)")
-          .run(parseInt(version), new Date().toISOString());
-        
-        logger.info(`Applied migration ${version}`);
+        if (sql) {
+          this.db.exec(sql);
+          
+          // Record migration
+          this.db
+            .prepare("INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)")
+            .run(version, new Date().toISOString());
+          
+          logger.info(`Applied migration ${version}`);
+        }
       } catch (error) {
         logger.error(`Failed to apply migration ${version}`, error as Error);
         throw error;
@@ -222,5 +169,83 @@ export class DatabaseManager {
    */
   getDatabasePath(): string {
     return this.dbPath;
+  }
+
+  /**
+   * Get database instance
+   */
+  getDatabase(): Database | null {
+    return this.db;
+  }
+
+  /**
+   * Check if table exists
+   */
+  tableExists(tableName: string): boolean {
+    if (!this.db) return false;
+    
+    try {
+      const result = this.db.prepare(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name=?"
+      ).get(tableName) as { name: string } | undefined;
+      
+      return !!result;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Get table schema
+   */
+  getTableSchema(tableName: string): any[] {
+    if (!this.db) return [];
+    
+    try {
+      return this.db.prepare(`PRAGMA table_info(${tableName})`).all() as any[];
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Backup database
+   */
+  async backup(backupPath: string): Promise<void> {
+    if (!this.db) {
+      throw new Error("Database not initialized");
+    }
+
+    try {
+      const backupDb = new Database(backupPath);
+      this.db.backup(backupDb);
+      backupDb.close();
+      logger.info(`Database backed up to ${backupPath}`);
+    } catch (error) {
+      logger.error("Failed to backup database", error as Error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get database statistics
+   */
+  getStats(): { tables: string[]; size: number } {
+    if (!this.db) {
+      return { tables: [], size: 0 };
+    }
+
+    try {
+      const tables = this.db.prepare(
+        "SELECT name FROM sqlite_master WHERE type='table'"
+      ).all() as { name: string }[];
+      
+      const tableNames = tables.map(t => t.name);
+      const size = Bun.file(this.dbPath).size || 0;
+      
+      return { tables: tableNames, size };
+    } catch {
+      return { tables: [], size: 0 };
+    }
   }
 }

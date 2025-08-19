@@ -2,182 +2,203 @@
 
 /**
  * LLM Configuration Manager
- * Stores and manages LLM provider configurations including API keys
+ * Manages LLM provider configurations using database storage
  */
 
-import { LLMProvider } from "../services/LLMTranslationService.js";
-import { promises as fs } from "fs";
-import { join } from "path";
+import { configManager } from "./config.js";
 
-export interface LLMConfig {
-  providers: {
-    [name: string]: LLMProvider;
-  };
-  defaultProvider?: string;
-  retryConfig?: {
-    maxRetries: number;
-    retryDelayMs: number;
-    backoffMultiplier: number;
-  };
+export interface LLMProviderConfig {
+  provider: string;
+  apiKey: string;
+  apiBase?: string;
+  model: string;
+  config?: any;
+  isDefault: boolean;
+  status: 'active' | 'inactive' | 'testing';
 }
 
 export class LLMConfigManager {
-  private configPath: string;
-  private config: LLMConfig;
-
-  constructor() {
-    this.configPath = join(process.cwd(), ".llm-config.json");
-    this.config = { providers: {} };
+  /**
+   * Add or update LLM provider
+   */
+  addProvider(provider: string, apiKey: string, model: string, apiBase?: string, config?: any): void {
+    configManager.setLLMProvider(provider, apiKey, model, apiBase, config);
   }
 
   /**
-   * Load configuration from file
+   * Remove LLM provider
    */
-  async load(): Promise<void> {
-    try {
-      const data = await fs.readFile(this.configPath, "utf-8");
-      this.config = JSON.parse(data);
-    } catch {
-      // Silently fail if config cannot be loaded
-      // logger.warn("Failed to load LLM config, using defaults");
+  removeProvider(provider: string): void {
+    // Note: This would need to be implemented in ConfigManager
+    // For now, we'll mark it as inactive
+    this.updateProviderStatus(provider, 'inactive');
+  }
+
+  /**
+   * Update provider status
+   */
+  updateProviderStatus(provider: string, status: 'active' | 'inactive' | 'testing'): void {
+    // This would need to be implemented in ConfigManager
+    // For now, we'll use a direct database approach
+    const db = (configManager as any).db;
+    if (db) {
+      const stmt = db.prepare("UPDATE llm SET status = ? WHERE provider = ?");
+      stmt.run(status, provider);
     }
   }
 
   /**
-   * Save configuration to file
+   * Set default LLM provider
    */
-  async save(): Promise<void> {
-    try {
-      await fs.writeFile(
-        this.configPath,
-        JSON.stringify(this.config, null, 2),
-        "utf-8",
-      );
-    } catch (error) {
-      console.error("Failed to save LLM config:", error);
-    }
+  setDefaultProvider(provider: string): void {
+    configManager.setDefaultLLMProvider(provider);
   }
 
   /**
-   * Add or update a provider
+   * Get default LLM provider
    */
-  async setProvider(name: string, provider: LLMProvider): Promise<void> {
-    // Load current config to preserve other providers
-    await this.load();
-
-    // Add or update the specific provider
-    this.config.providers[name] = provider;
-    await this.save();
+  getDefaultProvider(): string | undefined {
+    return configManager.getDefaultLLMProvider();
   }
 
   /**
-   * Get a provider by name
+   * Get provider configuration
    */
-  getProvider(name: string): LLMProvider | undefined {
-    return this.config.providers[name];
+  getProvider(provider: string): LLMProviderConfig | undefined {
+    const config = configManager.getLLMProvider(provider);
+    if (!config) return undefined;
+
+    return {
+      provider,
+      apiKey: config.apiKey,
+      apiBase: config.apiBase,
+      model: config.model,
+      config: config.config,
+      isDefault: provider === configManager.getDefaultLLMProvider(),
+      status: 'active' // Default status
+    };
   }
 
   /**
    * Get all providers
    */
-  getAllProviders(): { [name: string]: LLMProvider } {
-    return { ...this.config.providers };
+  getAllProviders(): LLMProviderConfig[] {
+    return configManager.getAllLLMProviders().map(p => ({
+      provider: p.provider,
+      apiKey: '', // Don't expose API keys in list
+      model: p.model,
+      isDefault: p.isDefault,
+      status: p.status as 'active' | 'inactive' | 'testing'
+    }));
   }
 
   /**
-   * Remove a provider
+   * Test provider connection
    */
-  async removeProvider(name: string): Promise<void> {
-    delete this.config.providers[name];
-    if (this.config.defaultProvider === name) {
-      this.config.defaultProvider = undefined;
+  async testProvider(provider: string): Promise<boolean> {
+    const config = this.getProvider(provider);
+    if (!config) return false;
+
+    try {
+      // Basic validation - in real implementation, you'd make an API call
+      if (!config.apiKey || !config.model) return false;
+      
+      // For now, just return true if we have the basic config
+      return true;
+    } catch (error) {
+      return false;
     }
-    await this.save();
   }
 
   /**
-   * Set default provider
+   * Get configuration summary
    */
-  async setDefaultProvider(name: string): Promise<void> {
-    if (this.config.providers[name]) {
-      this.config.defaultProvider = name;
-      await this.save();
-    }
-  }
+  getConfigSummary(): {
+    totalProviders: number;
+    activeProviders: number;
+    defaultProvider?: string;
+    providers: string[];
+  } {
+    const providers = this.getAllProviders();
+    const activeProviders = providers.filter(p => p.status === 'active');
+    const defaultProvider = this.getDefaultProvider();
 
-  /**
-   * Get default provider
-   */
-  getDefaultProvider(): LLMProvider | undefined {
-    if (this.config.defaultProvider) {
-      return this.config.providers[this.config.defaultProvider];
-    }
-    return undefined;
-  }
-
-  /**
-   * Check if provider exists
-   */
-  hasProvider(name: string): boolean {
-    return name in this.config.providers;
-  }
-
-  /**
-   * Get provider names
-   */
-  getProviderNames(): string[] {
-    return Object.keys(this.config.providers);
+    return {
+      totalProviders: providers.length,
+      activeProviders: activeProviders.length,
+      defaultProvider,
+      providers: providers.map(p => p.provider)
+    };
   }
 
   /**
    * Validate provider configuration
    */
-  validateProvider(provider: LLMProvider): string[] {
+  validateProvider(provider: string): string[] {
     const errors: string[] = [];
+    const config = this.getProvider(provider);
 
-    if (!provider.name) {
-      errors.push("Provider name is required");
+    if (!config) {
+      errors.push(`Provider '${provider}' not found`);
+      return errors;
     }
 
-    if (!provider.apiKey) {
-      errors.push("API key is required");
+    if (!config.apiKey) {
+      errors.push(`API key is required for provider '${provider}'`);
     }
 
-    if (provider.name === "custom" && !provider.baseUrl) {
-      errors.push("Custom provider requires baseUrl");
+    if (!config.model) {
+      errors.push(`Model is required for provider '${provider}'`);
     }
 
     return errors;
   }
 
   /**
-   * Get configuration file path
+   * Get retry configuration for provider
    */
-  getConfigPath(): string {
-    return this.configPath;
+  getRetryConfig(provider: string): {
+    maxRetries: number;
+    retryDelay: number;
+    backoffMultiplier: number;
+  } {
+    // Default retry configuration
+    return {
+      maxRetries: 3,
+      retryDelay: 1000, // 1 second
+      backoffMultiplier: 2
+    };
   }
 
   /**
-   * Set retry configuration
+   * Update retry configuration for provider
    */
-  async setRetryConfig(retryConfig: {
-    maxRetries: number;
-    retryDelayMs: number;
-    backoffMultiplier: number;
-  }): Promise<void> {
-    await this.load();
-    this.config.retryConfig = retryConfig;
-    await this.save();
-  }
+  updateRetryConfig(provider: string, config: {
+    maxRetries?: number;
+    retryDelay?: number;
+    backoffMultiplier?: number;
+  }): void {
+    const currentConfig = this.getProvider(provider);
+    if (!currentConfig) return;
 
-  /**
-   * Get retry configuration
-   */
-  getRetryConfig(): {
-    maxRetries: number;
-    retryDelayMs: number;
-    backoffMultiplier: number;
-  } | null {
-    return this.config.retryConfig || null;
+    const newConfig = {
+      ...currentConfig.config,
+      retry: {
+        ...this.getRetryConfig(provider),
+        ...config
+      }
+    };
+
+    // Update the provider with new config
+    this.addProvider(
+      provider,
+      currentConfig.apiKey,
+      currentConfig.model,
+      currentConfig.apiBase,
+      newConfig
+    );
   }
 }
+
+// Export singleton instance
+export const llmConfigManager = new LLMConfigManager();

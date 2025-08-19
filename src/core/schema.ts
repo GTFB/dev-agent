@@ -74,8 +74,8 @@ export const SCHEMA_MIGRATIONS = {
   `,
 
   "004": `
-    -- Project documents table - stores all project documentation
-    CREATE TABLE IF NOT EXISTS project_documents (
+    -- Documents table - stores all project documentation
+    CREATE TABLE IF NOT EXISTS documents (
       -- Unique AID identifier with 'd-' prefix for documents
       id TEXT PRIMARY KEY NOT NULL CHECK(id LIKE 'd-%'),
       
@@ -111,15 +111,15 @@ export const SCHEMA_MIGRATIONS = {
     );
 
     -- Indexes for documents
-    CREATE INDEX IF NOT EXISTS idx_documents_type ON project_documents(type);
-    CREATE INDEX IF NOT EXISTS idx_documents_status ON project_documents(status);
-    CREATE INDEX IF NOT EXISTS idx_documents_goal ON project_documents(goal_id);
-    CREATE INDEX IF NOT EXISTS idx_documents_tags ON project_documents(tags);
+    CREATE INDEX IF NOT EXISTS idx_documents_type ON documents(type);
+    CREATE INDEX IF NOT EXISTS idx_documents_status ON documents(status);
+    CREATE INDEX IF NOT EXISTS idx_documents_goal ON documents(goal_id);
+    CREATE INDEX IF NOT EXISTS idx_documents_tags ON documents(tags);
   `,
 
   "005": `
-    -- Project files table - stores project source files and assets
-    CREATE TABLE IF NOT EXISTS project_files (
+    -- Files table - stores project source files and assets
+    CREATE TABLE IF NOT EXISTS files (
       -- Unique AID identifier with 'f-' prefix for files
       id TEXT PRIMARY KEY NOT NULL CHECK(id LIKE 'f-%'),
       
@@ -155,15 +155,15 @@ export const SCHEMA_MIGRATIONS = {
     );
 
     -- Indexes for files
-    CREATE INDEX IF NOT EXISTS idx_files_path ON project_files(file_path);
-    CREATE INDEX IF NOT EXISTS idx_files_type ON project_files(file_type);
-    CREATE INDEX IF NOT EXISTS idx_files_goal ON project_files(goal_id);
-    CREATE INDEX IF NOT EXISTS idx_files_status ON project_files(status);
+    CREATE INDEX IF NOT EXISTS idx_files_path ON files(file_path);
+    CREATE INDEX IF NOT EXISTS idx_files_type ON files(file_type);
+    CREATE INDEX IF NOT EXISTS idx_files_goal ON files(goal_id);
+    CREATE INDEX IF NOT EXISTS idx_files_status ON files(status);
   `,
 
   "006": `
-    -- Project API endpoints table - stores API documentation and specifications
-    CREATE TABLE IF NOT EXISTS project_api_endpoints (
+    -- API endpoints table - stores API documentation and specifications
+    CREATE TABLE IF NOT EXISTS api_endpoints (
       -- Unique AID identifier with 'a-' prefix for API endpoints
       id TEXT PRIMARY KEY NOT NULL CHECK(id LIKE 'a-%'),
       
@@ -202,16 +202,16 @@ export const SCHEMA_MIGRATIONS = {
     );
 
     -- Indexes for API endpoints
-    CREATE INDEX IF NOT EXISTS idx_api_method ON project_api_endpoints(method);
-    CREATE INDEX IF NOT EXISTS idx_api_path ON project_api_endpoints(path);
-    CREATE INDEX IF NOT EXISTS idx_api_version ON project_api_endpoints(api_version);
-    CREATE INDEX IF NOT EXISTS idx_api_status ON project_api_endpoints(status);
-    CREATE INDEX IF NOT EXISTS idx_api_goal ON project_api_endpoints(goal_id);
+    CREATE INDEX IF NOT EXISTS idx_api_method ON api_endpoints(method);
+    CREATE INDEX IF NOT EXISTS idx_api_path ON api_endpoints(path);
+    CREATE INDEX IF NOT EXISTS idx_api_version ON api_endpoints(api_version);
+    CREATE INDEX IF NOT EXISTS idx_api_status ON api_endpoints(status);
+    CREATE INDEX IF NOT EXISTS idx_api_goal ON api_endpoints(goal_id);
   `,
 
   "007": `
-    -- Project scripts table - stores project automation scripts
-    CREATE TABLE IF NOT EXISTS project_scripts (
+    -- Scripts table - stores project automation scripts
+    CREATE TABLE IF NOT EXISTS scripts (
       -- Unique AID identifier with 's-' prefix for scripts
       id TEXT PRIMARY KEY NOT NULL CHECK(id LIKE 's-%'),
       
@@ -247,15 +247,15 @@ export const SCHEMA_MIGRATIONS = {
     );
 
     -- Indexes for scripts
-    CREATE INDEX IF NOT EXISTS idx_scripts_type ON project_scripts(script_type);
-    CREATE INDEX IF NOT EXISTS idx_scripts_language ON project_scripts(language);
-    CREATE INDEX IF NOT EXISTS idx_scripts_status ON project_scripts(status);
-    CREATE INDEX IF NOT EXISTS idx_scripts_goal ON project_scripts(goal_id);
+    CREATE INDEX IF NOT EXISTS idx_scripts_type ON scripts(script_type);
+    CREATE INDEX IF NOT EXISTS idx_scripts_language ON scripts(language);
+    CREATE INDEX IF NOT EXISTS idx_scripts_status ON scripts(status);
+    CREATE INDEX IF NOT EXISTS idx_scripts_goal ON scripts(goal_id);
   `,
 
   "008": `
-    -- Project prompts table - stores AI prompt templates
-    CREATE TABLE IF NOT EXISTS project_prompts (
+    -- Prompts table - stores AI prompt templates
+    CREATE TABLE IF NOT EXISTS prompts (
       -- Unique AID identifier with 'p-' prefix for prompts
       id TEXT PRIMARY KEY NOT NULL CHECK(id LIKE 'p-%'),
       
@@ -288,9 +288,82 @@ export const SCHEMA_MIGRATIONS = {
     );
 
     -- Indexes for prompts
-    CREATE INDEX IF NOT EXISTS idx_prompts_category ON project_prompts(category);
-    CREATE INDEX IF NOT EXISTS idx_prompts_status ON project_prompts(status);
-    CREATE INDEX IF NOT EXISTS idx_prompts_goal ON project_prompts(goal_id);
+    CREATE INDEX IF NOT EXISTS idx_prompts_category ON prompts(category);
+    CREATE INDEX IF NOT EXISTS idx_prompts_status ON prompts(status);
+    CREATE INDEX IF NOT EXISTS idx_prompts_goal ON prompts(goal_id);
+  `,
+
+  "009": `
+    -- Configuration table - stores application configuration
+    CREATE TABLE IF NOT EXISTS config (
+      -- Configuration key
+      key TEXT PRIMARY KEY NOT NULL,
+      
+      -- Configuration value
+      value TEXT NOT NULL,
+      
+      -- Configuration type (string, number, boolean, json)
+      type TEXT NOT NULL DEFAULT 'string' CHECK(type IN ('string', 'number', 'boolean', 'json')),
+      
+      -- Configuration description
+      description TEXT,
+      
+      -- Configuration category (database, github, llm, project, logging, storage)
+      category TEXT NOT NULL,
+      
+      -- Is configuration required
+      required BOOLEAN NOT NULL DEFAULT 0,
+      
+      -- Creation timestamp
+      created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+      
+      -- Last update timestamp
+      updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+    );
+
+    -- LLM Configuration table - stores LLM provider settings
+    CREATE TABLE IF NOT EXISTS llm (
+      -- Provider name (openai, anthropic, etc.)
+      provider TEXT PRIMARY KEY NOT NULL,
+      
+      -- API key
+      api_key TEXT NOT NULL,
+      
+      -- API base URL (optional, for custom endpoints)
+      api_base TEXT,
+      
+      -- Model name
+      model TEXT NOT NULL,
+      
+      -- Provider configuration (JSON)
+      config TEXT,
+      
+      -- Is default provider
+      is_default BOOLEAN NOT NULL DEFAULT 0,
+      
+      -- Provider status (active, inactive, testing)
+      status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'inactive', 'testing')),
+      
+      -- Creation timestamp
+      created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+      
+      -- Last update timestamp
+      updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+    );
+
+    -- Indexes for configuration
+    CREATE INDEX IF NOT EXISTS idx_config_category ON config(category);
+    CREATE INDEX IF NOT EXISTS idx_config_required ON config(required);
+    CREATE INDEX IF NOT EXISTS idx_llm_status ON llm(status);
+    CREATE INDEX IF NOT EXISTS idx_llm_default ON llm(is_default);
+  `,
+
+  "010": `
+    -- Remove deprecated tables
+    DROP TABLE IF EXISTS api_endpoints;
+    DROP TABLE IF EXISTS documents;
+    DROP TABLE IF EXISTS files;
+    DROP TABLE IF EXISTS scripts;
   `,
 };
 
