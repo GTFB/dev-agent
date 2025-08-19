@@ -9,7 +9,7 @@ import { Command } from "commander";
 import { StorageService } from "./services/StorageService.js";
 import { GitService } from "./services/GitService.js";
 import { WorkflowService } from "./services/WorkflowService.js";
-import { DevAgentConfig, WorkflowContext } from "./core/types.js";
+import { WorkflowContext, Goal } from "./core/types.js";
 import { logger, LogLevel } from "./utils/logger.js";
 
 // CLI version
@@ -58,7 +58,7 @@ async function initializeServices(): Promise<void> {
 /**
  * Display formatted goal list
  */
-function displayGoals(goals: any[], counts: Record<string, number>): void {
+function displayGoals(goals: Goal[], counts: Record<string, number>): void {
   console.log("\n📋 Goal Summary:");
   console.log(
     `   Todo: ${counts.todo || 0} | In Progress: ${counts.in_progress || 0} | Done: ${counts.done || 0} | Archived: ${counts.archived || 0}\n`,
@@ -70,7 +70,7 @@ function displayGoals(goals: any[], counts: Record<string, number>): void {
   }
 
   // Group goals by status
-  const groupedGoals: Record<string, any[]> = {
+  const groupedGoals: Record<string, Goal[]> = {
     todo: [],
     in_progress: [],
     done: [],
@@ -276,13 +276,14 @@ async function main(): Promise<void> {
             console.log(`Status: ${result.data.status}`);
 
             // Display validation warnings if any
-            if (result.data.validationResults) {
-              const warnings = result.data.validationResults.filter(
-                (r: any) => r.severity === "warning",
+            if (result.data && typeof result.data === 'object' && 'validationResults' in result.data) {
+              const validationResults = result.data.validationResults as Array<{severity: string, message: string, suggestion?: string}>;
+              const warnings = validationResults.filter(
+                (r) => r.severity === "warning",
               );
               if (warnings.length > 0) {
                 console.log("\n⚠️  Validation Warnings:");
-                warnings.forEach((warning: any) => {
+                warnings.forEach((warning) => {
                   console.log(`  - ${warning.message}`);
                   if (warning.suggestion) {
                     console.log(`    💡 ${warning.suggestion}`);
@@ -313,7 +314,7 @@ async function main(): Promise<void> {
     )
     .action(async (options: { status?: string }) => {
       try {
-        const result = await workflowService.listGoals(options.status as any);
+        const result = await workflowService.listGoals(options.status as "todo" | "in_progress" | "done" | "archived" | undefined);
 
         if (result.success) {
           console.log("✅", result.message);
@@ -556,8 +557,8 @@ async function main(): Promise<void> {
               if (options.fix) {
                 // Try to auto-fix some common issues
                 for (const error of summary.errors) {
-                  if (error.type === "INVALID_STATUS" && error.suggestion) {
-                    // Auto-fix invalid status
+                  if (error.severity === "error" && error.suggestion) {
+                    // Auto-fix errors with suggestions
                     console.log(`     🔧 Auto-fixing: ${error.suggestion}`);
                   }
                 }
@@ -582,7 +583,7 @@ async function main(): Promise<void> {
           process.exit(1);
         }
       } catch (error) {
-        console.error("❌ Failed to validate goals:", error);
+        logger.error("Failed to validate goals", error as Error);
         process.exit(1);
       } finally {
         storageService.close();
@@ -616,11 +617,34 @@ async function main(): Promise<void> {
           }
           process.exit(1);
         }
-      } catch (error) {
-        console.error("❌ Failed to cleanup goals:", error);
+      } catch {
+        console.error("❌ Failed to cleanup goals");
         process.exit(1);
       } finally {
         storageService.close();
+      }
+    });
+
+  goalCommand
+    .command("check-pr <goalId>")
+    .description("Check pull request status and update goal if merged")
+    .action(async (goalId: string) => {
+      try {
+        const result = await workflowService.checkPullRequestStatus(goalId);
+        if (result.success) {
+          logger.success(result.message);
+          if (result.data) {
+            console.log("Result:", result.data);
+          }
+        } else {
+          logger.error(result.message);
+          if (result.error) {
+            console.error("Error:", result.error);
+          }
+        }
+      } catch (error) {
+        logger.error("Failed to check pull request status", error as Error);
+        process.exit(1);
       }
     });
 
@@ -858,7 +882,7 @@ async function main(): Promise<void> {
           try {
             console.log("📤 Pushing current branch...");
             await gitService.push("origin", headBranch);
-          } catch (error) {
+          } catch {
             console.log("⚠️  Failed to push, continuing with PR creation...");
           }
 
@@ -987,9 +1011,17 @@ async function main(): Promise<void> {
         try {
           await initializeServices();
 
-          const { AutoTranslationService, LLMProvider } = await import(
+          const { AutoTranslationService } = await import(
             "./services/AutoTranslationService.js"
           );
+
+          // Define LLM provider type locally
+          type LLMProvider = {
+            name: "openai" | "gemini" | "anthropic" | "custom";
+            apiKey: string;
+            model?: string;
+            baseUrl?: string;
+          };
 
           let llmProvider: LLMProvider;
 
@@ -1188,7 +1220,7 @@ async function main(): Promise<void> {
           const translationService = new AutoTranslationService();
           await translationService.initializeConfig();
 
-          const retryConfig: any = {};
+          const retryConfig: Record<string, unknown> = {};
 
           if (options.maxRetries) {
             retryConfig.maxRetries = parseInt(options.maxRetries);
@@ -1237,7 +1269,6 @@ async function main(): Promise<void> {
           await initializeServices();
 
           const fs = await import("fs/promises");
-          const path = await import("path");
 
           // Check if file exists
           try {

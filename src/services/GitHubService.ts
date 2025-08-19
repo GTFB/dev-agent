@@ -38,6 +38,21 @@ export interface GitHubMilestone {
   updated_at: string;
 }
 
+interface GitHubAPIIssue {
+  id: number;
+  number: number;
+  title: string;
+  body?: string;
+  state: string;
+  created_at: string;
+  updated_at: string;
+  closed_at?: string;
+  pull_request?: unknown;
+  labels: Array<{ name: string }>;
+  assignees: Array<{ login: string }>;
+  milestone?: { title: string } | null;
+}
+
 /**
  * GitHub Service class for API operations
  */
@@ -112,73 +127,69 @@ export class GitHubService {
   }
 
   /**
-   * Fetch all issues from GitHub repository
+   * Fetch all issues from GitHub
    */
-  async fetchIssues(
-    state: "open" | "closed" | "all" = "open",
-  ): Promise<GitHubIssue[]> {
-    if (!this.octokit || !this.config) {
-      throw new Error("GitHub service not initialized");
+  async fetchAllIssues(): Promise<GitHubIssue[]> {
+    if (!this.config?.owner || !this.config?.repo) {
+      throw new Error("GitHub configuration not found");
     }
 
+    const issues: GitHubIssue[] = [];
+    let page = 1;
+    const perPage = 100;
+
     try {
-      logger.info(`Fetching ${state} issues from GitHub...`);
+      for (let i = 0; i < 10; i++) { // Limit to 10 pages to prevent infinite loops
+        const response = await fetch(
+          `https://api.github.com/repos/${this.config.owner}/${this.config.repo}/issues?state=all&page=${page}&per_page=${perPage}`,
+          {
+            headers: {
+              Authorization: `token ${this.config.token}`,
+              "User-Agent": "DevAgent/1.0",
+            },
+          },
+        );
 
-      const issues: GitHubIssue[] = [];
-      let page = 1;
-      const perPage = 100;
+        if (!response.ok) {
+          throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+        }
 
-      while (true) {
-        const { data } = await this.octokit.rest.issues.listForRepo({
-          owner: this.config.owner,
-          repo: this.config.repo,
-          state,
-          per_page: perPage,
-          page,
-          sort: "updated",
-          direction: "desc",
-        });
-
-        if (data.length === 0) break;
-
-        // Filter out pull requests (GitHub API returns both issues and PRs)
-        const filteredIssues = data
-          .filter((issue) => !issue.pull_request)
-          .map((issue) => ({
-            number: issue.number,
-            title: issue.title,
-            body: issue.body || undefined,
-            state: issue.state as "open" | "closed",
-            milestone: issue.milestone
-              ? {
-                  id: issue.milestone.id,
-                  title: issue.milestone.title,
-                  state: issue.milestone.state as "open" | "closed",
-                }
-              : undefined,
-            labels: issue.labels.map((label) => ({
-              name: typeof label === "string" ? label : label.name || "",
-              color: typeof label === "string" ? "" : label.color || "",
-            })),
-            assignee: issue.assignee
-              ? {
-                  login: issue.assignee.login,
-                }
-              : undefined,
-            created_at: issue.created_at,
-            updated_at: issue.updated_at,
+        const data = await response.json();
+        
+        // Filter out pull requests and map to GitHubIssue interface
+        const pageIssues = (data as GitHubAPIIssue[])
+          .filter((item) => !item.pull_request)
+          .map((item) => ({
+            id: item.id,
+            number: item.number,
+            title: item.title,
+            body: item.body || "",
+            state: item.state as "open" | "closed",
+            created_at: item.created_at,
+            updated_at: item.updated_at,
+            closed_at: item.closed_at,
+            labels: item.labels.map((label) => ({ name: label.name, color: "#000000" })),
+            assignees: item.assignees.map((assignee) => ({ login: assignee.login })),
+            milestone: item.milestone ? {
+              id: 0, // We don't have the actual ID from the API
+              title: item.milestone.title,
+              state: "open" as const
+            } : undefined,
           }));
 
-        issues.push(...filteredIssues);
+        issues.push(...pageIssues);
 
-        if (data.length < perPage) break;
+        // If we got fewer issues than perPage, we've reached the end
+        if (pageIssues.length < perPage) {
+          break;
+        }
+
         page++;
       }
 
-      logger.success(`Fetched ${issues.length} issues from GitHub`);
       return issues;
     } catch (error) {
-      logger.error("Failed to fetch issues from GitHub", error as Error);
+      logger.error("Failed to fetch GitHub issues", error as Error);
       throw error;
     }
   }
@@ -200,7 +211,6 @@ export class GitHubService {
         owner: this.config.owner,
         repo: this.config.repo,
         state,
-        sort: "updated",
         direction: "desc",
       });
 
@@ -303,7 +313,7 @@ export class GitHubService {
     try {
       logger.info("Starting GitHub issues sync...");
 
-      const issues = await this.fetchIssues("open");
+      const issues = await this.fetchAllIssues();
 
       for (const issue of issues) {
         try {
@@ -331,7 +341,7 @@ export class GitHubService {
             }
           } else {
             // Create new goal from issue
-            const goalId = this.generateGoalIdFromIssue(issue);
+            const goalId = this.generateGoalIdFromIssue();
 
             await this.storage.createGoal({
               id: goalId,
@@ -364,7 +374,7 @@ export class GitHubService {
   /**
    * Generate goal ID from GitHub issue
    */
-  private generateGoalIdFromIssue(issue: GitHubIssue): string {
+  private generateGoalIdFromIssue(): string {
     // Use a simple approach for now - we can enhance this later
     const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
     let result = "g-";
@@ -375,38 +385,197 @@ export class GitHubService {
   }
 
   /**
-   * Sync goal status changes back to GitHub
+   * Map goal status to GitHub issue state
    */
-  async syncGoalStatusToGitHub(goal: Goal): Promise<void> {
+  private mapGoalStatusToGitHubStatus(goalStatus: string): "open" | "closed" {
+    switch (goalStatus) {
+      case "done":
+      case "archived":
+        return "closed";
+      case "todo":
+      case "in_progress":
+      default:
+        return "open";
+    }
+  }
+
+  /**
+   * Create milestone for goal
+   */
+  async createMilestoneForGoal(goal: Goal): Promise<void> {
+    if (!this.octokit || !this.config) {
+      throw new Error("GitHub service not configured");
+    }
+
     if (!goal.github_issue_id) {
-      logger.debug(`Goal ${goal.id} has no GitHub issue associated`);
+      logger.warn(`Goal ${goal.id} has no GitHub issue ID, skipping milestone creation`);
       return;
     }
 
     try {
-      // Map goal status to GitHub milestone
-      const milestoneMap: Record<string, string> = {
-        todo: "Todo",
-        in_progress: "In Progress",
-        done: "Done",
-        archived: "Done",
-      };
-
-      const milestoneTitle = milestoneMap[goal.status];
-      if (milestoneTitle) {
-        await this.updateIssueMilestone(goal.github_issue_id, milestoneTitle);
+      // Check if milestone already exists
+      const existingMilestones = await this.fetchMilestones("all");
+      const milestoneTitle = this.generateMilestoneTitle(goal);
+      
+      let milestone = existingMilestones.find(m => m.title === milestoneTitle);
+      
+      if (!milestone) {
+        // Create new milestone
+        const { data } = await this.octokit.rest.issues.createMilestone({
+          owner: this.config.owner,
+          repo: this.config.repo,
+          title: milestoneTitle,
+          description: `Milestone for goal: ${goal.title}`,
+          state: goal.status === "done" ? "closed" : "open",
+        });
+        
+        milestone = {
+          id: data.id,
+          title: data.title,
+          description: data.description || undefined,
+          state: data.state as "open" | "closed",
+          created_at: data.created_at,
+          updated_at: data.updated_at,
+        };
+        
+        logger.info(`Created milestone "${milestoneTitle}" for goal ${goal.id}`);
       }
 
-      // Close issue if goal is done or archived
-      if (goal.status === "done" || goal.status === "archived") {
-        await this.updateIssueState(goal.github_issue_id, "closed");
-      } else {
-        await this.updateIssueState(goal.github_issue_id, "open");
-      }
+      // Assign milestone to the issue
+      await this.octokit.rest.issues.update({
+        owner: this.config.owner,
+        repo: this.config.repo,
+        issue_number: goal.github_issue_id,
+        milestone: milestone.id,
+      });
 
-      logger.success(
-        `Synced goal ${goal.id} status to GitHub issue #${goal.github_issue_id}`,
-      );
+      logger.info(`Assigned milestone "${milestoneTitle}" to issue #${goal.github_issue_id}`);
+    } catch (error) {
+      logger.error(`Failed to create/assign milestone for goal ${goal.id}`, error as Error);
+      throw error;
+    }
+  }
+
+  /**
+   * Generate milestone title based on goal status
+   */
+  private generateMilestoneTitle(goal: Goal): string {
+    switch (goal.status) {
+      case "in_progress":
+        return `🚧 In Progress: ${goal.title}`;
+      case "done":
+        return `✅ Completed: ${goal.title}`;
+      case "archived":
+        return `📁 Archived: ${goal.title}`;
+      default:
+        return `📋 Todo: ${goal.title}`;
+    }
+  }
+
+  /**
+   * Update milestone state based on goal status
+   */
+  async updateMilestoneState(goal: Goal): Promise<void> {
+    if (!this.octokit || !this.config) {
+      throw new Error("GitHub service not configured");
+    }
+
+    if (!goal.github_issue_id) {
+      return;
+    }
+
+    try {
+      const milestones = await this.fetchMilestones("all");
+      const milestone = milestones.find(m => m.title.includes(goal.title));
+
+      if (milestone) {
+        const newState = goal.status === "done" ? "closed" : "open";
+        
+        if (milestone.state !== newState) {
+          await this.octokit.rest.issues.updateMilestone({
+            owner: this.config.owner,
+            repo: this.config.repo,
+            milestone_number: milestone.id,
+            state: newState,
+          });
+          
+          logger.info(`Updated milestone "${milestone.title}" to ${newState} state`);
+        }
+      }
+    } catch (error) {
+      logger.error(`Failed to update milestone state for goal ${goal.id}`, error as Error);
+      // Don't throw error for milestone updates as they're not critical
+    }
+  }
+
+  /**
+   * Check if pull request is merged and close goal if needed
+   */
+  async checkPullRequestStatus(goal: Goal): Promise<void> {
+    if (!this.octokit || !this.config || !goal.branch_name) {
+      return;
+    }
+
+    try {
+      // Get pull requests for the branch
+      const { data: pullRequests } = await this.octokit.rest.pulls.list({
+        owner: this.config.owner,
+        repo: this.config.repo,
+        state: "all",
+        head: `${this.config.owner}:${goal.branch_name}`,
+      });
+
+      // Check if any PR was merged
+      const mergedPR = pullRequests.find(pr => pr.merged_at);
+      
+      if (mergedPR && goal.status !== "done") {
+        logger.info(`Pull request for goal ${goal.id} was merged, marking as done`);
+        
+        // This will trigger a callback to update the goal status
+        // The actual status update should be handled by the calling service
+        throw new Error("PULL_REQUEST_MERGED");
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message === "PULL_REQUEST_MERGED") {
+        throw error; // Re-throw to be handled by caller
+      }
+      logger.error(`Failed to check pull request status for goal ${goal.id}`, error as Error);
+      // Don't throw error for PR status checks as they're not critical
+    }
+  }
+
+  /**
+   * Sync goal status to GitHub
+   */
+  async syncGoalStatusToGitHub(goal: Goal): Promise<void> {
+    if (!this.isConfigured()) {
+      throw new Error("GitHub service not configured");
+    }
+
+    if (!this.config?.owner || !this.config?.repo) {
+      throw new Error("GitHub configuration incomplete");
+    }
+
+    try {
+      if (goal.github_issue_id) {
+        // Update issue status based on goal status
+        const issueStatus = this.mapGoalStatusToGitHubStatus(goal.status);
+        
+        await this.octokit!.issues.update({
+          owner: this.config.owner,
+          repo: this.config.repo,
+          issue_number: goal.github_issue_id,
+          state: issueStatus,
+        });
+
+        logger.info(`Updated GitHub issue ${goal.github_issue_id} to ${issueStatus}`);
+
+        // Create/update milestone for the goal
+        await this.createMilestoneForGoal(goal);
+        
+        // Update milestone state if needed
+        await this.updateMilestoneState(goal);
+      }
     } catch (error) {
       logger.error(`Failed to sync goal ${goal.id} to GitHub`, error as Error);
       throw error;

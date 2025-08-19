@@ -7,7 +7,6 @@
 
 import {
   LanguageDetectionService,
-  LanguageDetectionResult,
 } from "./LanguageDetectionService.js";
 import { LLMTranslationService, LLMProvider } from "./LLMTranslationService.js";
 import { LLMConfigManager } from "../config/llm-config.js";

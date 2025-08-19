@@ -1,100 +1,142 @@
 /**
- * Database module for Dev Agent
- * Handles SQLite connection and schema migrations
+ * Database Manager for Dev Agent
+ * Handles SQLite database operations and migrations
  */
 
 import { Database } from "bun:sqlite";
-import { Task, ProjectConfig, SchemaMigration } from "./types.js";
-import {
-  SCHEMA_MIGRATIONS,
-  getMigrationVersions,
-  getMigrationSQL,
-} from "./schema.js";
+import { logger } from "../utils/logger.js";
 
 /**
- * Database manager class
+ * Extended migration interface for internal use
+ */
+interface InternalMigration {
+  version: string;
+  description: string;
+  up: string;
+  down: string;
+}
+
+/**
+ * Database schema migrations
+ */
+const SCHEMA_MIGRATIONS: InternalMigration[] = [
+  {
+    version: "1",
+    description: "Initial schema",
+    up: `
+      CREATE TABLE IF NOT EXISTS goals (
+        id TEXT PRIMARY KEY,
+        github_issue_id INTEGER,
+        title TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'todo',
+        branch_name TEXT,
+        description TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS project_config (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_goals_status ON goals(status);
+      CREATE INDEX IF NOT EXISTS idx_goals_github_issue ON goals(github_issue_id);
+      CREATE INDEX IF NOT EXISTS idx_goals_branch ON goals(branch_name);
+    `,
+    down: `
+      DROP TABLE IF EXISTS goals;
+      DROP TABLE IF EXISTS project_config;
+    `,
+  },
+];
+
+/**
+ * Get migration versions
+ */
+function getMigrationVersions(): string[] {
+  return SCHEMA_MIGRATIONS.map((m) => m.version).sort((a, b) => parseInt(a) - parseInt(b));
+}
+
+/**
+ * Get migration SQL
+ */
+function getMigrationSQL(version: string): string {
+  const migration = SCHEMA_MIGRATIONS.find((m) => m.version === version);
+  if (!migration) {
+    throw new Error(`Migration version ${version} not found`);
+  }
+  return migration.up;
+}
+
+/**
+ * Database Manager class
  */
 export class DatabaseManager {
-  private db: Database;
   private dbPath: string;
+  private db: Database | null = null;
 
-  constructor(dbPath: string = ".dev-agent.db") {
+  constructor(dbPath: string) {
     this.dbPath = dbPath;
-    // Don't create database connection until initialize() is called
-    this.db = null as any;
   }
 
   /**
-   * Initialize database with schema
+   * Initialize database
    */
   async initialize(): Promise<void> {
     try {
-      // Create database connection in current working directory
       this.db = new Database(this.dbPath);
-      this.db.run("PRAGMA foreign_keys = ON");
-      this.db.run("PRAGMA journal_mode = WAL");
-
-      // Run all pending migrations
+      
+      // Run migrations
       await this.runMigrations();
-      console.log("Database initialized successfully");
+      
+      logger.info("Database initialized successfully");
     } catch (error) {
-      console.error("Failed to initialize database:", error);
+      logger.error("Failed to initialize database", error as Error);
       throw error;
     }
   }
 
   /**
-   * Run pending database migrations
+   * Run database migrations
    */
   private async runMigrations(): Promise<void> {
+    if (!this.db) return;
+
     // Create migrations table if it doesn't exist
-    this.db.run(`
-      CREATE TABLE IF NOT EXISTS schema_migrations (
-        version TEXT PRIMARY KEY NOT NULL,
-        applied_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
-      )
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS migrations (
+        version INTEGER PRIMARY KEY,
+        applied_at TEXT NOT NULL
+      );
     `);
 
     // Get applied migrations
     const appliedMigrations = this.db
-      .query<SchemaMigration>(
-        "SELECT version FROM schema_migrations ORDER BY version",
-      )
-      .all();
+      .prepare("SELECT version FROM migrations ORDER BY version")
+      .all() as { version: number }[];
 
-    const appliedVersions = new Set(appliedMigrations.map((m) => m.version));
-    const allVersions = getMigrationVersions();
+    const appliedVersions = appliedMigrations.map((m) => m.version);
+    const pendingVersions = getMigrationVersions().filter(
+      (v) => !appliedVersions.includes(parseInt(v)),
+    );
 
-    // Run pending migrations
-    for (const version of allVersions) {
-      if (!appliedVersions.has(version)) {
-        await this.runMigration(version);
+    // Apply pending migrations
+    for (const version of pendingVersions) {
+      try {
+        const sql = getMigrationSQL(version);
+        this.db.exec(sql);
+        
+        // Record migration
+        this.db
+          .prepare("INSERT INTO migrations (version, applied_at) VALUES (?, ?)")
+          .run(parseInt(version), new Date().toISOString());
+        
+        logger.info(`Applied migration ${version}`);
+      } catch (error) {
+        logger.error(`Failed to apply migration ${version}`, error as Error);
+        throw error;
       }
-    }
-  }
-
-  /**
-   * Run a specific migration
-   */
-  private async runMigration(version: string): Promise<void> {
-    const sql = getMigrationSQL(version);
-    if (!sql) {
-      throw new Error(`Migration ${version} not found`);
-    }
-
-    try {
-      // Execute migration SQL
-      this.db.run(sql);
-
-      // Record migration as applied
-      this.db.run("INSERT INTO schema_migrations (version) VALUES (?)", [
-        version,
-      ]);
-
-      console.log(`Applied migration ${version}`);
-    } catch (error) {
-      console.error(`Failed to apply migration ${version}:`, error);
-      throw error;
     }
   }
 
@@ -104,83 +146,81 @@ export class DatabaseManager {
   close(): void {
     if (this.db) {
       this.db.close();
-      this.db = null as any;
+      this.db = null;
     }
   }
 
   /**
-   * Get database instance (for direct queries)
+   * Check if database is initialized
    */
-  getDatabase(): Database {
+  isInitialized(): boolean {
+    return this.db !== null;
+  }
+
+  /**
+   * Execute SQL statement
+   */
+  run(sql: string, params: unknown[] = []): void {
     if (!this.db) {
-      throw new Error("Database not initialized. Call initialize() first.");
+      throw new Error("Database not initialized");
     }
-    return this.db;
+    this.db.prepare(sql).run(...(params as unknown[]));
   }
 
   /**
-   * Execute a query with parameters
+   * Get single row
    */
-  query<T>(sql: string, params: any[] = []): T[] {
-    try {
-      const db = this.getDatabase();
-      const stmt = db.prepare(sql);
-      return stmt.all(params) as T[];
-    } catch (error) {
-      console.error("Query failed:", error);
-      throw error;
+  get<T>(sql: string, params: unknown[] = []): T | undefined {
+    if (!this.db) {
+      throw new Error("Database not initialized");
     }
+    return this.db.prepare(sql).get(...(params as unknown[])) as T | undefined;
   }
 
   /**
-   * Execute a single statement
+   * Get multiple rows
    */
-  run(sql: string, params: any[] = []): void {
-    try {
-      const db = this.getDatabase();
-      const stmt = db.prepare(sql);
-      stmt.run(params);
-    } catch (error) {
-      console.error("Statement execution failed:", error);
-      throw error;
+  all<T>(sql: string, params: unknown[] = []): T[] {
+    if (!this.db) {
+      throw new Error("Database not initialized");
     }
+    return this.db.prepare(sql).all(...(params as unknown[])) as T[];
   }
 
   /**
-   * Get a single row
-   */
-  get<T>(sql: string, params: any[] = []): T | undefined {
-    try {
-      const db = this.getDatabase();
-      const stmt = db.prepare(sql);
-      return stmt.get(params) as T | undefined;
-    } catch (error) {
-      console.error("Get query failed:", error);
-      throw error;
-    }
-  }
-
-  /**
-   * Begin a transaction
+   * Begin transaction
    */
   beginTransaction(): void {
-    const db = this.getDatabase();
-    db.run("BEGIN TRANSACTION");
+    if (!this.db) {
+      throw new Error("Database not initialized");
+    }
+    this.db.exec("BEGIN TRANSACTION");
   }
 
   /**
-   * Commit a transaction
+   * Commit transaction
    */
   commitTransaction(): void {
-    const db = this.getDatabase();
-    db.run("COMMIT");
+    if (!this.db) {
+      throw new Error("Database not initialized");
+    }
+    this.db.exec("COMMIT");
   }
 
   /**
-   * Rollback a transaction
+   * Rollback transaction
    */
   rollbackTransaction(): void {
-    const db = this.getDatabase();
-    db.run("ROLLBACK");
+    if (!this.db) {
+      throw new Error("Database not initialized");
+    }
+    this.db.exec("ROLLBACK");
+  }
+
+  /**
+   * Get database path
+   */
+  getDatabasePath(): string {
+    return this.dbPath;
   }
 }

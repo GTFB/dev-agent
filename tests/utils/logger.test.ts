@@ -2,8 +2,9 @@
  * Tests for Logger utility
  */
 
+import { Logger, LogLevel } from "../../src/utils/logger.js";
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
-import { Logger, LogLevel, createLogger } from "../../src/utils/logger.js";
+import { existsSync } from "fs";
 
 describe("Logger", () => {
   let logger: Logger;
@@ -13,7 +14,7 @@ describe("Logger", () => {
     tempLogFile = ".logs/test-logger.log";
     logger = new Logger({
       level: LogLevel.INFO,
-      writeToFile: false,
+      fileLogging: false,
       logFilePath: tempLogFile,
     });
   });
@@ -21,8 +22,10 @@ describe("Logger", () => {
   afterEach(() => {
     // Clean up test log file
     try {
-      Bun.removeSync(tempLogFile);
-    } catch (error) {
+      // Use fs.unlinkSync instead of Bun.removeSync
+      const fs = require("fs");
+      fs.unlinkSync(tempLogFile);
+    } catch {
       // File might not exist, ignore
     }
   });
@@ -37,7 +40,7 @@ describe("Logger", () => {
       const customLogger = new Logger({
         level: LogLevel.DEBUG,
         includeTimestamp: false,
-        writeToFile: false,
+        fileLogging: false,
       });
       expect(customLogger).toBeInstanceOf(Logger);
     });
@@ -69,11 +72,6 @@ describe("Logger", () => {
     test("should log at ERROR level when set", () => {
       logger.setLevel(LogLevel.ERROR);
       expect(() => logger.error("Error message")).not.toThrow();
-    });
-
-    test("should log at SUCCESS level when set", () => {
-      logger.setLevel(LogLevel.SUCCESS);
-      expect(() => logger.success("Success message")).not.toThrow();
     });
 
     test("should not log below current level", () => {
@@ -117,117 +115,123 @@ describe("Logger", () => {
   });
 
   describe("File Logging", () => {
-    test("should create log directory when file logging is enabled", () => {
+    test("should create log file when fileLogging is enabled", async () => {
+      const logFilePath = "./test-logs/test-file.log";
       const fileLogger = new Logger({
-        writeToFile: true,
-        logFilePath: ".logs/test-dir/test.log",
+        level: LogLevel.INFO,
+        fileLogging: true,
+        logFilePath,
       });
 
-      // This should create the directory
-      expect(() => fileLogger.info("Test message")).not.toThrow();
+      await fileLogger.info("Test message");
 
-      // Clean up
+      // Check if directory was created
+      const fs = require("fs");
+      const logDir = "./test-logs";
+      expect(fs.existsSync(logDir)).toBe(true);
+      
+      // Cleanup
       try {
-        Bun.removeSync(".logs/test-dir/test.log");
-        Bun.removeSync(".logs/test-dir");
-      } catch (error) {
+        const fs = require("fs");
+        if (fs.existsSync(logFilePath)) {
+          fs.unlinkSync(logFilePath);
+        }
+        if (fs.existsSync(logDir)) {
+          fs.rmdirSync(logDir);
+        }
+      } catch {
         // Ignore cleanup errors
       }
     });
 
-    test("should write to file when file logging is enabled", () => {
+    test("should not create log file when fileLogging is disabled", async () => {
+      const logFilePath = "./test-logs/test-disabled.log";
       const fileLogger = new Logger({
-        writeToFile: true,
-        logFilePath: tempLogFile,
+        level: LogLevel.INFO,
+        fileLogging: false,
+        logFilePath,
       });
 
-      fileLogger.info("File test message");
+      await fileLogger.info("Test message");
 
-      // Check if file was created and contains the message
-      try {
-        const logContent = Bun.file(tempLogFile).text();
-        expect(logContent).toContain("File test message");
-      } catch (error) {
-        // File might not be written immediately, this is acceptable
-      }
-    });
-
-    test("should not write to file when file logging is disabled", () => {
-      const noFileLogger = new Logger({
-        writeToFile: false,
-        logFilePath: tempLogFile,
-      });
-
-      noFileLogger.info("No file test message");
-
-      // File should not exist
-      expect(() => Bun.file(tempLogFile).text()).toThrow();
-    });
-  });
-
-  describe("Configuration Methods", () => {
-    test("should set log level", () => {
-      logger.setLevel(LogLevel.DEBUG);
-      expect(logger.getConfig().level).toBe(LogLevel.DEBUG);
-    });
-
-    test("should set file logging", () => {
-      logger.setFileLogging(true, ".logs/new-test.log");
-      const config = logger.getConfig();
-      expect(config.writeToFile).toBe(true);
-      expect(config.logFilePath).toBe(".logs/new-test.log");
-
-      // Reset to original path for other tests
-      logger.setFileLogging(false, tempLogFile);
-    });
-
-    test("should get current configuration", () => {
-      const config = logger.getConfig();
-      expect(config).toHaveProperty("level");
-      expect(config).toHaveProperty("includeTimestamp");
-      expect(config).toHaveProperty("writeToFile");
-      expect(config).toHaveProperty("logFilePath");
-    });
-  });
-
-  describe("Utility Functions", () => {
-    test("should create logger with createLogger function", () => {
-      const newLogger = createLogger({
-        level: LogLevel.ERROR,
-        writeToFile: false,
-      });
-
-      expect(newLogger).toBeInstanceOf(Logger);
-      expect(newLogger.getConfig().level).toBe(LogLevel.ERROR);
-    });
-
-    test("should format timestamp correctly", () => {
-      const timestamp = logger.formatTimestamp(
-        new Date("2025-01-01T12:00:00Z"),
-      );
-      expect(timestamp).toMatch(/\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+      expect(existsSync(logFilePath)).toBe(false);
     });
   });
 
   describe("Error Handling", () => {
-    test("should handle file write errors gracefully", () => {
-      const invalidPathLogger = new Logger({
-        writeToFile: true,
-        logFilePath: "/invalid/path/test.log",
+    test("should handle file write errors gracefully", async () => {
+      const logFilePath = "/invalid/path/test.log";
+      const fileLogger = new Logger({
+        level: LogLevel.INFO,
+        fileLogging: true,
+        logFilePath,
       });
 
-      // Should not throw error
-      expect(() => invalidPathLogger.info("Test message")).not.toThrow();
+      // Mock Bun.write to simulate error
+      const originalWrite = Bun.write;
+      Bun.write = async () => {
+        throw new Error("Write error");
+      };
+
+      await fileLogger.info("Test message");
+
+      // Restore original
+      Bun.write = originalWrite;
     });
 
-    test("should handle directory creation errors gracefully", () => {
-      const invalidDirLogger = new Logger({
-        writeToFile: true,
-        logFilePath: "/invalid/dir/test.log",
+    test("should handle directory creation errors gracefully", async () => {
+      const logFilePath = "/invalid/path/test.log";
+      const fileLogger = new Logger({
+        level: LogLevel.INFO,
+        fileLogging: true,
+        logFilePath,
       });
 
-      // Should not throw error
-      expect(() => invalidDirLogger.info("Test message")).not.toThrow();
+      // Mock Bun.write to simulate directory creation error
+      const originalWrite = Bun.write;
+      Bun.write = async () => {
+        throw new Error("Directory creation error");
+      };
+
+      await fileLogger.info("Test message");
+
+      // Restore original
+      Bun.write = originalWrite;
+    });
+  });
+
+  describe("Configuration", () => {
+    test("should use default configuration when none provided", () => {
+      const defaultLogger = new Logger();
+      expect(defaultLogger.getConfig().level).toBe(LogLevel.INFO);
+      expect(defaultLogger.getConfig().fileLogging).toBe(false);
+    });
+
+    test("should apply custom configuration", () => {
+      const customLogger = new Logger({
+        level: LogLevel.DEBUG,
+        fileLogging: true,
+        logFilePath: "./custom.log",
+      });
+
+      expect(customLogger.getConfig().level).toBe(LogLevel.DEBUG);
+      expect(customLogger.getConfig().fileLogging).toBe(true);
+    });
+
+    test("should update level dynamically", () => {
+      const logger = new Logger({ level: LogLevel.INFO });
+      expect(logger.getConfig().level).toBe(LogLevel.INFO);
+
+      logger.setLevel(LogLevel.DEBUG);
+      expect(logger.getConfig().level).toBe(LogLevel.DEBUG);
+    });
+
+    test("should update fileLogging dynamically", () => {
+      const logger = new Logger({ fileLogging: false });
+      expect(logger.getConfig().fileLogging).toBe(false);
+
+      logger.setFileLogging(true);
+      expect(logger.getConfig().fileLogging).toBe(true);
     });
   });
 

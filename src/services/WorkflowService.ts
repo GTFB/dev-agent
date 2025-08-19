@@ -7,13 +7,13 @@ import { StorageService } from "./StorageService.js";
 import { GitService } from "./GitService.js";
 import { GitHubService } from "./GitHubService.js";
 import { ValidationService } from "./ValidationService.js";
+import { AIDService } from "./AIDService.js";
 import {
   Goal,
   GoalStatus,
   CommandResult,
   WorkflowContext,
 } from "../core/types.js";
-import { generateGoalId } from "../core/aid-generator.js";
 import { logger } from "../utils/logger.js";
 
 /**
@@ -24,6 +24,7 @@ export class WorkflowService {
   private git: GitService;
   private github: GitHubService;
   private validation: ValidationService;
+  private aid: AIDService;
   private context: WorkflowContext;
 
   constructor(
@@ -35,6 +36,7 @@ export class WorkflowService {
     this.git = git;
     this.github = new GitHubService(storage);
     this.validation = new ValidationService(storage, git);
+    this.aid = new AIDService(storage);
     this.context = context;
   }
 
@@ -165,6 +167,17 @@ export class WorkflowService {
         branch_name: branchName,
       });
 
+      // Sync to GitHub if configured
+      try {
+        if (this.github.isConfigured()) {
+          await this.github.syncGoalStatusToGitHub(goal);
+          logger.info(`Synced goal ${goalId} status to GitHub`);
+        }
+      } catch (error) {
+        logger.warn(`Failed to sync goal ${goalId} to GitHub`, error as Error);
+        // Don't fail the goal start if GitHub sync fails
+      }
+
       logger.success(
         `Started working on goal ${goalId} in branch ${branchName}`,
       );
@@ -260,6 +273,20 @@ export class WorkflowService {
         branch_name: undefined,
       });
 
+      // Get updated goal for GitHub sync
+      const updatedGoal = await this.storage.getGoal(goalId);
+      
+      // Sync to GitHub if configured
+      try {
+        if (this.github.isConfigured() && updatedGoal) {
+          await this.github.syncGoalStatusToGitHub(updatedGoal);
+          logger.info(`Synced goal ${goalId} status to GitHub`);
+        }
+      } catch (error) {
+        logger.warn(`Failed to sync goal ${goalId} to GitHub`, error as Error);
+        // Don't fail the goal completion if GitHub sync fails
+      }
+
       logger.success(`Goal ${goalId} marked as completed and feature branch cleaned up`);
       return {
         success: true,
@@ -326,6 +353,20 @@ export class WorkflowService {
         branch_name: undefined,
       });
 
+      // Get updated goal for GitHub sync
+      const updatedGoal = await this.storage.getGoal(goalId);
+      
+      // Sync to GitHub if configured
+      try {
+        if (this.github.isConfigured() && updatedGoal) {
+          await this.github.syncGoalStatusToGitHub(updatedGoal);
+          logger.info(`Synced goal ${goalId} status to GitHub`);
+        }
+      } catch (error) {
+        logger.warn(`Failed to sync goal ${goalId} to GitHub`, error as Error);
+        // Don't fail the goal stop if GitHub sync fails
+      }
+
       logger.success(`Stopped working on goal ${goalId} and cleaned up feature branch`);
       return {
         success: true,
@@ -385,7 +426,7 @@ export class WorkflowService {
       // Get all completed goals
       const completedGoals = await this.storage.listGoals("done");
       let cleanedCount = 0;
-      let errors: string[] = [];
+      const errors: string[] = [];
 
       for (const goal of completedGoals) {
         if (goal.branch_name) {
@@ -394,7 +435,7 @@ export class WorkflowService {
             try {
               await this.git.deleteRemoteBranch("origin", goal.branch_name);
               logger.info(`Deleted remote branch: ${goal.branch_name}`);
-            } catch (error) {
+            } catch {
               // Branch might not exist remotely, which is fine
               logger.debug(`Remote branch ${goal.branch_name} not found or already deleted`);
             }
@@ -406,10 +447,10 @@ export class WorkflowService {
 
             cleanedCount++;
             logger.info(`Cleaned up goal ${goal.id}: ${goal.title}`);
-          } catch (error) {
-            const errorMsg = `Failed to cleanup goal ${goal.id}: ${error instanceof Error ? error.message : String(error)}`;
+          } catch {
+            const errorMsg = `Failed to cleanup goal ${goal.id}`;
             errors.push(errorMsg);
-            logger.error(errorMsg, error as Error);
+            logger.error(errorMsg);
           }
         }
       }
@@ -468,7 +509,7 @@ export class WorkflowService {
       logger.info(`Creating new goal: ${title}`);
 
       // Generate unique goal ID
-      const goalId = generateGoalId(title);
+      const goalId = await this.aid.generateUniqueGoalId();
 
       // Validate goal before creation
       const validationResults = await this.validation.validateGoalCreation({
@@ -734,6 +775,81 @@ export class WorkflowService {
       return {
         success: false,
         message: `Failed to sync goal ${goalId} to GitHub`,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }
+
+  /**
+   * Check pull request status and update goal if merged
+   */
+  async checkPullRequestStatus(goalId: string): Promise<CommandResult> {
+    try {
+      logger.info(`Checking pull request status for goal: ${goalId}`);
+
+      const goal = await this.storage.getGoal(goalId);
+      if (!goal) {
+        return {
+          success: false,
+          message: `Goal ${goalId} not found`,
+          error: "Goal not found",
+        };
+      }
+
+      if (!goal.branch_name) {
+        return {
+          success: false,
+          message: `Goal ${goalId} has no associated branch`,
+          error: "No branch associated",
+        };
+      }
+
+      try {
+        await this.github.checkPullRequestStatus(goal);
+        
+        // If we get here, the PR was merged
+        logger.info(`Pull request for goal ${goalId} was merged, updating status to done`);
+        
+        // Update goal status to done
+        await this.storage.updateGoal(goalId, {
+          status: "done",
+          completed_at: new Date().toISOString(),
+        });
+
+        // Sync to GitHub
+        const updatedGoal = await this.storage.getGoal(goalId);
+        if (updatedGoal && this.github.isConfigured()) {
+          await this.github.syncGoalStatusToGitHub(updatedGoal);
+        }
+
+        return {
+          success: true,
+          message: `Goal ${goalId} marked as done after pull request merge`,
+          data: {
+            goalId,
+            status: "done",
+            completedAt: new Date().toISOString(),
+          },
+        };
+      } catch (error) {
+        if (error instanceof Error && error.message === "PULL_REQUEST_MERGED") {
+          // This is expected when PR is merged
+          return {
+            success: true,
+            message: `Pull request for goal ${goalId} was merged`,
+            data: {
+              goalId,
+              status: "merged",
+            },
+          };
+        }
+        throw error;
+      }
+    } catch (error) {
+      logger.error(`Failed to check pull request status for goal ${goalId}`, error as Error);
+      return {
+        success: false,
+        message: `Failed to check pull request status for goal ${goalId}`,
         error: error instanceof Error ? error.message : String(error),
       };
     }

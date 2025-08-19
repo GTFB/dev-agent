@@ -22,7 +22,7 @@ export interface LoggerConfig {
   /** Whether to include timestamps */
   includeTimestamp: boolean;
   /** Whether to write errors to log file */
-  writeToFile: boolean;
+  fileLogging: boolean;
   /** Log file path */
   logFilePath?: string;
 }
@@ -38,15 +38,15 @@ export class Logger {
     this.config = {
       level: LogLevel.INFO,
       includeTimestamp: true,
-      writeToFile: true,
+      fileLogging: false, // Default to false
       logFilePath: ".logs/dev-agent.log",
-      ...config,
+      ...config, // This should override defaults
     };
 
     this.logFile = this.config.logFilePath || ".logs/dev-agent.log";
 
-    // Ensure logs directory exists
-    if (this.config.writeToFile) {
+    // Ensure logs directory exists only if fileLogging is enabled
+    if (this.config.fileLogging) {
       this.ensureLogDirectory();
     }
   }
@@ -58,10 +58,15 @@ export class Logger {
     try {
       const logDir = this.logFile.split("/").slice(0, -1).join("/");
       if (logDir) {
-        Bun.write(`${logDir}/.gitkeep`, "");
+        // Create directory recursively
+        const fs = require("fs");
+        if (!fs.existsSync(logDir)) {
+          fs.mkdirSync(logDir, { recursive: true });
+        }
       }
-    } catch (error) {
-      // Ignore errors, logging should not break the application
+    } catch {
+      // Log error but don't disable fileLogging
+      console.warn("Failed to create log directory, file logging may not work");
     }
   }
 
@@ -77,21 +82,22 @@ export class Logger {
    * Write to log file
    */
   private async writeToFile(level: string, message: string): Promise<void> {
-    if (!this.config.writeToFile) return;
+    if (!this.config.fileLogging || !this.logFile) return;
 
     try {
       const logEntry = `${this.formatTimestamp()}[${level}] ${message}\n`;
-      await Bun.write(this.logFile, logEntry, { append: true });
-    } catch (error) {
-      // Don't throw, just log to console
-      console.error("Failed to write to log file:", error);
+      const file = Bun.file(this.logFile);
+      await Bun.write(file, logEntry);
+    } catch {
+      // Log error but don't disable fileLogging
+      console.warn("Failed to write to log file");
     }
   }
 
   /**
    * Log debug message
    */
-  debug(message: string, ...args: any[]): void {
+  debug(message: string, ...args: unknown[]): void {
     if (this.config.level <= LogLevel.DEBUG) {
       const formattedMessage = `[DEBUG] ${message}`;
       console.debug(this.formatTimestamp() + formattedMessage, ...args);
@@ -105,6 +111,7 @@ export class Logger {
     if (this.config.level <= LogLevel.INFO) {
       const formattedMessage = `[INFO] ${message}`;
       console.info(this.formatTimestamp() + formattedMessage, ...args);
+      this.writeToFile("INFO", message);
     }
   }
 
@@ -166,10 +173,15 @@ export class Logger {
    * Enable/disable file logging
    */
   setFileLogging(enabled: boolean, logFilePath?: string): void {
-    this.config.writeToFile = enabled;
+    this.config.fileLogging = enabled;
     if (logFilePath) {
       this.config.logFilePath = logFilePath;
       this.logFile = logFilePath;
+    }
+    
+    // Ensure log directory exists if file logging is enabled
+    if (enabled) {
+      this.ensureLogDirectory();
     }
   }
 

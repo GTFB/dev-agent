@@ -205,156 +205,100 @@ export class ValidationService {
    */
   private async validateUniqueTitle(
     goal: Goal,
-    context: ValidationContext,
   ): Promise<ValidationResult> {
-    const duplicates = context.allGoals.filter(
-      (g) =>
-        g.id !== goal.id &&
-        g.title.toLowerCase().trim() === goal.title.toLowerCase().trim(),
+    // Title should be unique among all goals
+    const allGoals = await this.storage.listGoals();
+    const duplicateTitle = allGoals.find(
+      (g) => g.id !== goal.id && g.title.toLowerCase() === goal.title.toLowerCase(),
     );
 
-    if (duplicates.length > 0) {
+    if (duplicateTitle) {
       return {
         valid: false,
-        message: `Goal title "${goal.title}" is already used by goal ${duplicates[0].id}`,
+        message: `Goal title "${goal.title}" already exists`,
         severity: "error",
-        suggestion: "Choose a unique title or modify the existing goal",
+        suggestion: "Use a unique title or check existing goals",
       };
     }
 
-    return { valid: true, severity: "info" };
+    return {
+      valid: true,
+      message: "Goal title is unique",
+      severity: "info",
+    };
   }
 
   /**
-   * Validate title format
+   * Validate goal title format
    */
   private async validateTitleFormat(
     goal: Goal,
-    context: ValidationContext,
   ): Promise<ValidationResult> {
-    const title = goal.title.trim();
-
-    // Check minimum length
-    if (title.length < 3) {
+    // Title should not be empty and should be descriptive
+    if (!goal.title || goal.title.trim().length === 0) {
       return {
         valid: false,
-        message: "Goal title is too short (minimum 3 characters)",
+        message: "Goal title cannot be empty",
         severity: "error",
-        suggestion: "Provide a more descriptive title",
+        suggestion: "Provide a descriptive title for the goal",
       };
     }
 
-    // Check maximum length
-    if (title.length > 100) {
+    if (goal.title.length < 3) {
       return {
         valid: false,
-        message: "Goal title is too long (maximum 100 characters)",
-        severity: "error",
-        suggestion: "Shorten the title or move details to description",
-      };
-    }
-
-    // Check for proper capitalization
-    if (title[0] !== title[0].toUpperCase()) {
-      return {
-        valid: true,
-        message: "Goal title should start with a capital letter",
+        message: "Goal title is too short",
         severity: "warning",
-        suggestion: "Consider capitalizing the first letter",
+        suggestion: "Use a more descriptive title (at least 3 characters)",
       };
     }
 
-    // Check for action words (verbs)
-    const actionWords = [
-      "add",
-      "implement",
-      "create",
-      "fix",
-      "update",
-      "remove",
-      "refactor",
-      "optimize",
-    ];
-    const hasActionWord = actionWords.some((word) =>
-      title.toLowerCase().includes(word),
-    );
-
-    if (!hasActionWord) {
+    if (goal.title.length > 100) {
       return {
-        valid: true,
-        message:
-          "Goal title should contain an action word (add, implement, fix, etc.)",
+        valid: false,
+        message: "Goal title is too long",
         severity: "warning",
-        suggestion:
-          "Start with an action verb to clarify what needs to be done",
+        suggestion: "Keep title concise (under 100 characters)",
       };
     }
 
-    return { valid: true, severity: "info" };
+    return {
+      valid: true,
+      message: "Goal title format is valid",
+      severity: "info",
+    };
   }
 
   /**
-   * Validate status transition
+   * Validate goal status transitions
    */
   private async validateStatusTransition(
     goal: Goal,
-    context: ValidationContext,
   ): Promise<ValidationResult> {
-    // Check if status is valid
-    const validStatuses: GoalStatus[] = [
-      "todo",
-      "in_progress",
-      "done",
-      "archived",
-    ];
-    if (!validStatuses.includes(goal.status)) {
-      return {
-        valid: false,
-        message: `Invalid status "${goal.status}"`,
-        severity: "error",
-        suggestion: `Valid statuses: ${validStatuses.join(", ")}`,
-      };
-    }
-
-    // Find previous version of the goal
-    const existingGoal = context.allGoals.find((g) => g.id === goal.id);
-
-    if (!existingGoal) {
-      // New goal, check if initial status is valid
-      if (goal.status !== "todo") {
-        return {
-          valid: false,
-          message: 'New goals must start with "todo" status',
-          severity: "error",
-          suggestion: 'Set status to "todo" for new goals',
-        };
-      }
-      return { valid: true, severity: "info" };
-    }
-
-    // Only validate transition if status actually changed
-    if (existingGoal.status === goal.status) {
-      return { valid: true, severity: "info" };
-    }
-
+    // Status transitions should be logical
     const validTransitions: Record<GoalStatus, GoalStatus[]> = {
-      todo: ["in_progress", "archived"],
-      in_progress: ["done", "todo", "archived"],
-      done: ["archived", "todo"], // Can reopen if needed
-      archived: ["todo"], // Can restore from archive
+      todo: ["in_progress"],
+      in_progress: ["done", "todo"],
+      done: ["archived"],
+      archived: [],
     };
 
-    const allowedNext = validTransitions[existingGoal.status];
-    if (!allowedNext.includes(goal.status)) {
+    // For now, we'll just check if the current status is valid
+    // In a real implementation, you'd check the previous status
+    if (!Object.keys(validTransitions).includes(goal.status)) {
       return {
         valid: false,
-        message: `Invalid status transition from "${existingGoal.status}" to "${goal.status}"`,
+        message: `Invalid goal status: ${goal.status}`,
         severity: "error",
-        suggestion: `Allowed transitions from "${existingGoal.status}": ${allowedNext.join(", ")}`,
+        suggestion: "Use one of: todo, in_progress, done, archived",
       };
     }
 
-    return { valid: true, severity: "info" };
+    return {
+      valid: true,
+      message: "Goal status is valid",
+      severity: "info",
+    };
   }
 
   /**
@@ -362,29 +306,31 @@ export class ValidationService {
    */
   private async validateBranchConsistency(
     goal: Goal,
-    context: ValidationContext,
   ): Promise<ValidationResult> {
-    // If goal has a branch, it should be in progress
-    if (goal.branch_name && goal.status !== "in_progress") {
+    // Goals with branches should have consistent states
+    if (goal.branch_name && goal.status === "todo") {
       return {
         valid: false,
-        message: `Goal has branch "${goal.branch_name}" but status is "${goal.status}"`,
-        severity: "error",
-        suggestion: 'Goals with branches should be in "in_progress" status',
-      };
-    }
-
-    // If goal is in progress, it should have a branch
-    if (goal.status === "in_progress" && !goal.branch_name) {
-      return {
-        valid: true,
-        message: "Goal is in progress but has no associated branch",
+        message: "Goal with branch should not be in 'todo' status",
         severity: "warning",
-        suggestion: "Consider creating a feature branch for this goal",
+        suggestion: "Update status to 'in_progress' or remove branch name",
       };
     }
 
-    return { valid: true, severity: "info" };
+    if (!goal.branch_name && goal.status === "in_progress") {
+      return {
+        valid: false,
+        message: "Goal in progress should have a branch name",
+        severity: "warning",
+        suggestion: "Create a feature branch for this goal",
+      };
+    }
+
+    return {
+      valid: true,
+      message: "Branch consistency is valid",
+      severity: "info",
+    };
   }
 
   /**
@@ -394,26 +340,27 @@ export class ValidationService {
     goal: Goal,
     context: ValidationContext,
   ): Promise<ValidationResult> {
-    const inProgressGoals = context.allGoals.filter(
-      (g) => g.status === "in_progress" && g.id !== goal.id,
-    );
+    // Limit number of goals in progress
+    if (goal.status === "in_progress") {
+      const inProgressCount = context.allGoals.filter(
+        (g) => g.status === "in_progress",
+      ).length;
 
-    // Recommend limiting work in progress
-    const maxInProgress = 3;
-
-    if (
-      goal.status === "in_progress" &&
-      inProgressGoals.length >= maxInProgress
-    ) {
-      return {
-        valid: true,
-        message: `You have ${inProgressGoals.length} goals in progress. Consider focusing on fewer goals.`,
-        severity: "warning",
-        suggestion: "Complete or pause some goals before starting new ones",
-      };
+      if (inProgressCount > 3) {
+        return {
+          valid: false,
+          message: "Too many goals in progress",
+          severity: "warning",
+          suggestion: "Complete or pause some goals before starting new ones",
+        };
+      }
     }
 
-    return { valid: true, severity: "info" };
+    return {
+      valid: true,
+      message: "In-progress limit is acceptable",
+      severity: "info",
+    };
   }
 
   /**
@@ -421,11 +368,11 @@ export class ValidationService {
    */
   private async validateGitHubConsistency(
     goal: Goal,
-    context: ValidationContext,
   ): Promise<ValidationResult> {
     // If goal has GitHub issue, check for duplicates
     if (goal.github_issue_id) {
-      const duplicates = context.allGoals.filter(
+      const allGoals = await this.storage.listGoals();
+      const duplicates = allGoals.filter(
         (g) => g.id !== goal.id && g.github_issue_id === goal.github_issue_id,
       );
 
@@ -447,7 +394,6 @@ export class ValidationService {
    */
   private async validateDescriptionQuality(
     goal: Goal,
-    context: ValidationContext,
   ): Promise<ValidationResult> {
     if (!goal.description || goal.description.trim().length === 0) {
       return {

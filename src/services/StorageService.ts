@@ -97,10 +97,10 @@ export class StorageService {
     } catch (error) {
       logger.error(`Failed to get goal ${id}`, error as Error);
       throw error;
+    }
   }
-}
 
-/**
+  /**
    * Update goal
    */
   async updateGoal(
@@ -132,21 +132,20 @@ export class StorageService {
   }
 
   /**
-   * List goals with optional status filter
+   * List goals by status
    */
   async listGoals(status?: GoalStatus): Promise<Goal[]> {
     try {
       await this.ensureInitialized();
       if (status) {
-        return this.db.query<Goal>(
+        return this.db.all<Goal>(
           "SELECT * FROM goals WHERE status = ? ORDER BY created_at DESC",
           [status],
         );
-      } else {
-        return this.db.query<Goal>(
-          "SELECT * FROM goals ORDER BY status, created_at DESC",
-        );
       }
+      return this.db.all<Goal>(
+        "SELECT * FROM goals ORDER BY created_at DESC",
+      );
     } catch (error) {
       logger.error("Failed to list goals", error as Error);
       throw error;
@@ -271,21 +270,15 @@ export class StorageService {
   /**
    * Get all configuration
    */
-  async getAllConfig(): Promise<Record<string, string>> {
+  async getAllConfig(): Promise<ProjectConfig[]> {
     try {
       await this.ensureInitialized();
-      const configs = this.db.query<ProjectConfig>(
-        "SELECT key, value FROM project_config",
+      const configs = this.db.all<ProjectConfig>(
+        "SELECT * FROM project_config ORDER BY key",
       );
-
-      const result: Record<string, string> = {};
-      for (const config of configs) {
-        result[config.key] = config.value;
-      }
-
-      return result;
+      return configs;
     } catch (error) {
-      logger.error("Failed to get all config", error as Error);
+      logger.error("Failed to get all configuration", error as Error);
       throw error;
     }
   }
@@ -311,7 +304,7 @@ export class StorageService {
   isInitialized(): boolean {
     try {
       // Try to query a simple table to check if DB is ready
-      this.db.query("SELECT 1 FROM goals LIMIT 1");
+      this.db.get("SELECT 1 FROM goals LIMIT 1");
       return true;
     } catch {
       return false;
@@ -322,7 +315,7 @@ export class StorageService {
    * Get database path
    */
   getDatabasePath(): string {
-    return this.db.getDatabase().filename;
+    return this.db.getDatabasePath();
   }
 
   /**
@@ -344,5 +337,19 @@ export class StorageService {
    */
   rollbackTransaction(): void {
     this.db.rollbackTransaction();
+  }
+
+  /**
+   * Check if database has any goals
+   */
+  async hasGoals(): Promise<boolean> {
+    try {
+      await this.ensureInitialized();
+      const result = this.db.get("SELECT 1 FROM goals LIMIT 1");
+      return result !== undefined;
+    } catch (error) {
+      logger.error("Failed to check if database has goals", error as Error);
+      return false;
+    }
   }
 }
