@@ -334,6 +334,7 @@ Pre-commit hooks automatically:
 - [GitHub Setup](docs/github-setup.md) - GitHub integration
 - [Language Compliance](docs/language-compliance.md) - Language policy enforcement
 - [Backups](docs/backups.md) - Backup directory documentation
+- [Quick Commands](docs/quick-commands.md) - Command reference and examples
 - [Protocols](docs/protocols/) - Development protocols
 
 ## 🤝 Contributing
