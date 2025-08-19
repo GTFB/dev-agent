@@ -268,9 +268,9 @@ bun run docs:generate
 
 ### Project Structure
 
-**Слой 1: Dev Agent (dev/)**
+**Layer 1: Dev Agent (dev/)**
 ```
-dev/                           # Dev Agent - автоматизация разработки
+dev/                           # Dev Agent - development automation
 ├── src/
 │   ├── core/                  # Core types, database, AID generator
 │   ├── services/              # Business logic services
@@ -281,52 +281,61 @@ dev/                           # Dev Agent - автоматизация разр
 └── package.json               # Dependencies
 ```
 
-**Слой 2: Проект (монорепозиторий)**
+**Layer 2: Project (Monorepo)**
 ```
-/monorepo/                    # Монорепозиторий проекта
-├── .git/                     # Git репозиторий
-├── .github/                  # GitHub конфигурация
+/monorepo/                    # Project monorepo
+├── .git/                     # Git repository
+├── .github/                  # GitHub configuration
 │
-├── apps/                     # === ПРОДУКТОВЫЕ ПРИЛОЖЕНИЯ ===
-│   ├── web/                  # Веб-приложение
-│   └── google-sheets-integrator/ # Интегратор с Google Sheets
+├── apps/                     # === PRODUCT APPLICATIONS ===
+│   ├── web/                  # Main web application (Next.js)
+│   │   ├── package.json
+│   │   ├── next.config.js
+│   │   └── src/
+│   │
+│   └── marketing/            # Marketing website (Nextra/Next.js)
+│       ├── package.json
+│       └── src/
+│    
 │
-├── packages/                 # === ПРОДУКТОВЫЕ БИБЛИОТЕКИ ===
-│   ├── ui/                   # UI компоненты
-│   ├── utils/                # Утилиты
-│   ├── eslint-config-custom/ # ESLint конфигурация
-│   └── tsconfig/             # TypeScript конфигурация
+├── gas/                      # Google Sheets integrator
 │
-├── dev/                      # === ИНСТРУМЕНТАРИЙ РАЗРАБОТКИ ===
-│                             # (Git subtree dev-agent)
-│   ├── .dev-agent.json       # Конфиг агента (генерируется)
-│   ├── .dev-agent.db         # База данных (генерируется)
-│   ├── src/                  # Исходники dev-agent
-│   ├── docs/                 # Документация dev-agent
-│   ├── package.json          # Зависимости dev-agent
-│   └── tsconfig.json         # TypeScript конфигурация dev-agent
+├── dev/                      # === DEVELOPMENT TOOLKIT ===
+│   │                         # (Git subtree dev-agent)
+│   ├── .dev-agent.json       # Agent config (generated)
+│   ├── .dev-agent.db         # Database (generated)
+│   ├── src/                  # Dev Agent source code
+│   ├── docs/                 # Dev Agent documentation
+│   ├── package.json          # Dev Agent dependencies
+│   └── tsconfig.json         # Dev Agent TypeScript config
+│
+├── packages/                 # === REUSABLE LIBRARIES ===
+│   ├── ui/                   # UI components
+│   ├── utils/                # Utilities
+│   ├── eslint-config-custom/ # ESLint configuration
+│   └── tsconfig/             # TypeScript configuration
 │
 ├── .gitignore
-├── package.json              # Корневой package.json монорепозитория
+├── package.json              # Root monorepo package.json
 ├── bun.lockb
-└── turbo.json                # Turborepo конфигурация
+└── turbo.json                # Turborepo configuration
 ```
 
-### 🏗️ Двухслойная архитектура
+### 🏗️ Two-Layer Architecture
 
 **Dev Agent (dev/)**
-- Автоматизация разработки и управления задачами
-- Валидация и контроль качества
-- Git операции и интеграция с GitHub
-- Управление ветками и workflow
+- Development automation and task management
+- Validation and quality control
+- Git operations and GitHub integration
+- Branch management and workflow
 
-**Проект (монорепозиторий)**
-- **apps/** - Продуктовые приложения (web, google-sheets-integrator)
-- **packages/** - Переиспользуемые библиотеки (ui, utils, конфигурации)
-- **dev/** - Инструментарий разработки (Dev Agent как Git subtree)
-- Все проектные сущности (задачи, документы, API) хранятся в БД dev-agent
-- Связь между задачами и файлами монорепозитория
-- Централизованное управление через Dev Agent
+**Project (Monorepo)**
+- **apps/** - Product applications (web, google-sheets-integrator)
+- **packages/** - Reusable libraries (ui, utils, configurations)
+- **dev/** - Development toolkit (Dev Agent as Git subtree)
+- All project entities (tasks, documents, API) stored in dev-agent database
+- Connection between tasks and monorepo files
+- Centralized management through Dev Agent
 
 ## 📚 Documentation
 
