@@ -331,6 +331,48 @@ lang-validate-file:
 	@echo "🔍 Validating file language: $(FILE)"
 	@$(DEV_CMD) lang validate-file "$(FILE)" --translate
 
+lang-setup-llm:
+	@test "$(PROVIDER)" || (echo "❌ Error: PROVIDER parameter required. Usage: make lang-setup-llm PROVIDER=<provider> API_KEY=<api-key>" && exit 1)
+	@test "$(API_KEY)" || (echo "❌ Error: API_KEY parameter required. Usage: make lang-setup-llm PROVIDER=<provider> API_KEY=<api-key>" && exit 1)
+	@echo "🔧 Setting up LLM translation service..."
+	@$(DEV_CMD) lang setup-llm "$(PROVIDER)" "$(API_KEY)"
+
+# Quick setup for common providers
+lang-setup-gemini:
+	@test "$(API_KEY)" || (echo "❌ Error: API_KEY parameter required. Usage: make lang-setup-gemini API_KEY=<gemini-api-key>" && exit 1)
+	@echo "🔧 Setting up Gemini translation service..."
+	@$(DEV_CMD) lang setup-llm gemini "$(API_KEY)"
+
+lang-setup-openai:
+	@test "$(API_KEY)" || (echo "❌ Error: API_KEY parameter required. Usage: make lang-setup-openai API_KEY=<openai-api-key>" && exit 1)
+	@echo "🔧 Setting up OpenAI translation service..."
+	@$(DEV_CMD) lang setup-llm openai "$(API_KEY)"
+
+# LLM provider management
+lang-list-providers:
+	@echo "🤖 Listing configured LLM providers..."
+	@$(DEV_CMD) lang list-providers
+
+lang-remove-provider:
+	@test "$(NAME)" || (echo "❌ Error: NAME parameter required. Usage: make lang-remove-provider NAME=<provider-name>" && exit 1)
+	@echo "🗑️  Removing LLM provider..."
+	@$(DEV_CMD) lang remove-provider "$(NAME)"
+
+lang-set-default:
+	@test "$(NAME)" || (echo "❌ Error: NAME parameter required. Usage: make lang-set-default NAME=<provider-name>" && exit 1)
+	@echo "⭐ Setting default LLM provider..."
+	@$(DEV_CMD) lang set-default "$(NAME)"
+
+# Configure retry settings
+lang-configure-retry:
+	@echo "⚙️  Configuring LLM retry settings..."
+	@$(DEV_CMD) lang configure-retry
+
+lang-set-retry:
+	@test "$(MAX_RETRIES)" || (echo "❌ Error: MAX_RETRIES parameter required. Usage: make lang-set-retry MAX_RETRIES=<number> RETRY_DELAY=<seconds> BACKOFF=<multiplier>" && exit 1)
+	@echo "⚙️  Setting LLM retry configuration..."
+	@$(DEV_CMD) lang configure-retry -r "$(MAX_RETRIES)" -d "$(RETRY_DELAY)" -b "$(BACKOFF)"
+
 # Pull Request operations
 pr-create:
 	@test "$(TITLE)" || (echo "❌ Error: TITLE parameter required. Usage: make pr-create TITLE=\"<title>\"" && exit 1)

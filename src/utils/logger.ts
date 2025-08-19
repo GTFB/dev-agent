@@ -10,7 +10,7 @@ export enum LogLevel {
   DEBUG = 0,
   INFO = 1,
   WARN = 2,
-  ERROR = 3
+  ERROR = 3,
 }
 
 /**
@@ -39,12 +39,12 @@ export class Logger {
       level: LogLevel.INFO,
       includeTimestamp: true,
       writeToFile: true,
-      logFilePath: '.logs/dev-agent.log',
-      ...config
+      logFilePath: ".logs/dev-agent.log",
+      ...config,
     };
 
-    this.logFile = this.config.logFilePath || '.logs/dev-agent.log';
-    
+    this.logFile = this.config.logFilePath || ".logs/dev-agent.log";
+
     // Ensure logs directory exists
     if (this.config.writeToFile) {
       this.ensureLogDirectory();
@@ -56,9 +56,9 @@ export class Logger {
    */
   private ensureLogDirectory(): void {
     try {
-      const logDir = this.logFile.split('/').slice(0, -1).join('/');
+      const logDir = this.logFile.split("/").slice(0, -1).join("/");
       if (logDir) {
-        Bun.write(`${logDir}/.gitkeep`, '');
+        Bun.write(`${logDir}/.gitkeep`, "");
       }
     } catch (error) {
       // Ignore errors, logging should not break the application
@@ -69,7 +69,7 @@ export class Logger {
    * Format timestamp
    */
   private formatTimestamp(): string {
-    if (!this.config.includeTimestamp) return '';
+    if (!this.config.includeTimestamp) return "";
     return `[${new Date().toISOString()}] `;
   }
 
@@ -84,7 +84,7 @@ export class Logger {
       await Bun.write(this.logFile, logEntry, { append: true });
     } catch (error) {
       // Don't throw, just log to console
-      console.error('Failed to write to log file:', error);
+      console.error("Failed to write to log file:", error);
     }
   }
 
@@ -115,7 +115,7 @@ export class Logger {
     if (this.config.level <= LogLevel.WARN) {
       const formattedMessage = `[WARN] ${message}`;
       console.warn(this.formatTimestamp() + formattedMessage, ...args);
-      this.writeToFile('WARN', message);
+      this.writeToFile("WARN", message);
     }
   }
 
@@ -126,18 +126,21 @@ export class Logger {
     if (this.config.level <= LogLevel.ERROR) {
       const formattedMessage = `[ERROR] ${message}`;
       console.error(this.formatTimestamp() + formattedMessage, ...args);
-      
+
       if (error) {
-        console.error('Error details:', error.message);
+        console.error("Error details:", error.message);
         if (error.stack) {
-          console.error('Stack trace:', error.stack);
+          console.error("Stack trace:", error.stack);
         }
       }
 
       // Always write errors to log file
-      this.writeToFile('ERROR', message);
+      this.writeToFile("ERROR", message);
       if (error) {
-        this.writeToFile('ERROR', `Error: ${error.message}\nStack: ${error.stack || 'No stack trace'}`);
+        this.writeToFile(
+          "ERROR",
+          `Error: ${error.message}\nStack: ${error.stack || "No stack trace"}`,
+        );
       }
     }
   }

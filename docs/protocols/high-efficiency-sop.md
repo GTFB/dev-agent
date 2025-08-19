@@ -51,7 +51,7 @@ This document defines the standardized workflow for development and release mana
    ```bash
    make lint && make test
    ```
-   *Recommendation: Automate this step with a pre-commit hook.*
+   _Recommendation: Automate this step with a pre-commit hook._
 3. **Update Status:** `echo "Implementation" > .tasks/.task.progress.yaml`
 
 ### **Phase 3: Finalization & Delivery**
@@ -61,7 +61,7 @@ This document defines the standardized workflow for development and release mana
    git fetch origin
    git rebase origin/develop
    ```
-   *(Resolve any conflicts that arise)*.
+   _(Resolve any conflicts that arise)_.
 2. **Run Full Quality Gate:** Ensure all checks pass after syncing.
    ```bash
    make quality
@@ -70,7 +70,7 @@ This document defines the standardized workflow for development and release mana
    ```bash
    git push --force-with-lease origin feature/your-branch-name
    ```
-   *(`--force-with-lease` is safe after a rebase and won't overwrite others' work).*
+   _(`--force-with-lease` is safe after a rebase and won't overwrite others' work)._
 4. **Update Status:** `echo "Quality Assurance" > .tasks/.task.progress.yaml`
 
 ### **Phase 4: Code Review & Merge**
@@ -92,7 +92,7 @@ This document defines the standardized workflow for development and release mana
    ```
 2. The `feature/*` branch will be deleted automatically upon merging the PR (if configured in the repository). If not, delete it manually: `git branch -d feature/your-branch-name`.
 
-*The developer's work on this task is now complete. Final closure occurs after the release.*
+_The developer's work on this task is now complete. Final closure occurs after the release._
 
 ---
 
@@ -163,18 +163,23 @@ Here is the list of tasks to set up this high-efficiency workflow.
 4. **Create a Pull Request Template:**
    - Create a file in your repository at this exact path: `.github/PULL_REQUEST_TEMPLATE.md`.
    - Add content to guide developers, for example:
+
      ```markdown
      ### Description
-     *A clear and concise description of the changes.*
+
+     _A clear and concise description of the changes._
 
      ### Related Issue
-     *Closes #...*
+
+     _Closes #..._
 
      ### How to Test
+
      1. Step 1...
      2. Step 2...
 
      ### Checklist
+
      - [ ] I have added/updated unit tests.
      - [ ] I have run `make quality` locally.
      ```
@@ -189,20 +194,20 @@ Here is the list of tasks to set up this high-efficiency workflow.
      name: CI Quality Gate
      on:
        pull_request:
-         branches: [ develop ]
+         branches: [develop]
      jobs:
        build-and-test:
          runs-on: ubuntu-latest
          steps:
-         - uses: actions/checkout@v3
-         - name: Set up Node.js
-           uses: actions/setup-node@v3
-           with:
-             node-version: '18'
-         - name: Install dependencies
-           run: npm install
-         - name: Run Quality Gate
-           run: make quality
+           - uses: actions/checkout@v3
+           - name: Set up Node.js
+             uses: actions/setup-node@v3
+             with:
+               node-version: "18"
+           - name: Install dependencies
+             run: npm install
+           - name: Run Quality Gate
+             run: make quality
      ```
 
 6. **(Advanced) Develop Post-Release Script:**
@@ -222,26 +227,31 @@ Here is the list of tasks to set up this high-efficiency workflow.
 Dev Agent automates many aspects of this protocol:
 
 ### **Automated Task Management**
+
 - **Task Creation:** `agent task create "Task title"`
 - **Task Status Tracking:** Database-backed task status management
 - **Branch Management:** Automatic feature branch creation following naming conventions
 
 ### **Git Workflow Automation**
+
 - **Branch Operations:** Automatic checkout, pull, and branch creation
 - **Status Validation:** Ensures working directory is clean before operations
 - **Naming Conventions:** Consistent `feature/g-xxxxxx-task-title` branch naming
 
 ### **Quality Assurance**
+
 - **Pre-commit Validation:** Integration with `make quality` commands
 - **Status Reporting:** Real-time task status and progress tracking
 - **Configuration Management:** Centralized project configuration
 
 ### **Integration Points**
+
 - **GitHub Issues:** Future integration for issue linking
 - **CI/CD Pipelines:** Compatible with existing GitHub Actions workflows
 - **Release Management:** Supports version tagging and release preparation
 
 By following this protocol and using Dev Agent for automation, teams can achieve:
+
 - ✅ Consistent development workflows
 - ✅ Reduced manual errors
 - ✅ Improved code quality
@@ -250,4 +260,4 @@ By following this protocol and using Dev Agent for automation, teams can achieve
 
 ---
 
-*This protocol is implemented and enforced by Dev Agent v2.0. For technical details on the implementation, see the [Architecture Overview](../05-architecture.md).*
+_This protocol is implemented and enforced by Dev Agent v2.0. For technical details on the implementation, see the [Architecture Overview](../05-architecture.md)._

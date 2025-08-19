@@ -35,8 +35,13 @@ make goal-create TITLE="My Goal"    # Create new goal
 make goal-list                      # List all goals
 make config-set KEY=github.owner VALUE=myuser  # Configure GitHub
 
+# LLM Translation Setup
+make lang-setup-gemini API_KEY=your_key        # Setup Gemini for translations
+make lang-setup-openai API_KEY=your_key        # Setup OpenAI for translations
+make lang-list-providers                        # List configured providers
+
 # Or using dev command directly
-bun run dev/src/index.ts init                    # Initialize project  
+bun run dev/src/index.ts init                    # Initialize project
 bun run dev/src/index.ts goal create "My Goal"   # Create new goal
 bun run dev/src/index.ts goal list               # List all goals
 ```
@@ -46,12 +51,14 @@ bun run dev/src/index.ts goal list               # List all goals
 Dev Agent is designed to be integrated into your monorepo as a Git subtree in the `dev/` folder.
 
 1. **Add Dev Agent as subtree to your monorepo:**
+
    ```bash
    # In your monorepo root
    git subtree add --prefix=dev https://github.com/your-org/dev-agent.git main --squash
    ```
 
 2. **Install dependencies for Dev Agent:**
+
    ```bash
    cd dev
    bun install
@@ -59,11 +66,13 @@ Dev Agent is designed to be integrated into your monorepo as a Git subtree in th
    ```
 
 3. **Initialize Dev Agent in your monorepo:**
+
    ```bash
    bun run dev/src/index.ts init
    ```
 
 4. **Create your first goal:**
+
    ```bash
    bun run dev/src/index.ts goal create "Implement user authentication"
    ```
@@ -73,11 +82,65 @@ Dev Agent is designed to be integrated into your monorepo as a Git subtree in th
    bun run dev/src/index.ts goal start g-a1b2c3
    ```
 
+## 🤖 LLM Translation Setup
+
+Dev Agent includes an intelligent language detection and automatic translation system that uses Large Language Models (LLM) to translate non-English content to English.
+
+### Supported LLM Providers
+
+- **Google Gemini** - Fast and cost-effective translations
+- **OpenAI GPT** - High-quality translations with advanced models
+- **Anthropic Claude** - Professional-grade translations
+- **Custom APIs** - Support for any compatible LLM service
+
+### Quick Setup
+
+```bash
+# Setup Gemini (recommended for cost-effectiveness)
+make lang-setup-gemini API_KEY=your_gemini_api_key
+
+# Setup OpenAI
+make lang-setup-openai API_KEY=your_openai_api_key
+
+# Setup custom provider
+bun run dev/src/index.ts lang setup-llm custom your_api_key -u https://your-api.com/v1/chat
+```
+
+### Configuration Management
+
+```bash
+# List all configured providers
+make lang-list-providers
+
+# Set default provider
+make lang-setup-default NAME=gemini
+
+# Remove provider
+make lang-remove-provider NAME=openai
+```
+
+### Automatic Translation
+
+The system automatically:
+
+- **Detects language** of content (Russian, English, etc.)
+- **Translates non-English** content to English using LLM
+- **Caches results** for efficiency
+- **Integrates seamlessly** with goal and document creation
+
+### Security Notes
+
+- API keys are stored locally in `.llm-config.json`
+- This file is automatically added to `.gitignore`
+- Never commit API keys to version control
+- Use `.llm-config.example.json` as a template
+
 ## 📖 Usage Guide
 
 ### Basic Commands
 
 #### Project Initialization
+
 ```bash
 # Initialize Dev Agent in current monorepo
 bun run dev/src/index.ts init
@@ -85,6 +148,7 @@ bun run dev/src/index.ts init
 ```
 
 #### Goal Management
+
 ```bash
 # Create a new goal
 bun run dev/src/index.ts goal create "goal title" -d "Optional description"
@@ -111,6 +175,7 @@ bun run dev/src/index.ts goal stop g-a1b2c3
 ```
 
 #### Configuration
+
 ```bash
 # Set configuration value
 bun run dev/src/index.ts config set github.owner "your-org"
@@ -131,12 +196,14 @@ bun run dev/src/index.ts config list
 Here's a typical development workflow using Dev Agent:
 
 1. **Initialize the monorepo:**
+
    ```bash
    make init
    # or: bun run dev/src/index.ts init
    ```
 
 2. **Configure GitHub repository:**
+
    ```bash
    make config-set KEY=github.owner VALUE="your-org"
    make config-set KEY=github.repo VALUE="your-monorepo"
@@ -144,16 +211,19 @@ Here's a typical development workflow using Dev Agent:
    ```
 
 3. **Create a goal:**
+
    ```bash
    make goal-create TITLE="Add user authentication"
    # or: bun run dev/src/index.ts goal create "Add user authentication" -d "Implement JWT-based authentication system"
    ```
 
 4. **Start working:**
+
    ```bash
    make goal-start ID=g-a1b2c3
    # or: bun run dev/src/index.ts goal start g-a1b2c3
    ```
+
    This will:
    - Switch to `develop` branch
    - Pull latest changes
@@ -198,6 +268,7 @@ Dev Agent follows a clean, layered architecture:
 Dev Agent uses a simple key-value configuration system stored in SQLite. The database file (`.dev-agent.db`) is created in your project root when you run `init`.
 
 ### Default Configuration
+
 ```json
 {
   "github.owner": "",
@@ -212,6 +283,7 @@ Dev Agent uses a simple key-value configuration system stored in SQLite. The dat
 ```
 
 ### Setting Configuration
+
 ```bash
 # Set GitHub repository
 dev config set github.owner "your-org"
@@ -230,6 +302,7 @@ Dev Agent uses an **Atomic ID (AID)** system for reliable entity identification:
 - **Examples**: `g-a1b2c3` (goal), `a-d4e5f6` (document)
 
 ### Entity Types
+
 - **G** - Goals (задачи и цели)
 - **D** - Documents (проектная документация)
 - **F** - Files (файлы проекта)
@@ -244,11 +317,13 @@ Dev Agent uses an **Atomic ID (AID)** system for reliable entity identification:
 ## 🧪 Development
 
 ### Prerequisites
+
 - Bun v1.x
 - TypeScript 5.x
 - Git
 
 ### Setup Development Environment
+
 ```bash
 # Install dependencies
 bun install
@@ -269,6 +344,7 @@ bun run docs:generate
 ### Project Structure
 
 **Layer 1: Dev Agent (dev/)**
+
 ```
 dev/                           # Dev Agent - development automation
 ├── src/
@@ -282,6 +358,7 @@ dev/                           # Dev Agent - development automation
 ```
 
 **Layer 2: Project (Monorepo)**
+
 ```
 /monorepo/                    # Project monorepo
 ├── .git/                     # Git repository
@@ -296,7 +373,7 @@ dev/                           # Dev Agent - development automation
 │   └── marketing/            # Marketing website (Nextra/Next.js)
 │       ├── package.json
 │       └── src/
-│    
+│
 │
 ├── gas/                      # Google Sheets integrator
 │
@@ -324,12 +401,14 @@ dev/                           # Dev Agent - development automation
 ### 🏗️ Two-Layer Architecture
 
 **Dev Agent (dev/)**
+
 - Development automation and task management
 - Validation and quality control
 - Git operations and GitHub integration
 - Branch management and workflow
 
 **Project (Monorepo)**
+
 - **apps/** - Product applications (web, google-sheets-integrator)
 - **packages/** - Reusable libraries (ui, utils, configurations)
 - **dev/** - Development toolkit (Dev Agent as Git subtree)
@@ -351,6 +430,7 @@ dev/                           # Dev Agent - development automation
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
 ### Development Workflow
+
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/amazing-feature`
 3. Make your changes

@@ -5,21 +5,25 @@ Welcome to the Dev Agent documentation! This comprehensive guide will help you u
 ## 📚 Documentation Index
 
 ### 🚀 Getting Started
+
 - **[Getting Started Guide](01-getting-started.md)** - Quick start and first steps
 - **[CLI Commands Reference](02-cli-commands.md)** - Complete command reference
 - **[Configuration Guide](03-configuration.md)** - System configuration and customization
 
 ### 🛠️ Development
+
 - **[Developer Guide](04-developer-guide.md)** - Contributing and development setup
 - **[Architecture Overview](05-architecture.md)** - System design and architecture
 
 ### 📋 Protocols
+
 - **[Development Protocols](protocols/README.md)** - Standardized workflows and procedures
 - **[High-Efficiency SOP](protocols/high-efficiency-sop.md)** - Core development and release protocol
 
 ### 📖 Quick Reference
 
 #### Essential Commands
+
 ```bash
 # Initialize project
 bun run dev-agent/src/index.ts init
@@ -38,6 +42,7 @@ bun run dev-agent/src/index.ts task complete <task-id>
 ```
 
 #### Configuration
+
 ```bash
 # Set GitHub repository
 bun run dev-agent/src/index.ts config set github.owner "your-org"
@@ -90,7 +95,7 @@ Dev Agent follows a clean, layered architecture:
 Dev Agent uses an **Atomic ID (AID)** system for reliable entity identification:
 
 - **Format**: `[prefix]-[a-z0-9]{6}`
-- **Examples**: 
+- **Examples**:
   - `g-a1b2c3` (task)
   - `a-d4e5f6` (document)
   - `b-x7y8z9` (inventory item)

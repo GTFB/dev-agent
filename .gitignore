@@ -5,6 +5,9 @@
 .dev-agent.db-shm
 .logs/
 
+# LLM Configuration (contains API keys)
+.llm-config.json
+
 # Dependencies
 node_modules/
 bun.lockb

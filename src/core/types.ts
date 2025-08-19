@@ -6,32 +6,32 @@
 /**
  * Goal status enumeration
  */
-export type GoalStatus = 'todo' | 'in_progress' | 'done' | 'archived';
+export type GoalStatus = "todo" | "in_progress" | "done" | "archived";
 
 /**
  * Document status enumeration
  */
-export type DocumentStatus = 'draft' | 'review' | 'approved' | 'archived';
+export type DocumentStatus = "draft" | "review" | "approved" | "archived";
 
 /**
  * File status enumeration
  */
-export type FileStatus = 'active' | 'deprecated' | 'archived';
+export type FileStatus = "active" | "deprecated" | "archived";
 
 /**
  * API endpoint status enumeration
  */
-export type ApiEndpointStatus = 'active' | 'deprecated' | 'planned';
+export type ApiEndpointStatus = "active" | "deprecated" | "planned";
 
 /**
  * Script status enumeration
  */
-export type ScriptStatus = 'active' | 'deprecated' | 'testing';
+export type ScriptStatus = "active" | "deprecated" | "testing";
 
 /**
  * Prompt status enumeration
  */
-export type PromptStatus = 'active' | 'testing' | 'archived';
+export type PromptStatus = "active" | "testing" | "archived";
 
 /**
  * Goal entity with AID prefix 'g-' for Goals

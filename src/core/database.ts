@@ -3,9 +3,13 @@
  * Handles SQLite connection and schema migrations
  */
 
-import { Database } from 'bun:sqlite';
-import { Task, ProjectConfig, SchemaMigration } from './types.js';
-import { SCHEMA_MIGRATIONS, getMigrationVersions, getMigrationSQL } from './schema.js';
+import { Database } from "bun:sqlite";
+import { Task, ProjectConfig, SchemaMigration } from "./types.js";
+import {
+  SCHEMA_MIGRATIONS,
+  getMigrationVersions,
+  getMigrationSQL,
+} from "./schema.js";
 
 /**
  * Database manager class
@@ -14,7 +18,7 @@ export class DatabaseManager {
   private db: Database;
   private dbPath: string;
 
-  constructor(dbPath: string = '.dev-agent.db') {
+  constructor(dbPath: string = ".dev-agent.db") {
     this.dbPath = dbPath;
     // Don't create database connection until initialize() is called
     this.db = null as any;
@@ -27,14 +31,14 @@ export class DatabaseManager {
     try {
       // Create database connection in current working directory
       this.db = new Database(this.dbPath);
-      this.db.run('PRAGMA foreign_keys = ON');
-      this.db.run('PRAGMA journal_mode = WAL');
-      
+      this.db.run("PRAGMA foreign_keys = ON");
+      this.db.run("PRAGMA journal_mode = WAL");
+
       // Run all pending migrations
       await this.runMigrations();
-      console.log('Database initialized successfully');
+      console.log("Database initialized successfully");
     } catch (error) {
-      console.error('Failed to initialize database:', error);
+      console.error("Failed to initialize database:", error);
       throw error;
     }
   }
@@ -52,11 +56,13 @@ export class DatabaseManager {
     `);
 
     // Get applied migrations
-    const appliedMigrations = this.db.query<SchemaMigration>(
-      'SELECT version FROM schema_migrations ORDER BY version'
-    ).all();
+    const appliedMigrations = this.db
+      .query<SchemaMigration>(
+        "SELECT version FROM schema_migrations ORDER BY version",
+      )
+      .all();
 
-    const appliedVersions = new Set(appliedMigrations.map(m => m.version));
+    const appliedVersions = new Set(appliedMigrations.map((m) => m.version));
     const allVersions = getMigrationVersions();
 
     // Run pending migrations
@@ -79,12 +85,11 @@ export class DatabaseManager {
     try {
       // Execute migration SQL
       this.db.run(sql);
-      
+
       // Record migration as applied
-      this.db.run(
-        'INSERT INTO schema_migrations (version) VALUES (?)',
-        [version]
-      );
+      this.db.run("INSERT INTO schema_migrations (version) VALUES (?)", [
+        version,
+      ]);
 
       console.log(`Applied migration ${version}`);
     } catch (error) {
@@ -108,7 +113,7 @@ export class DatabaseManager {
    */
   getDatabase(): Database {
     if (!this.db) {
-      throw new Error('Database not initialized. Call initialize() first.');
+      throw new Error("Database not initialized. Call initialize() first.");
     }
     return this.db;
   }
@@ -122,7 +127,7 @@ export class DatabaseManager {
       const stmt = db.prepare(sql);
       return stmt.all(params) as T[];
     } catch (error) {
-      console.error('Query failed:', error);
+      console.error("Query failed:", error);
       throw error;
     }
   }
@@ -136,7 +141,7 @@ export class DatabaseManager {
       const stmt = db.prepare(sql);
       stmt.run(params);
     } catch (error) {
-      console.error('Statement execution failed:', error);
+      console.error("Statement execution failed:", error);
       throw error;
     }
   }
@@ -150,7 +155,7 @@ export class DatabaseManager {
       const stmt = db.prepare(sql);
       return stmt.get(params) as T | undefined;
     } catch (error) {
-      console.error('Get query failed:', error);
+      console.error("Get query failed:", error);
       throw error;
     }
   }
@@ -160,7 +165,7 @@ export class DatabaseManager {
    */
   beginTransaction(): void {
     const db = this.getDatabase();
-    db.run('BEGIN TRANSACTION');
+    db.run("BEGIN TRANSACTION");
   }
 
   /**
@@ -168,7 +173,7 @@ export class DatabaseManager {
    */
   commitTransaction(): void {
     const db = this.getDatabase();
-    db.run('COMMIT');
+    db.run("COMMIT");
   }
 
   /**
@@ -176,6 +181,6 @@ export class DatabaseManager {
    */
   rollbackTransaction(): void {
     const db = this.getDatabase();
-    db.run('ROLLBACK');
+    db.run("ROLLBACK");
   }
 }

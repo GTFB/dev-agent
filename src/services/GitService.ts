@@ -3,8 +3,8 @@
  * Manages all Git operations using simple-git
  */
 
-import simpleGit, { SimpleGit, SimpleGitOptions } from 'simple-git';
-import { logger } from '../utils/logger.js';
+import simpleGit, { SimpleGit, SimpleGitOptions } from "simple-git";
+import { logger } from "../utils/logger.js";
 
 /**
  * Git Service class
@@ -15,11 +15,11 @@ export class GitService {
 
   constructor(cwd: string = process.cwd()) {
     this.cwd = cwd;
-    
+
     const options: SimpleGitOptions = {
       baseDir: cwd,
-      binary: 'git',
-      maxConcurrentProcesses: 1
+      binary: "git",
+      maxConcurrentProcesses: 1,
     };
 
     this.git = simpleGit(options);
@@ -45,7 +45,7 @@ export class GitService {
       const branch = await this.git.branch();
       return branch.current;
     } catch (error) {
-      logger.error('Failed to get current branch', error as Error);
+      logger.error("Failed to get current branch", error as Error);
       throw error;
     }
   }
@@ -58,7 +58,7 @@ export class GitService {
       const branches = await this.git.branch();
       return branches.all;
     } catch (error) {
-      logger.error('Failed to get branches', error as Error);
+      logger.error("Failed to get branches", error as Error);
       throw error;
     }
   }
@@ -71,7 +71,10 @@ export class GitService {
       const branches = await this.git.branch();
       return branches.all.includes(branchName);
     } catch (error) {
-      logger.error(`Failed to check if branch ${branchName} exists`, error as Error);
+      logger.error(
+        `Failed to check if branch ${branchName} exists`,
+        error as Error,
+      );
       throw error;
     }
   }
@@ -105,7 +108,10 @@ export class GitService {
   /**
    * Pull latest changes from remote
    */
-  async pull(remote: string = 'origin', branch: string = 'develop'): Promise<void> {
+  async pull(
+    remote: string = "origin",
+    branch: string = "develop",
+  ): Promise<void> {
     try {
       await this.git.pull(remote, branch);
       logger.info(`Pulled latest changes from ${remote}/${branch}`);
@@ -118,17 +124,17 @@ export class GitService {
   /**
    * Push branch to remote
    */
-  async push(remote: string = 'origin', branch?: string): Promise<void> {
+  async push(remote: string = "origin", branch?: string): Promise<void> {
     try {
       if (branch) {
         await this.git.push(remote, branch);
         logger.info(`Pushed branch ${branch} to ${remote}`);
       } else {
         await this.git.push();
-        logger.info('Pushed current branch to remote');
+        logger.info("Pushed current branch to remote");
       }
     } catch (error) {
-      logger.error('Failed to push branch', error as Error);
+      logger.error("Failed to push branch", error as Error);
       throw error;
     }
   }
@@ -136,17 +142,20 @@ export class GitService {
   /**
    * Force push with lease (safer than --force)
    */
-  async forcePushWithLease(remote: string = 'origin', branch?: string): Promise<void> {
+  async forcePushWithLease(
+    remote: string = "origin",
+    branch?: string,
+  ): Promise<void> {
     try {
       if (branch) {
-        await this.git.push(remote, branch, ['--force-with-lease']);
+        await this.git.push(remote, branch, ["--force-with-lease"]);
         logger.info(`Force pushed branch ${branch} to ${remote} with lease`);
       } else {
-        await this.git.push(remote, undefined, ['--force-with-lease']);
-        logger.info('Force pushed current branch with lease');
+        await this.git.push(remote, undefined, ["--force-with-lease"]);
+        logger.info("Force pushed current branch with lease");
       }
     } catch (error) {
-      logger.error('Failed to force push with lease', error as Error);
+      logger.error("Failed to force push with lease", error as Error);
       throw error;
     }
   }
@@ -154,16 +163,20 @@ export class GitService {
   /**
    * Get status of working directory
    */
-  async getStatus(): Promise<{ files: string[], ahead: number, behind: number }> {
+  async getStatus(): Promise<{
+    files: string[];
+    ahead: number;
+    behind: number;
+  }> {
     try {
       const status = await this.git.status();
       return {
-        files: status.files.map(f => f.path),
+        files: status.files.map((f) => f.path),
         ahead: status.ahead,
-        behind: status.behind
+        behind: status.behind,
       };
     } catch (error) {
-      logger.error('Failed to get Git status', error as Error);
+      logger.error("Failed to get Git status", error as Error);
       throw error;
     }
   }
@@ -176,7 +189,7 @@ export class GitService {
       const status = await this.git.status();
       return status.files.length === 0;
     } catch (error) {
-      logger.error('Failed to check working directory status', error as Error);
+      logger.error("Failed to check working directory status", error as Error);
       throw error;
     }
   }
@@ -187,9 +200,9 @@ export class GitService {
   async add(files: string[]): Promise<void> {
     try {
       await this.git.add(files);
-      logger.info(`Added files to staging: ${files.join(', ')}`);
+      logger.info(`Added files to staging: ${files.join(", ")}`);
     } catch (error) {
-      logger.error('Failed to add files to staging', error as Error);
+      logger.error("Failed to add files to staging", error as Error);
       throw error;
     }
   }
@@ -202,7 +215,7 @@ export class GitService {
       await this.git.commit(message);
       logger.info(`Committed changes: ${message}`);
     } catch (error) {
-      logger.error('Failed to commit changes', error as Error);
+      logger.error("Failed to commit changes", error as Error);
       throw error;
     }
   }
@@ -212,15 +225,15 @@ export class GitService {
    */
   async getCommitHistory(branch?: string, limit: number = 10): Promise<any[]> {
     try {
-      const options = ['--oneline', `-${limit}`];
+      const options = ["--oneline", `-${limit}`];
       if (branch) {
         options.unshift(branch);
       }
-      
+
       const log = await this.git.log(options);
       return log.all;
     } catch (error) {
-      logger.error('Failed to get commit history', error as Error);
+      logger.error("Failed to get commit history", error as Error);
       throw error;
     }
   }
@@ -230,10 +243,10 @@ export class GitService {
    */
   async getLatestCommitHash(): Promise<string> {
     try {
-      const log = await this.git.log(['-1', '--format=%H']);
-      return log.latest?.hash || '';
+      const log = await this.git.log(["-1", "--format=%H"]);
+      return log.latest?.hash || "";
     } catch (error) {
-      logger.error('Failed to get latest commit hash', error as Error);
+      logger.error("Failed to get latest commit hash", error as Error);
       throw error;
     }
   }
@@ -243,10 +256,10 @@ export class GitService {
    */
   async getLatestCommitMessage(): Promise<string> {
     try {
-      const log = await this.git.log(['-1', '--format=%s']);
-      return log.latest?.message || '';
+      const log = await this.git.log(["-1", "--format=%s"]);
+      return log.latest?.message || "";
     } catch (error) {
-      logger.error('Failed to get latest commit message', error as Error);
+      logger.error("Failed to get latest commit message", error as Error);
       throw error;
     }
   }
@@ -272,12 +285,12 @@ export class GitService {
   /**
    * Push tags to remote
    */
-  async pushTags(remote: string = 'origin'): Promise<void> {
+  async pushTags(remote: string = "origin"): Promise<void> {
     try {
       await this.git.pushTags(remote);
       logger.info(`Pushed tags to ${remote}`);
     } catch (error) {
-      logger.error('Failed to push tags', error as Error);
+      logger.error("Failed to push tags", error as Error);
       throw error;
     }
   }
@@ -298,7 +311,10 @@ export class GitService {
   /**
    * Delete branch
    */
-  async deleteBranch(branchName: string, force: boolean = false): Promise<void> {
+  async deleteBranch(
+    branchName: string,
+    force: boolean = false,
+  ): Promise<void> {
     try {
       if (force) {
         await this.git.deleteLocalBranch(branchName, true);
@@ -316,11 +332,11 @@ export class GitService {
   /**
    * Get remote URL
    */
-  async getRemoteUrl(remote: string = 'origin'): Promise<string> {
+  async getRemoteUrl(remote: string = "origin"): Promise<string> {
     try {
       const remotes = await this.git.getRemotes(true);
-      const origin = remotes.find(r => r.name === remote);
-      return origin?.refs?.push || '';
+      const origin = remotes.find((r) => r.name === remote);
+      return origin?.refs?.push || "";
     } catch (error) {
       logger.error(`Failed to get remote URL for ${remote}`, error as Error);
       throw error;

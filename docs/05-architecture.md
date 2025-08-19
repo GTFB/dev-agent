@@ -27,6 +27,7 @@ Dev Agent is built with a clean, layered architecture that promotes separation o
 **Purpose**: User interface and command orchestration
 
 **Responsibilities**:
+
 - Parse command line arguments using Commander.js
 - Display formatted output with emojis and structured information
 - Handle global options (verbose, debug logging)
@@ -34,18 +35,20 @@ Dev Agent is built with a clean, layered architecture that promotes separation o
 - Provide user-friendly error messages
 
 **Key Components**:
+
 - `Command` instances for each command category
 - Global option handlers for logging configuration
 - Output formatting functions (`displayTasks`)
 - Error handling and process exit management
 
 **Example Flow**:
+
 ```typescript
 // User runs: bun run src/index.ts task create "Fix bug"
 program
-  .command('task')
-  .command('create')
-  .argument('<title>')
+  .command("task")
+  .command("create")
+  .argument("<title>")
   .action(async (title) => {
     const result = await workflowService.createTask(title);
     // Display result...
@@ -57,6 +60,7 @@ program
 **Purpose**: Business logic orchestration and protocol implementation
 
 **Responsibilities**:
+
 - Implement the High-Efficiency Standard Operating Protocol
 - Coordinate interactions between Storage and Git services
 - Validate business rules and constraints
@@ -64,6 +68,7 @@ program
 - Handle complex multi-step workflows
 
 **Key Methods**:
+
 - `initializeProject()`: Project setup and configuration
 - `startTask()`: Task workflow initiation
 - `completeTask()`: Task completion workflow
@@ -71,6 +76,7 @@ program
 - Configuration management methods
 
 **Business Logic Examples**:
+
 ```typescript
 async startTask(taskId: string): Promise<CommandResult> {
   // 1. Validate task ID format
@@ -91,6 +97,7 @@ async startTask(taskId: string): Promise<CommandResult> {
 **Purpose**: Data persistence and database operations
 
 **Responsibilities**:
+
 - CRUD operations for tasks and configuration
 - Database connection management
 - Transaction handling
@@ -98,17 +105,19 @@ async startTask(taskId: string): Promise<CommandResult> {
 - Error logging and recovery
 
 **Key Features**:
+
 - Lazy initialization with `ensureInitialized()`
 - Comprehensive error handling
 - Transaction support for atomic operations
 - Automatic database setup
 
 **Data Models**:
+
 ```typescript
 interface Task {
-  id: string;           // AID format: g-xxxxxx
+  id: string; // AID format: g-xxxxxx
   title: string;
-  status: TaskStatus;   // todo | in_progress | done | archived
+  status: TaskStatus; // todo | in_progress | done | archived
   description?: string;
   github_issue_id?: number;
   branch_name?: string;
@@ -123,6 +132,7 @@ interface Task {
 **Purpose**: Git operations abstraction
 
 **Responsibilities**:
+
 - Branch management (create, checkout, delete)
 - Repository status checking
 - Commit operations
@@ -130,16 +140,18 @@ interface Task {
 - Working directory validation
 
 **Key Features**:
+
 - Uses `simple-git` library for Git operations
 - Comprehensive error handling
 - Logging for debugging
 - Branch naming conventions
 
 **Operations**:
+
 ```typescript
 // Branch management
-await git.createBranch('feature/g-a1b2c3-task-title');
-await git.checkoutBranch('develop');
+await git.createBranch("feature/g-a1b2c3-task-title");
+await git.checkoutBranch("develop");
 
 // Status checking
 const isClean = await git.isWorkingDirectoryClean();
@@ -153,6 +165,7 @@ const currentBranch = await git.getCurrentBranch();
 **Purpose**: TypeScript type definitions and interfaces
 
 **Key Types**:
+
 - `Task`: Core task entity with all properties
 - `TaskStatus`: Union type for task states
 - `CommandResult`: Standardized command response
@@ -160,6 +173,7 @@ const currentBranch = await git.getCurrentBranch();
 - `AIDMetadata`: Metadata for AID generation
 
 **Type Safety Benefits**:
+
 - Compile-time error detection
 - IntelliSense support
 - Refactoring safety
@@ -170,6 +184,7 @@ const currentBranch = await git.getCurrentBranch();
 **Purpose**: SQLite database management and migrations
 
 **Key Features**:
+
 - Automatic schema migration system
 - Transaction support
 - Prepared statement handling
@@ -177,21 +192,27 @@ const currentBranch = await git.getCurrentBranch();
 - Lazy initialization
 
 **Migration System**:
+
 ```typescript
 export const SCHEMA_MIGRATIONS = {
-  '001': `CREATE TABLE tasks...`,
-  '002': `CREATE TABLE project_config...`,
-  '003': `CREATE TABLE schema_migrations...`,
+  "001": `CREATE TABLE tasks...`,
+  "002": `CREATE TABLE project_config...`,
+  "003": `CREATE TABLE schema_migrations...`,
 };
 ```
 
 **Database Operations**:
+
 ```typescript
 // Query with parameters
-const tasks = db.query<Task>('SELECT * FROM tasks WHERE status = ?', ['todo']);
+const tasks = db.query<Task>("SELECT * FROM tasks WHERE status = ?", ["todo"]);
 
 // Execute statement
-db.run('INSERT INTO tasks (id, title, status) VALUES (?, ?, ?)', [id, title, status]);
+db.run("INSERT INTO tasks (id, title, status) VALUES (?, ?, ?)", [
+  id,
+  title,
+  status,
+]);
 
 // Transaction handling
 db.beginTransaction();
@@ -209,6 +230,7 @@ try {
 **Purpose**: Unique identifier generation and validation
 
 **Key Features**:
+
 - Typed entity prefixes (G for Goals/Tasks, A for Archive, etc.)
 - Random string generation
 - Format validation
@@ -217,16 +239,18 @@ try {
 **AID Format**: `[prefix]-[a-z0-9]{6}`
 
 **Examples**:
+
 - `g-a1b2c3` - Task (Goal)
 - `a-d4e5f6` - Document (Archive)
 - `b-x7y8z9` - Inventory item (Base)
 
 **Registry System**:
+
 ```typescript
 export const AID_REGISTRY = {
-  A: 'Archive (Documents)',
-  B: 'Base (Logistics, Inventory)',
-  G: 'Goal (Tasks)',
+  A: "Archive (Documents)",
+  B: "Base (Logistics, Inventory)",
+  G: "Goal (Tasks)",
   // ... 26 entity types
 };
 ```
@@ -236,6 +260,7 @@ export const AID_REGISTRY = {
 **Purpose**: Centralized logging system
 
 **Features**:
+
 - Multiple log levels (DEBUG, INFO, WARN, ERROR, SUCCESS)
 - File and console output
 - Timestamp formatting
@@ -253,6 +278,7 @@ User Input → CLI Parser → WorkflowService → StorageService → Database
 ```
 
 **Detailed Flow**:
+
 1. **CLI Layer**: Parse `task create "Fix bug"` command
 2. **Workflow Service**: Generate AID, validate input
 3. **Storage Service**: Ensure database initialized, create task
@@ -269,6 +295,7 @@ User Input → CLI Parser → WorkflowService → GitService → StorageService
 ```
 
 **Detailed Flow**:
+
 1. **CLI Layer**: Parse `task start g-123` command
 2. **Workflow Service**: Validate task, check status
 3. **Git Service**: Checkout develop, pull, create feature branch
@@ -298,8 +325,8 @@ User Input → CLI Parser → WorkflowService → StorageService → Database
 interface CommandResult {
   success: boolean;
   message: string;
-  error?: string;        // Error description
-  data?: any;           // Additional data
+  error?: string; // Error description
+  data?: any; // Additional data
 }
 ```
 

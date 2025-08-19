@@ -35,16 +35,19 @@ When you run `bun run dev-agent/src/index.ts init`, the following default values
 Configure your GitHub repository information for future integrations.
 
 #### `github.owner`
+
 - **Purpose**: GitHub organization or username
 - **Example**: `"acme-corp"` or `"john-doe"`
 - **Usage**: Used for GitHub API calls and issue linking
 
 #### `github.repo`
+
 - **Purpose**: GitHub repository name
 - **Example**: `"web-app"` or `"mobile-app"`
 - **Usage**: Used for GitHub API calls and issue linking
 
 **Setting GitHub Configuration:**
+
 ```bash
 bun run dev-agent/src/index.ts config set github.owner "acme-corp"
 bun run dev-agent/src/index.ts config set github.repo "web-app"
@@ -55,30 +58,35 @@ bun run dev-agent/src/index.ts config set github.repo "web-app"
 Configure your Git branch naming conventions.
 
 #### `branches.main`
+
 - **Purpose**: Main production branch name
 - **Default**: `"main"`
 - **Alternatives**: `"master"`, `"production"`
 - **Usage**: Used for release management and hotfixes
 
 #### `branches.develop`
+
 - **Purpose**: Development integration branch name
 - **Default**: `"develop"`
 - **Alternatives**: `"development"`, `"dev"`
 - **Usage**: Used for feature branch integration
 
 #### `branches.feature_prefix`
+
 - **Purpose**: Prefix for feature branches
 - **Default**: `"feature"`
 - **Alternatives**: `"feat"`, `"task"`
 - **Usage**: Creates branches like `feature/g-a1b2c3-task-title`
 
 #### `branches.release_prefix`
+
 - **Purpose**: Prefix for release branches
 - **Default**: `"release"`
 - **Alternatives**: `"rel"`, `"version"`
 - **Usage**: Creates branches like `release/v1.2.0`
 
 **Setting Branch Configuration:**
+
 ```bash
 bun run dev-agent/src/index.ts config set branches.main "main"
 bun run dev-agent/src/index.ts config set branches.develop "develop"
@@ -91,18 +99,21 @@ bun run dev-agent/src/index.ts config set branches.release_prefix "release"
 Configure task-related behavior and validation.
 
 #### `tasks.default_status`
+
 - **Purpose**: Default status for newly created tasks
 - **Default**: `"todo"`
 - **Valid Values**: `"todo"`, `"in_progress"`, `"done"`, `"archived"`
 - **Usage**: Sets initial status when creating tasks
 
 #### `tasks.id_pattern`
+
 - **Purpose**: Regular expression for validating task IDs
 - **Default**: `"^g-[a-z0-9]{6}$"`
 - **Pattern**: Ensures task IDs follow AID format
 - **Usage**: Validates task ID format in commands
 
 **Setting Task Configuration:**
+
 ```bash
 bun run dev-agent/src/index.ts config set tasks.default_status "todo"
 bun run dev-agent/src/index.ts config set tasks.id_pattern "^g-[a-z0-9]{6}$"
@@ -117,6 +128,7 @@ bun run dev-agent/src/index.ts config list
 ```
 
 **Output:**
+
 ```
 ✅ Retrieved 8 configuration items
 
@@ -138,6 +150,7 @@ bun run dev-agent/src/index.ts config get <key>
 ```
 
 **Examples:**
+
 ```bash
 bun run dev-agent/src/index.ts config get github.owner
 bun run dev-agent/src/index.ts config get branches.feature_prefix
@@ -145,6 +158,7 @@ bun run dev-agent/src/index.ts config get tasks.default_status
 ```
 
 **Output:**
+
 ```
 ✅ Configuration value: acme-corp
 github.owner = acme-corp
@@ -157,6 +171,7 @@ bun run dev-agent/src/index.ts config set <key> <value>
 ```
 
 **Examples:**
+
 ```bash
 bun run dev-agent/src/index.ts config set github.owner "acme-corp"
 bun run dev-agent/src/index.ts config set branches.feature_prefix "feat"
@@ -164,6 +179,7 @@ bun run dev-agent/src/index.ts config set tasks.default_status "in_progress"
 ```
 
 **Output:**
+
 ```
 ✅ Configuration updated: github.owner = acme-corp
 ```
@@ -278,6 +294,7 @@ sqlite3 .dev-agent.db "SELECT key, value FROM project_config;" > config_backup.t
 ### Common Configuration Issues
 
 **Configuration not found error:**
+
 ```
 ❌ Configuration key 'github.owner' not found
 Error: Configuration not found
@@ -286,6 +303,7 @@ Error: Configuration not found
 **Solution:** Ensure you've run `init` first and set the configuration value.
 
 **Invalid configuration value:**
+
 ```
 ❌ Failed to set configuration
 Error: Invalid value for key
@@ -294,6 +312,7 @@ Error: Invalid value for key
 **Solution:** Check the expected format and valid values for the configuration key.
 
 **Configuration not persisting:**
+
 - Ensure you have write permissions to the database
 - Check that the database file (`.dev-agent.db`) exists
 - Verify the database is not corrupted

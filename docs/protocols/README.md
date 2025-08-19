@@ -27,16 +27,19 @@ The core development and release management protocol that defines:
 Dev Agent automates key aspects of these protocols:
 
 ### Task Management
+
 - **AID System**: Unique, typed identifiers for all tasks
 - **Status Tracking**: Automatic status updates through the workflow
 - **Database Storage**: Persistent task state and history
 
 ### Git Workflow
+
 - **Branch Creation**: Automatic feature branch creation with naming conventions
 - **Status Validation**: Working directory cleanliness checks
 - **Branch Management**: Automated checkout and synchronization
 
 ### Quality Assurance
+
 - **Pre-commit Hooks**: Integration with quality gates
 - **Configuration Management**: Centralized project settings
 - **Reporting**: Task status and progress tracking
@@ -44,6 +47,7 @@ Dev Agent automates key aspects of these protocols:
 ## 🚀 Getting Started
 
 1. **Initialize your project** with Dev Agent:
+
    ```bash
    bun run dev-agent/src/index.ts init
    ```
@@ -51,10 +55,11 @@ Dev Agent automates key aspects of these protocols:
 2. **Configure your repository** according to the protocol requirements
 
 3. **Start following the workflow**:
+
    ```bash
    # Create a task
    bun run dev-agent/src/index.ts task create "Implement feature X"
-   
+
    # Start working
    bun run dev-agent/src/index.ts task start g-xxxxxx
    ```
@@ -92,4 +97,4 @@ For questions about implementing these protocols:
 
 ---
 
-*These protocols are designed to work seamlessly with Dev Agent's automation capabilities while maintaining flexibility for team-specific requirements.*
+_These protocols are designed to work seamlessly with Dev Agent's automation capabilities while maintaining flexibility for team-specific requirements._

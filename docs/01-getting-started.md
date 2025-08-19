@@ -42,6 +42,7 @@ bun run dev-agent/src/index.ts init
 ```
 
 This command will:
+
 - Create the SQLite database (`.dev-agent.db`) in your project root
 - Set up default configuration values
 - Verify Git repository status
@@ -77,6 +78,7 @@ bun run dev-agent/src/index.ts task start g-a1b2c3
 ```
 
 This will:
+
 - Switch to the `develop` branch
 - Pull latest changes
 - Create a feature branch: `feature/g-a1b2c3-implement-user-authentication`
@@ -93,7 +95,7 @@ bun run dev-agent/src/index.ts task complete g-a1b2c3
 Dev Agent uses an **Atomic ID (AID)** system for reliable entity identification:
 
 - **Format**: `[prefix]-[a-z0-9]{6}`
-- **Examples**: 
+- **Examples**:
   - `g-a1b2c3` (task)
   - `a-d4e5f6` (document)
   - `b-x7y8z9` (inventory item)
@@ -101,7 +103,7 @@ Dev Agent uses an **Atomic ID (AID)** system for reliable entity identification:
 ### Entity Type Prefixes
 
 - **G** - Goals/Tasks
-- **A** - Archive/Documents  
+- **A** - Archive/Documents
 - **B** - Base/Inventory
 - **C** - Contractor/Legal entities
 - **D** - Deal/Sales deals
@@ -157,14 +159,17 @@ your-project/
 ### Common Issues
 
 **Database not initialized error**
+
 - Ensure you've run `bun run dev-agent/src/index.ts init` first
 - Check that you have write permissions in your project directory
 
 **Git repository not found**
+
 - Ensure you're in a Git repository: `git status`
 - Run `git init` if needed
 
 **Permission denied errors**
+
 - Check file permissions in your project directory
 - Ensure Bun has access to create files
 

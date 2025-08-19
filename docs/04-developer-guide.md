@@ -16,12 +16,14 @@ This guide is for developers who want to contribute to Dev Agent or understand i
 ### Environment Setup
 
 1. **Clone the repository:**
+
    ```bash
    git clone https://github.com/your-org/dev-agent.git
    cd dev-agent
    ```
 
 2. **Install dependencies:**
+
    ```bash
    bun install
    ```
@@ -85,15 +87,17 @@ Dev Agent follows a clean, layered architecture:
 ### Layer Responsibilities
 
 #### CLI Layer (`src/index.ts`)
+
 - **Purpose**: User interface and command parsing
 - **Technology**: Commander.js
-- **Responsibilities**: 
+- **Responsibilities**:
   - Parse command line arguments
   - Display formatted output
   - Handle global options (verbose, debug)
   - Orchestrate service calls
 
 #### Workflow Service (`src/services/WorkflowService.ts`)
+
 - **Purpose**: Business logic orchestration
 - **Responsibilities**:
   - Implement High-Efficiency Standard Operating Protocol
@@ -102,12 +106,14 @@ Dev Agent follows a clean, layered architecture:
   - Return structured CommandResult objects
 
 #### Service Layer
+
 - **StorageService**: Database operations and data persistence
 - **GitService**: Git operations and branch management
 - **GitHubService**: GitHub API integration (future)
 - **AIService**: AI-powered features (future)
 
 #### Core Layer
+
 - **Types**: TypeScript interfaces and type definitions
 - **Database**: SQLite connection and schema management
 - **AID Generator**: Unique identifier generation and validation
@@ -131,6 +137,7 @@ const prefix = getAIDPrefix("g-a1b2c3"); // "G"
 ```
 
 **Key Functions:**
+
 - `generateUniqueEntityId(prefix, metadata)`: Generate AID for any entity type
 - `isValidAID(aid)`: Validate AID format
 - `getAIDPrefix(aid)`: Extract entity type from AID
@@ -141,11 +148,12 @@ const prefix = getAIDPrefix("g-a1b2c3"); // "G"
 Handles SQLite database operations with automatic migrations:
 
 ```typescript
-const db = new DatabaseManager('.dev-agent.db');
+const db = new DatabaseManager(".dev-agent.db");
 await db.initialize(); // Creates tables and applies migrations
 ```
 
 **Features:**
+
 - Automatic schema migration
 - Transaction support
 - Prepared statement handling
@@ -161,16 +169,17 @@ await storage.initialize();
 
 // Create task
 await storage.createTask({
-  id: 'g-a1b2c3',
-  title: 'Fix login bug',
-  status: 'todo'
+  id: "g-a1b2c3",
+  title: "Fix login bug",
+  status: "todo",
 });
 
 // Query tasks
-const tasks = await storage.listTasks('todo');
+const tasks = await storage.listTasks("todo");
 ```
 
 **Key Methods:**
+
 - Task CRUD operations
 - Configuration management
 - Transaction handling
@@ -187,6 +196,7 @@ const currentBranch = await git.getCurrentBranch();
 ```
 
 **Features:**
+
 - Branch management
 - Status checking
 - Commit operations
@@ -197,6 +207,7 @@ const currentBranch = await git.getCurrentBranch();
 ### 1. Making Changes
 
 1. **Create a feature branch:**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -208,6 +219,7 @@ const currentBranch = await git.getCurrentBranch();
    - Update tests for new functionality
 
 3. **Run quality checks:**
+
    ```bash
    bun run quality  # Runs lint + test
    ```
@@ -238,28 +250,32 @@ bun test --watch
 #### Writing Tests
 
 Tests should cover:
+
 - **Happy path**: Normal operation scenarios
 - **Error cases**: Invalid input and failure scenarios
 - **Edge cases**: Boundary conditions and unusual inputs
 - **Integration**: Service interactions
 
 **Example Test Structure:**
+
 ```typescript
-describe('StorageService', () => {
-  describe('createTask', () => {
-    test('should create task with valid data', async () => {
+describe("StorageService", () => {
+  describe("createTask", () => {
+    test("should create task with valid data", async () => {
       // Arrange
-      const taskData = { /* test data */ };
-      
+      const taskData = {
+        /* test data */
+      };
+
       // Act
       await storageService.createTask(taskData);
-      
+
       // Assert
       const result = await storageService.getTask(taskData.id);
       expect(result).toBeTruthy();
     });
 
-    test('should handle invalid task data', async () => {
+    test("should handle invalid task data", async () => {
       // Test error scenarios
     });
   });
@@ -303,11 +319,12 @@ bun run tsc --noEmit
 ### Schema Migrations
 
 1. **Add new migration in `src/core/schema.ts`:**
+
    ```typescript
    export const SCHEMA_MIGRATIONS = {
-     '001': `CREATE TABLE tasks...`,
-     '002': `CREATE TABLE project_config...`,
-     '003': `ALTER TABLE tasks ADD COLUMN priority...`, // New migration
+     "001": `CREATE TABLE tasks...`,
+     "002": `CREATE TABLE project_config...`,
+     "003": `ALTER TABLE tasks ADD COLUMN priority...`, // New migration
    };
    ```
 
@@ -319,20 +336,22 @@ bun run tsc --noEmit
 ### Database Operations
 
 **Best Practices:**
+
 - Use prepared statements to prevent SQL injection
 - Wrap related operations in transactions
 - Handle SQLite errors gracefully
 - Log database operations for debugging
 
 **Example Transaction:**
+
 ```typescript
 try {
   this.db.beginTransaction();
-  
+
   // Multiple operations
-  this.db.run('INSERT INTO tasks...', [taskData]);
-  this.db.run('UPDATE project_stats...', [statsData]);
-  
+  this.db.run("INSERT INTO tasks...", [taskData]);
+  this.db.run("UPDATE project_stats...", [statsData]);
+
   this.db.commitTransaction();
 } catch (error) {
   this.db.rollbackTransaction();
@@ -345,15 +364,15 @@ try {
 ### Logger Configuration
 
 ```typescript
-import { logger, LogLevel } from './utils/logger.js';
+import { logger, LogLevel } from "./utils/logger.js";
 
 // Set log level
 logger.setLevel(LogLevel.DEBUG);
 
 // Log with context
-logger.info('Creating task', { taskId, title });
-logger.error('Failed to create task', error);
-logger.success('Task created successfully');
+logger.info("Creating task", { taskId, title });
+logger.error("Failed to create task", error);
+logger.success("Task created successfully");
 ```
 
 ### Debug Mode
@@ -418,16 +437,19 @@ test(aid): add edge case test coverage
 ### Common Development Issues
 
 **Tests failing:**
+
 - Check database state
 - Verify test data isolation
 - Check for race conditions
 
 **Type errors:**
+
 - Run `bun run tsc --noEmit`
 - Check interface definitions
 - Verify import/export statements
 
 **Database issues:**
+
 - Check file permissions
 - Verify schema migrations
 - Check SQLite version compatibility

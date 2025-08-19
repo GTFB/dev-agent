@@ -5,12 +5,12 @@
  * Automatically validates and translates content when saving
  */
 
-import { LanguageDetectionService } from '../services/LanguageDetectionService.js';
-import { AutoTranslationService } from '../services/AutoTranslationService.js';
-import { logger } from '../utils/logger.js';
+import { LanguageDetectionService } from "../services/LanguageDetectionService.js";
+import { AutoTranslationService } from "../services/AutoTranslationService.js";
+import { logger } from "../utils/logger.js";
 
 export interface ValidationContext {
-  entityType: 'goal' | 'document' | 'comment' | 'file' | 'config';
+  entityType: "goal" | "document" | "comment" | "file" | "config";
   fieldName: string;
   content: string;
   autoTranslate?: boolean;
@@ -39,20 +39,43 @@ export class LanguageValidationMiddleware {
   }
 
   /**
+   * Initialize translation service with configuration
+   */
+  private async initializeTranslationService(): Promise<void> {
+    try {
+      await this.translationService.initializeConfig();
+    } catch (error) {
+      logger.warn("Failed to initialize translation service config:", error);
+    }
+  }
+
+  /**
    * Validate content before saving to database
    */
-  async validateBeforeSave(context: ValidationContext): Promise<ValidationResult> {
-    const { entityType, fieldName, content, autoTranslate = true, strictMode = false } = context;
-    
+  async validateBeforeSave(
+    context: ValidationContext,
+  ): Promise<ValidationResult> {
+    const {
+      entityType,
+      fieldName,
+      content,
+      autoTranslate = true,
+      strictMode = false,
+    } = context;
+
     logger.info(`Validating language for ${entityType}.${fieldName}`);
+
+    // Initialize translation service if needed
+    await this.initializeTranslationService();
 
     try {
       // Detect language
       const detection = this.languageService.detectLanguage(content);
-      
+
       // Validate compliance
-      const compliance = this.languageService.validateLanguageCompliance(content);
-      
+      const compliance =
+        this.languageService.validateLanguageCompliance(content);
+
       const result: ValidationResult = {
         valid: compliance.compliant,
         originalContent: content,
@@ -61,7 +84,7 @@ export class LanguageValidationMiddleware {
         warnings: [],
         needsTranslation: detection.needsTranslation,
         detectedLanguage: detection.detectedLanguage,
-        confidence: detection.confidence
+        confidence: detection.confidence,
       };
 
       // Auto-translate if enabled and needed
@@ -70,23 +93,27 @@ export class LanguageValidationMiddleware {
           const translation = await this.translationService.autoTranslate({
             text: content,
             sourceLanguage: detection.detectedLanguage,
-            targetLanguage: 'english',
-            context: `${entityType}.${fieldName}`
+            targetLanguage: "english",
+            context: `${entityType}.${fieldName}`,
           });
 
           if (translation.success) {
             result.translatedContent = translation.translatedText;
-            result.suggestions.push('✅ Content automatically translated to English');
+            result.suggestions.push(
+              "✅ Content automatically translated to English",
+            );
             result.valid = true; // Translation successful
           } else {
-            result.warnings.push('⚠️  Auto-translation failed, manual review required');
+            result.warnings.push(
+              "⚠️  Auto-translation failed, manual review required",
+            );
             if (strictMode) {
               result.valid = false;
             }
           }
         } catch (error) {
-          logger.error('Translation failed', error);
-          result.warnings.push('⚠️  Translation service unavailable');
+          logger.error("Translation failed", error);
+          result.warnings.push("⚠️  Translation service unavailable");
           if (strictMode) {
             result.valid = false;
           }
@@ -95,7 +122,10 @@ export class LanguageValidationMiddleware {
 
       // Log validation results
       if (result.issues.length > 0) {
-        logger.warn(`Language validation issues in ${entityType}.${fieldName}:`, result.issues);
+        logger.warn(
+          `Language validation issues in ${entityType}.${fieldName}:`,
+          result.issues,
+        );
       }
 
       if (result.needsTranslation && !result.translatedContent) {
@@ -104,17 +134,17 @@ export class LanguageValidationMiddleware {
 
       return result;
     } catch (error) {
-      logger.error('Language validation failed', error);
-      
+      logger.error("Language validation failed", error);
+
       return {
         valid: false,
         originalContent: content,
-        issues: ['Language validation service error'],
-        suggestions: ['Check system configuration'],
-        warnings: ['Validation service unavailable'],
+        issues: ["Language validation service error"],
+        suggestions: ["Check system configuration"],
+        warnings: ["Validation service unavailable"],
         needsTranslation: false,
-        detectedLanguage: 'unknown',
-        confidence: 0
+        detectedLanguage: "unknown",
+        confidence: 0,
       };
     }
   }
@@ -122,13 +152,16 @@ export class LanguageValidationMiddleware {
   /**
    * Validate file content before saving
    */
-  async validateFileContent(filePath: string, content: string): Promise<ValidationResult> {
+  async validateFileContent(
+    filePath: string,
+    content: string,
+  ): Promise<ValidationResult> {
     const context: ValidationContext = {
-      entityType: 'file',
-      fieldName: 'content',
+      entityType: "file",
+      fieldName: "content",
       content,
       autoTranslate: true,
-      strictMode: false
+      strictMode: false,
     };
 
     return this.validateBeforeSave(context);
@@ -139,15 +172,15 @@ export class LanguageValidationMiddleware {
    */
   async validateGoalContent(goalData: any): Promise<ValidationResult[]> {
     const results: ValidationResult[] = [];
-    
+
     // Validate title
     if (goalData.title) {
       const titleResult = await this.validateBeforeSave({
-        entityType: 'goal',
-        fieldName: 'title',
+        entityType: "goal",
+        fieldName: "title",
         content: goalData.title,
         autoTranslate: true,
-        strictMode: true
+        strictMode: true,
       });
       results.push(titleResult);
     }
@@ -155,11 +188,11 @@ export class LanguageValidationMiddleware {
     // Validate description
     if (goalData.description) {
       const descResult = await this.validateBeforeSave({
-        entityType: 'goal',
-        fieldName: 'description',
+        entityType: "goal",
+        fieldName: "description",
         content: goalData.description,
         autoTranslate: true,
-        strictMode: false
+        strictMode: false,
       });
       results.push(descResult);
     }
@@ -172,15 +205,15 @@ export class LanguageValidationMiddleware {
    */
   async validateDocumentContent(docData: any): Promise<ValidationResult[]> {
     const results: ValidationResult[] = [];
-    
+
     // Validate title
     if (docData.title) {
       const titleResult = await this.validateBeforeSave({
-        entityType: 'document',
-        fieldName: 'title',
+        entityType: "document",
+        fieldName: "title",
         content: docData.title,
         autoTranslate: true,
-        strictMode: true
+        strictMode: true,
       });
       results.push(titleResult);
     }
@@ -188,11 +221,11 @@ export class LanguageValidationMiddleware {
     // Validate content
     if (docData.content) {
       const contentResult = await this.validateBeforeSave({
-        entityType: 'document',
-        fieldName: 'content',
+        entityType: "document",
+        fieldName: "content",
         content: docData.content,
         autoTranslate: true,
-        strictMode: false
+        strictMode: false,
       });
       results.push(contentResult);
     }
@@ -211,18 +244,21 @@ export class LanguageValidationMiddleware {
     suggestions: string[];
   } {
     const totalIssues = results.reduce((sum, r) => sum + r.issues.length, 0);
-    const totalWarnings = results.reduce((sum, r) => sum + r.warnings.length, 0);
-    const needsTranslation = results.filter(r => r.needsTranslation).length;
-    
-    const allSuggestions = results.flatMap(r => r.suggestions);
+    const totalWarnings = results.reduce(
+      (sum, r) => sum + r.warnings.length,
+      0,
+    );
+    const needsTranslation = results.filter((r) => r.needsTranslation).length;
+
+    const allSuggestions = results.flatMap((r) => r.suggestions);
     const uniqueSuggestions = [...new Set(allSuggestions)];
 
     return {
-      overallValid: results.every(r => r.valid),
+      overallValid: results.every((r) => r.valid),
       totalIssues,
       totalWarnings,
       needsTranslation,
-      suggestions: uniqueSuggestions
+      suggestions: uniqueSuggestions,
     };
   }
 
@@ -231,9 +267,12 @@ export class LanguageValidationMiddleware {
    */
   applyTranslations(results: ValidationResult[]): any {
     const translations: Record<string, string> = {};
-    
+
     for (const result of results) {
-      if (result.translatedContent && result.translatedContent !== result.originalContent) {
+      if (
+        result.translatedContent &&
+        result.translatedContent !== result.originalContent
+      ) {
         translations[`${result.originalContent}`] = result.translatedContent;
       }
     }

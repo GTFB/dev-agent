@@ -29,16 +29,19 @@ bun run dev-agent/src/index.ts init
 ```
 
 **What it does:**
+
 - Creates SQLite database (`.dev-agent.db`) in project root
 - Applies database schema migrations
 - Sets up default configuration values
 - Verifies Git repository status
 
 **Requirements:**
+
 - Must be run in a Git repository
 - Requires write permissions in project directory
 
 **Output:**
+
 ```
 ✅ Dev Agent project initialized successfully
 
@@ -61,10 +64,12 @@ bun run dev-agent/src/index.ts task create "Task title" [-d "Description"]
 ```
 
 **Arguments:**
+
 - `title` (required) - Task title
 - `-d, --description` (optional) - Task description
 
 **Examples:**
+
 ```bash
 # Simple task
 bun run dev-agent/src/index.ts task create "Fix login bug"
@@ -74,6 +79,7 @@ bun run dev-agent/src/index.ts task create "Add user profile" -d "Implement user
 ```
 
 **Output:**
+
 ```
 ✅ Task created successfully
 Task ID: g-a1b2c3
@@ -90,9 +96,11 @@ bun run dev-agent/src/index.ts task list [-s <status>]
 ```
 
 **Options:**
+
 - `-s, --status <status>` - Filter by status: `todo`, `in_progress`, `done`, `archived`
 
 **Examples:**
+
 ```bash
 # List all tasks
 bun run dev-agent/src/index.ts task list
@@ -105,6 +113,7 @@ bun run dev-agent/src/index.ts task list -s done
 ```
 
 **Output:**
+
 ```
 ✅ Found 3 tasks
 
@@ -130,9 +139,11 @@ bun run dev-agent/src/index.ts task start <task-id>
 ```
 
 **Arguments:**
+
 - `task-id` (required) - Task AID (e.g., `g-a1b2c3`)
 
 **What it does:**
+
 - Validates task ID format
 - Checks task exists and is in `todo` status
 - Ensures working directory is clean
@@ -142,11 +153,13 @@ bun run dev-agent/src/index.ts task start <task-id>
 - Updates task status to `in_progress`
 
 **Examples:**
+
 ```bash
 bun run dev-agent/src/index.ts task start g-a1b2c3
 ```
 
 **Output:**
+
 ```
 ✅ Started working on task g-a1b2c3
 Branch: feature/g-a1b2c3-fix-login-bug
@@ -162,24 +175,29 @@ bun run dev-agent/src/index.ts task complete <task-id>
 ```
 
 **Arguments:**
+
 - `task-id` (required) - Task AID
 
 **Requirements:**
+
 - Task must be in `in_progress` status
 - Must be on the correct feature branch
 
 **What it does:**
+
 - Validates task status
 - Checks current branch
 - Updates task status to `done`
 - Sets completion timestamp
 
 **Examples:**
+
 ```bash
 bun run dev-agent/src/index.ts task complete g-a1b2c3
 ```
 
 **Output:**
+
 ```
 ✅ Task g-a1b2c3 completed successfully
 Task ID: g-a1b2c3
@@ -196,20 +214,24 @@ bun run dev-agent/src/index.ts task stop <task-id>
 ```
 
 **Arguments:**
+
 - `task-id` (required) - Task AID
 
 **What it does:**
+
 - Validates task status
 - Switches back to `develop` branch
 - Updates task status to `todo`
 - Removes branch association
 
 **Examples:**
+
 ```bash
 bun run dev-agent/src/index.ts task stop g-a1b2c3
 ```
 
 **Output:**
+
 ```
 ✅ Stopped working on task g-a1b2c3
 Task ID: g-a1b2c3
@@ -227,18 +249,21 @@ bun run dev-agent/src/index.ts config set <key> <value>
 ```
 
 **Arguments:**
+
 - `key` (required) - Configuration key (e.g., `github.owner`)
 - `value` (required) - Configuration value
 
 **Common Configuration Keys:**
 
 **GitHub Settings:**
+
 ```bash
 bun run dev-agent/src/index.ts config set github.owner "your-org"
 bun run dev-agent/src/index.ts config set github.repo "your-project"
 ```
 
 **Branch Naming:**
+
 ```bash
 bun run dev-agent/src/index.ts config set branches.main "main"
 bun run dev-agent/src/index.ts config set branches.develop "develop"
@@ -247,18 +272,21 @@ bun run dev-agent/src/index.ts config set branches.release_prefix "release"
 ```
 
 **Task Settings:**
+
 ```bash
 bun run dev-agent/src/index.ts config set tasks.default_status "todo"
 bun run dev-agent/src/index.ts config set tasks.id_pattern "^g-[a-z0-9]{6}$"
 ```
 
 **Examples:**
+
 ```bash
 bun run dev-agent/src/index.ts config set github.owner "acme-corp"
 bun run dev-agent/src/index.ts config set branches.feature_prefix "feature"
 ```
 
 **Output:**
+
 ```
 ✅ Configuration updated: github.owner = acme-corp
 ```
@@ -272,15 +300,18 @@ bun run dev-agent/src/index.ts config get <key>
 ```
 
 **Arguments:**
+
 - `key` (required) - Configuration key
 
 **Examples:**
+
 ```bash
 bun run dev-agent/src/index.ts config get github.owner
 bun run dev-agent/src/index.ts config get branches.feature_prefix
 ```
 
 **Output:**
+
 ```
 ✅ Configuration value: acme-corp
 github.owner = acme-corp
@@ -295,6 +326,7 @@ bun run dev-agent/src/index.ts config list
 ```
 
 **Output:**
+
 ```
 ✅ Retrieved 8 configuration items
 
@@ -320,6 +352,7 @@ bun run dev-agent/src/index.ts help
 ```
 
 **Output:**
+
 ```
 🚀 Dev Agent - High-Efficiency Standard Operating Protocol
 ========================================================
@@ -349,6 +382,7 @@ bun run dev-agent/src/index.ts <command> --help
 ```
 
 **Examples:**
+
 ```bash
 bun run dev-agent/src/index.ts task --help
 bun run dev-agent/src/index.ts config --help
@@ -363,6 +397,7 @@ All commands return structured error messages:
 - **Error**: ❌ followed by error message and details
 
 **Common Error Patterns:**
+
 ```
 ❌ Failed to create task
 Error: Database not initialized. Call initialize() first.

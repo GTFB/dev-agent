@@ -27,7 +27,7 @@ export class LanguageDetectionService {
     /\b(is|are|was|were|be|been|being|have|has|had|do|does|did)\b/i,
     /\b(this|that|these|those|it|they|them|their|its)\b/i,
     /\b(function|class|interface|type|const|let|var|import|export)\b/i,
-    /\b(if|else|for|while|switch|case|default|return|break|continue)\b/i
+    /\b(if|else|for|while|switch|case|default|return|break|continue)\b/i,
   ];
 
   private readonly russianPatterns = [
@@ -36,7 +36,7 @@ export class LanguageDetectionService {
     /\b(есть|быть|был|была|были|стать|становиться)\b/i,
     /\b(функция|класс|интерфейс|тип|константа|переменная)\b/i,
     /\b(если|иначе|для|пока|переключатель|случай|возврат)\b/i,
-    /\b(тест|автоматический|перевод|система|работа|проект)\b/i
+    /\b(тест|автоматический|перевод|система|работа|проект)\b/i,
   ];
 
   /**
@@ -45,37 +45,43 @@ export class LanguageDetectionService {
   detectLanguage(text: string): LanguageDetectionResult {
     if (!text || text.trim().length === 0) {
       return {
-        detectedLanguage: 'unknown',
+        detectedLanguage: "unknown",
         confidence: 0,
         isEnglish: true,
-        needsTranslation: false
+        needsTranslation: false,
       };
     }
 
-    const englishScore = this.calculateLanguageScore(text, this.englishPatterns);
-    const russianScore = this.calculateLanguageScore(text, this.russianPatterns);
-    
+    const englishScore = this.calculateLanguageScore(
+      text,
+      this.englishPatterns,
+    );
+    const russianScore = this.calculateLanguageScore(
+      text,
+      this.russianPatterns,
+    );
+
     // Additional heuristics
     const hasCyrillic = /[а-яё]/i.test(text);
     const hasLatin = /[a-z]/i.test(text);
-    
-    let detectedLanguage = 'unknown';
+
+    let detectedLanguage = "unknown";
     let confidence = 0;
     let isEnglish = false;
     let needsTranslation = false;
 
     if (hasCyrillic) {
-      detectedLanguage = 'russian';
+      detectedLanguage = "russian";
       confidence = Math.min((russianScore + 5) / 10, 1); // Boost confidence for Cyrillic
       isEnglish = false;
       needsTranslation = true;
     } else if (hasLatin && englishScore > russianScore) {
-      detectedLanguage = 'english';
+      detectedLanguage = "english";
       confidence = Math.min(englishScore / 10, 1);
       isEnglish = true;
       needsTranslation = false;
     } else if (englishScore > 0) {
-      detectedLanguage = 'english';
+      detectedLanguage = "english";
       confidence = Math.min(englishScore / 10, 1);
       isEnglish = true;
       needsTranslation = false;
@@ -85,7 +91,7 @@ export class LanguageDetectionService {
       detectedLanguage,
       confidence,
       isEnglish,
-      needsTranslation
+      needsTranslation,
     };
   }
 
@@ -95,7 +101,7 @@ export class LanguageDetectionService {
   private calculateLanguageScore(text: string, patterns: RegExp[]): number {
     let score = 0;
     const words = text.toLowerCase().split(/\s+/);
-    
+
     for (const pattern of patterns) {
       for (const word of words) {
         if (pattern.test(word)) {
@@ -106,7 +112,7 @@ export class LanguageDetectionService {
 
     // Bonus for longer texts with consistent patterns
     if (words.length > 10) {
-      score += Math.min(score / words.length * 5, 3);
+      score += Math.min((score / words.length) * 5, 3);
     }
 
     return score;
@@ -125,11 +131,15 @@ export class LanguageDetectionService {
    */
   getTranslationSuggestions(text: string): string[] {
     const suggestions: string[] = [];
-    
+
     if (this.needsTranslation(text)) {
-      suggestions.push('⚠️  Content contains non-English text');
-      suggestions.push('💡 Consider translating to English for international accessibility');
-      suggestions.push('🌍 Use English for all documentation, comments, and user-facing text');
+      suggestions.push("⚠️  Content contains non-English text");
+      suggestions.push(
+        "💡 Consider translating to English for international accessibility",
+      );
+      suggestions.push(
+        "🌍 Use English for all documentation, comments, and user-facing text",
+      );
     }
 
     return suggestions;
@@ -145,29 +155,33 @@ export class LanguageDetectionService {
   } {
     const issues: string[] = [];
     const suggestions: string[] = [];
-    
+
     if (!text || text.trim().length === 0) {
       return { compliant: true, issues, suggestions };
     }
 
     const detection = this.detectLanguage(text);
-    
+
     if (detection.needsTranslation) {
-      issues.push(`Non-English content detected (${detection.detectedLanguage})`);
-      suggestions.push('Translate all content to English');
-      suggestions.push('Use English for documentation, comments, and user interfaces');
+      issues.push(
+        `Non-English content detected (${detection.detectedLanguage})`,
+      );
+      suggestions.push("Translate all content to English");
+      suggestions.push(
+        "Use English for documentation, comments, and user interfaces",
+      );
     }
 
     if (detection.confidence < 0.3) {
-      issues.push('Low confidence in language detection');
-      suggestions.push('Review content for mixed languages');
-      suggestions.push('Ensure consistent language usage');
+      issues.push("Low confidence in language detection");
+      suggestions.push("Review content for mixed languages");
+      suggestions.push("Ensure consistent language usage");
     }
 
     return {
       compliant: !detection.needsTranslation,
       issues,
-      suggestions
+      suggestions,
     };
   }
 }

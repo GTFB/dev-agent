@@ -1,7 +1,7 @@
 /**
  * Database schema for Dev Agent
  * Uses SQLite with native bun:sqlite driver
- * 
+ *
  * This schema stores both Dev Agent data and project entities
  * creating a unified project management system
  */
@@ -10,7 +10,7 @@
  * SQL statements for creating database tables
  */
 export const SCHEMA_MIGRATIONS = {
-  '001': `
+  "001": `
     -- Goals table - stores all project goals
     CREATE TABLE IF NOT EXISTS goals (
       -- Unique AID identifier with 'g-' prefix for goals
@@ -51,7 +51,7 @@ export const SCHEMA_MIGRATIONS = {
     CREATE INDEX IF NOT EXISTS idx_goals_branch ON goals(branch_name);
   `,
 
-  '002': `
+  "002": `
     -- Project configuration table
     CREATE TABLE IF NOT EXISTS project_config (
       -- Configuration key
@@ -62,7 +62,7 @@ export const SCHEMA_MIGRATIONS = {
     );
   `,
 
-  '003': `
+  "003": `
     -- Schema migrations tracking table
     CREATE TABLE IF NOT EXISTS schema_migrations (
       -- Migration version
@@ -73,7 +73,7 @@ export const SCHEMA_MIGRATIONS = {
     );
   `,
 
-  '004': `
+  "004": `
     -- Project documents table - stores all project documentation
     CREATE TABLE IF NOT EXISTS project_documents (
       -- Unique AID identifier with 'd-' prefix for documents
@@ -117,7 +117,7 @@ export const SCHEMA_MIGRATIONS = {
     CREATE INDEX IF NOT EXISTS idx_documents_tags ON project_documents(tags);
   `,
 
-  '005': `
+  "005": `
     -- Project files table - stores project source files and assets
     CREATE TABLE IF NOT EXISTS project_files (
       -- Unique AID identifier with 'f-' prefix for files
@@ -161,7 +161,7 @@ export const SCHEMA_MIGRATIONS = {
     CREATE INDEX IF NOT EXISTS idx_files_status ON project_files(status);
   `,
 
-  '006': `
+  "006": `
     -- Project API endpoints table - stores API documentation and specifications
     CREATE TABLE IF NOT EXISTS project_api_endpoints (
       -- Unique AID identifier with 'a-' prefix for API endpoints
@@ -209,7 +209,7 @@ export const SCHEMA_MIGRATIONS = {
     CREATE INDEX IF NOT EXISTS idx_api_goal ON project_api_endpoints(goal_id);
   `,
 
-  '007': `
+  "007": `
     -- Project scripts table - stores project automation scripts
     CREATE TABLE IF NOT EXISTS project_scripts (
       -- Unique AID identifier with 's-' prefix for scripts
@@ -253,7 +253,7 @@ export const SCHEMA_MIGRATIONS = {
     CREATE INDEX IF NOT EXISTS idx_scripts_goal ON project_scripts(goal_id);
   `,
 
-  '008': `
+  "008": `
     -- Project prompts table - stores AI prompt templates
     CREATE TABLE IF NOT EXISTS project_prompts (
       -- Unique AID identifier with 'p-' prefix for prompts
@@ -291,7 +291,7 @@ export const SCHEMA_MIGRATIONS = {
     CREATE INDEX IF NOT EXISTS idx_prompts_category ON project_prompts(category);
     CREATE INDEX IF NOT EXISTS idx_prompts_status ON project_prompts(status);
     CREATE INDEX IF NOT EXISTS idx_prompts_goal ON project_prompts(goal_id);
-  `
+  `,
 };
 
 /**

@@ -3,13 +3,18 @@
  * Orchestrates the High-Efficiency Standard Operating Protocol
  */
 
-import { StorageService } from './StorageService.js';
-import { GitService } from './GitService.js';
-import { GitHubService } from './GitHubService.js';
-import { ValidationService } from './ValidationService.js';
-import { Goal, GoalStatus, CommandResult, WorkflowContext } from '../core/types.js';
-import { generateGoalId } from '../core/aid-generator.js';
-import { logger } from '../utils/logger.js';
+import { StorageService } from "./StorageService.js";
+import { GitService } from "./GitService.js";
+import { GitHubService } from "./GitHubService.js";
+import { ValidationService } from "./ValidationService.js";
+import {
+  Goal,
+  GoalStatus,
+  CommandResult,
+  WorkflowContext,
+} from "../core/types.js";
+import { generateGoalId } from "../core/aid-generator.js";
+import { logger } from "../utils/logger.js";
 
 /**
  * Workflow Service class
@@ -21,7 +26,11 @@ export class WorkflowService {
   private validation: ValidationService;
   private context: WorkflowContext;
 
-  constructor(storage: StorageService, git: GitService, context: WorkflowContext) {
+  constructor(
+    storage: StorageService,
+    git: GitService,
+    context: WorkflowContext,
+  ) {
     this.storage = storage;
     this.git = git;
     this.github = new GitHubService(storage);
@@ -34,14 +43,15 @@ export class WorkflowService {
    */
   async initializeProject(): Promise<CommandResult> {
     try {
-      logger.info('Initializing Dev Agent project');
+      logger.info("Initializing Dev Agent project");
 
       // Check if Git repository exists
       if (!(await this.git.isGitRepository())) {
         return {
           success: false,
-          message: 'Current directory is not a Git repository. Please run "git init" first.',
-          error: 'Not a Git repository'
+          message:
+            'Current directory is not a Git repository. Please run "git init" first.',
+          error: "Not a Git repository",
         };
       }
 
@@ -51,17 +61,17 @@ export class WorkflowService {
       // Set default configuration
       await this.setDefaultConfiguration();
 
-      logger.success('Project initialized successfully');
+      logger.success("Project initialized successfully");
       return {
         success: true,
-        message: 'Dev Agent project initialized successfully'
+        message: "Dev Agent project initialized successfully",
       };
     } catch (error) {
-      logger.error('Failed to initialize project', error as Error);
+      logger.error("Failed to initialize project", error as Error);
       return {
         success: false,
-        message: 'Failed to initialize project',
-        error: error instanceof Error ? error.message : String(error)
+        message: "Failed to initialize project",
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -71,14 +81,14 @@ export class WorkflowService {
    */
   private async setDefaultConfiguration(): Promise<void> {
     const defaultConfig = {
-      'github.owner': '',
-      'github.repo': '',
-      'branches.main': 'main',
-      'branches.develop': 'develop',
-      'branches.feature_prefix': 'feature',
-      'branches.release_prefix': 'release',
-      'goals.default_status': 'todo',
-      'goals.id_pattern': '^g-[a-z0-9]{6}$'
+      "github.owner": "",
+      "github.repo": "",
+      "branches.main": "main",
+      "branches.develop": "develop",
+      "branches.feature_prefix": "feature",
+      "branches.release_prefix": "release",
+      "goals.default_status": "todo",
+      "goals.id_pattern": "^g-[a-z0-9]{6}$",
     };
 
     for (const [key, value] of Object.entries(defaultConfig)) {
@@ -97,8 +107,8 @@ export class WorkflowService {
       if (!goalId.match(/^g-[a-z0-9]{6}$/)) {
         return {
           success: false,
-          message: 'Invalid goal ID format. Expected format: g-xxxxxx',
-          error: 'Invalid goal ID format'
+          message: "Invalid goal ID format. Expected format: g-xxxxxx",
+          error: "Invalid goal ID format",
         };
       }
 
@@ -108,15 +118,15 @@ export class WorkflowService {
         return {
           success: false,
           message: `Goal ${goalId} not found`,
-          error: 'Goal not found'
+          error: "Goal not found",
         };
       }
 
-      if (goal.status !== 'todo') {
+      if (goal.status !== "todo") {
         return {
           success: false,
           message: `Goal ${goalId} is not in 'todo' status. Current status: ${goal.status}`,
-          error: 'Invalid goal status'
+          error: "Invalid goal status",
         };
       }
 
@@ -124,14 +134,15 @@ export class WorkflowService {
       if (!(await this.git.isWorkingDirectoryClean())) {
         return {
           success: false,
-          message: 'Working directory is not clean. Please commit or stash your changes first.',
-          error: 'Working directory not clean'
+          message:
+            "Working directory is not clean. Please commit or stash your changes first.",
+          error: "Working directory not clean",
         };
       }
 
       // Update develop branch
-      await this.git.checkoutBranch('develop');
-      await this.git.pull('origin', 'develop');
+      await this.git.checkoutBranch("develop");
+      await this.git.pull("origin", "develop");
 
       // Create feature branch
       const branchName = this.generateFeatureBranchName(goal);
@@ -139,26 +150,28 @@ export class WorkflowService {
 
       // Update goal status
       await this.storage.updateGoal(goalId, {
-        status: 'in_progress',
-        branch_name: branchName
+        status: "in_progress",
+        branch_name: branchName,
       });
 
-      logger.success(`Started working on goal ${goalId} in branch ${branchName}`);
+      logger.success(
+        `Started working on goal ${goalId} in branch ${branchName}`,
+      );
       return {
         success: true,
         message: `Started working on goal ${goalId}`,
         data: {
           goalId,
           branchName,
-          status: 'in_progress'
-        }
+          status: "in_progress",
+        },
       };
     } catch (error) {
       logger.error(`Failed to start goal ${goalId}`, error as Error);
       return {
         success: false,
         message: `Failed to start goal ${goalId}`,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -170,10 +183,10 @@ export class WorkflowService {
     const featurePrefix = this.context.config.branches.feature_prefix;
     const sanitizedTitle = goal.title
       .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
       .substring(0, 30);
-    
+
     return `${featurePrefix}/${goal.id}-${sanitizedTitle}`;
   }
 
@@ -190,15 +203,15 @@ export class WorkflowService {
         return {
           success: false,
           message: `Goal ${goalId} not found`,
-          error: 'Goal not found'
+          error: "Goal not found",
         };
       }
 
-      if (goal.status !== 'in_progress') {
+      if (goal.status !== "in_progress") {
         return {
           success: false,
           message: `Goal ${goalId} is not in 'in_progress' status. Current status: ${goal.status}`,
-          error: 'Invalid goal status'
+          error: "Invalid goal status",
         };
       }
 
@@ -208,14 +221,14 @@ export class WorkflowService {
         return {
           success: false,
           message: `You must be on branch ${goal.branch_name} to complete goal ${goalId}. Current branch: ${currentBranch}`,
-          error: 'Wrong branch'
+          error: "Wrong branch",
         };
       }
 
       // Update goal status
       await this.storage.updateGoal(goalId, {
-        status: 'done',
-        completed_at: new Date().toISOString()
+        status: "done",
+        completed_at: new Date().toISOString(),
       });
 
       logger.success(`Goal ${goalId} marked as completed`);
@@ -224,16 +237,16 @@ export class WorkflowService {
         message: `Goal ${goalId} completed successfully`,
         data: {
           goalId,
-          status: 'done',
-          completedAt: new Date().toISOString()
-        }
+          status: "done",
+          completedAt: new Date().toISOString(),
+        },
       };
     } catch (error) {
       logger.error(`Failed to complete goal ${goalId}`, error as Error);
       return {
         success: false,
         message: `Failed to complete goal ${goalId}`,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -251,25 +264,25 @@ export class WorkflowService {
         return {
           success: false,
           message: `Goal ${goalId} not found`,
-          error: 'Goal not found'
+          error: "Goal not found",
         };
       }
 
-      if (goal.status !== 'in_progress') {
+      if (goal.status !== "in_progress") {
         return {
           success: false,
           message: `Goal ${goalId} is not in 'in_progress' status. Current status: ${goal.status}`,
-          error: 'Invalid goal status'
+          error: "Invalid goal status",
         };
       }
 
       // Switch back to develop branch
-      await this.git.checkoutBranch('develop');
+      await this.git.checkoutBranch("develop");
 
       // Update goal status
       await this.storage.updateGoal(goalId, {
-        status: 'todo',
-        branch_name: undefined
+        status: "todo",
+        branch_name: undefined,
       });
 
       logger.success(`Stopped working on goal ${goalId}`);
@@ -278,15 +291,15 @@ export class WorkflowService {
         message: `Stopped working on goal ${goalId}`,
         data: {
           goalId,
-          status: 'todo'
-        }
+          status: "todo",
+        },
       };
     } catch (error) {
       logger.error(`Failed to stop goal ${goalId}`, error as Error);
       return {
         success: false,
         message: `Failed to stop goal ${goalId}`,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -296,7 +309,7 @@ export class WorkflowService {
    */
   async listGoals(status?: GoalStatus): Promise<CommandResult> {
     try {
-      logger.info('Listing goals');
+      logger.info("Listing goals");
 
       const goals = await this.storage.listGoals(status);
       const counts = await this.getGoalCounts();
@@ -307,15 +320,15 @@ export class WorkflowService {
         message: `Found ${goals.length} goals`,
         data: {
           goals,
-          counts
-        }
+          counts,
+        },
       };
     } catch (error) {
-      logger.error('Failed to list goals', error as Error);
+      logger.error("Failed to list goals", error as Error);
       return {
         success: false,
-        message: 'Failed to list goals',
-        error: error instanceof Error ? error.message : String(error)
+        message: "Failed to list goals",
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -328,7 +341,7 @@ export class WorkflowService {
       todo: 0,
       in_progress: 0,
       done: 0,
-      archived: 0
+      archived: 0,
     };
 
     for (const status of Object.keys(counts) as GoalStatus[]) {
@@ -341,7 +354,10 @@ export class WorkflowService {
   /**
    * Create a new goal
    */
-  async createGoal(title: string, description?: string): Promise<CommandResult> {
+  async createGoal(
+    title: string,
+    description?: string,
+  ): Promise<CommandResult> {
     try {
       logger.info(`Creating new goal: ${title}`);
 
@@ -353,19 +369,19 @@ export class WorkflowService {
         id: goalId,
         title,
         description,
-        status: 'todo'
+        status: "todo",
       });
 
       const summary = ValidationService.summarizeResults(validationResults);
-      
+
       // Check for validation errors
       if (!summary.valid) {
-        const errorMessages = summary.errors.map(e => e.message).join('; ');
+        const errorMessages = summary.errors.map((e) => e.message).join("; ");
         return {
           success: false,
           message: `Goal validation failed: ${errorMessages}`,
-          error: 'Validation failed',
-          data: { validationResults }
+          error: "Validation failed",
+          data: { validationResults },
         };
       }
 
@@ -374,16 +390,16 @@ export class WorkflowService {
         id: goalId,
         title,
         description,
-        status: 'todo'
+        status: "todo",
       });
 
       logger.success(`Created goal ${goalId}: ${title}`);
-      
+
       // Include validation warnings in response
-      const warningMessages = summary.warnings.map(w => w.message);
-      let message = 'Goal created successfully';
+      const warningMessages = summary.warnings.map((w) => w.message);
+      let message = "Goal created successfully";
       if (warningMessages.length > 0) {
-        message += ` (${warningMessages.length} warning${warningMessages.length > 1 ? 's' : ''})`;
+        message += ` (${warningMessages.length} warning${warningMessages.length > 1 ? "s" : ""})`;
       }
 
       return {
@@ -392,16 +408,17 @@ export class WorkflowService {
         data: {
           goalId,
           title,
-          status: 'todo',
-          validationResults: summary.warnings.length > 0 ? validationResults : undefined
-        }
+          status: "todo",
+          validationResults:
+            summary.warnings.length > 0 ? validationResults : undefined,
+        },
       };
     } catch (error) {
-      logger.error('Failed to create goal', error as Error);
+      logger.error("Failed to create goal", error as Error);
       return {
         success: false,
-        message: 'Failed to create goal',
-        error: error instanceof Error ? error.message : String(error)
+        message: "Failed to create goal",
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -418,14 +435,14 @@ export class WorkflowService {
       logger.success(`Configuration updated: ${key} = ${value}`);
       return {
         success: true,
-        message: `Configuration updated: ${key} = ${value}`
+        message: `Configuration updated: ${key} = ${value}`,
       };
     } catch (error) {
       logger.error(`Failed to set configuration ${key}`, error as Error);
       return {
         success: false,
         message: `Failed to set configuration ${key}`,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -443,7 +460,7 @@ export class WorkflowService {
         return {
           success: false,
           message: `Configuration key '${key}' not found`,
-          error: 'Configuration not found'
+          error: "Configuration not found",
         };
       }
 
@@ -453,15 +470,15 @@ export class WorkflowService {
         message: `Configuration value: ${value}`,
         data: {
           key,
-          value
-        }
+          value,
+        },
       };
     } catch (error) {
       logger.error(`Failed to get configuration ${key}`, error as Error);
       return {
         success: false,
         message: `Failed to get configuration ${key}`,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -471,22 +488,24 @@ export class WorkflowService {
    */
   async getAllConfiguration(): Promise<CommandResult> {
     try {
-      logger.info('Getting all configuration');
+      logger.info("Getting all configuration");
 
       const config = await this.storage.getAllConfig();
 
-      logger.success(`Retrieved ${Object.keys(config).length} configuration items`);
+      logger.success(
+        `Retrieved ${Object.keys(config).length} configuration items`,
+      );
       return {
         success: true,
         message: `Retrieved ${Object.keys(config).length} configuration items`,
-        data: config
+        data: config,
       };
     } catch (error) {
-      logger.error('Failed to get all configuration', error as Error);
+      logger.error("Failed to get all configuration", error as Error);
       return {
         success: false,
-        message: 'Failed to get all configuration',
-        error: error instanceof Error ? error.message : String(error)
+        message: "Failed to get all configuration",
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -496,39 +515,40 @@ export class WorkflowService {
    */
   async initializeGitHub(token?: string): Promise<CommandResult> {
     try {
-      logger.info('Initializing GitHub integration');
+      logger.info("Initializing GitHub integration");
 
       // Get GitHub configuration
-      const owner = await this.storage.getConfig('github.owner');
-      const repo = await this.storage.getConfig('github.repo');
+      const owner = await this.storage.getConfig("github.owner");
+      const repo = await this.storage.getConfig("github.repo");
 
       if (!owner || !repo) {
         return {
           success: false,
-          message: 'GitHub repository not configured. Please set github.owner and github.repo',
-          error: 'Missing GitHub configuration'
+          message:
+            "GitHub repository not configured. Please set github.owner and github.repo",
+          error: "Missing GitHub configuration",
         };
       }
 
       const config = {
         owner,
         repo,
-        token
+        token,
       };
 
       await this.github.initialize(config, token);
 
-      logger.success('GitHub integration initialized successfully');
+      logger.success("GitHub integration initialized successfully");
       return {
         success: true,
-        message: 'GitHub integration initialized successfully'
+        message: "GitHub integration initialized successfully",
       };
     } catch (error) {
-      logger.error('Failed to initialize GitHub integration', error as Error);
+      logger.error("Failed to initialize GitHub integration", error as Error);
       return {
         success: false,
-        message: 'Failed to initialize GitHub integration',
-        error: error instanceof Error ? error.message : String(error)
+        message: "Failed to initialize GitHub integration",
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -538,7 +558,7 @@ export class WorkflowService {
    */
   async syncFromGitHub(token?: string): Promise<CommandResult> {
     try {
-      logger.info('Syncing issues from GitHub');
+      logger.info("Syncing issues from GitHub");
 
       // Initialize GitHub if not already done
       if (!this.github.isConfigured()) {
@@ -550,18 +570,20 @@ export class WorkflowService {
 
       const result = await this.github.syncIssuesToGoals();
 
-      logger.success(`GitHub sync completed: ${result.created} created, ${result.updated} updated`);
+      logger.success(
+        `GitHub sync completed: ${result.created} created, ${result.updated} updated`,
+      );
       return {
         success: true,
         message: `Sync completed: ${result.created} goals created, ${result.updated} updated`,
-        data: result
+        data: result,
       };
     } catch (error) {
-      logger.error('Failed to sync from GitHub', error as Error);
+      logger.error("Failed to sync from GitHub", error as Error);
       return {
         success: false,
-        message: 'Failed to sync from GitHub',
-        error: error instanceof Error ? error.message : String(error)
+        message: "Failed to sync from GitHub",
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -569,7 +591,10 @@ export class WorkflowService {
   /**
    * Sync goal status to GitHub
    */
-  async syncGoalToGitHub(goalId: string, token?: string): Promise<CommandResult> {
+  async syncGoalToGitHub(
+    goalId: string,
+    token?: string,
+  ): Promise<CommandResult> {
     try {
       logger.info(`Syncing goal ${goalId} to GitHub`);
 
@@ -587,7 +612,7 @@ export class WorkflowService {
         return {
           success: false,
           message: `Goal ${goalId} not found`,
-          error: 'Goal not found'
+          error: "Goal not found",
         };
       }
 
@@ -596,14 +621,14 @@ export class WorkflowService {
       logger.success(`Goal ${goalId} synced to GitHub successfully`);
       return {
         success: true,
-        message: `Goal ${goalId} synced to GitHub successfully`
+        message: `Goal ${goalId} synced to GitHub successfully`,
       };
     } catch (error) {
       logger.error(`Failed to sync goal ${goalId} to GitHub`, error as Error);
       return {
         success: false,
         message: `Failed to sync goal ${goalId} to GitHub`,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
