@@ -255,32 +255,32 @@ goal:
 
 goal-list:
 	@echo "📋 Listing all goals:"
-	bun run src/index.ts goal list
+	@$(DEV_CMD) goal list
 
 goal-create:
 	@test "$(TITLE)" || (echo "❌ Error: TITLE parameter required. Usage: make goal-create TITLE=\"<title>\"" && exit 1)
 	@echo "✨ Creating new goal: $(TITLE)"
-	bun run src/index.ts goal create "$(TITLE)"
+	@$(DEV_CMD) goal create "$(TITLE)"
 
 goal-start:
 	@test "$(ID)" || (echo "❌ Error: ID parameter required. Usage: make goal-start ID=<goal-id>" && exit 1)
 	@echo "🚀 Starting work on goal: $(ID)"
-	bun run src/index.ts goal start "$(ID)"
+	@$(DEV_CMD) goal start "$(ID)"
 
 goal-complete:
 	@test "$(ID)" || (echo "❌ Error: ID parameter required. Usage: make goal-complete ID=<goal-id>" && exit 1)
 	@echo "✅ Completing goal: $(ID)"
-	bun run src/index.ts goal complete "$(ID)"
+	@$(DEV_CMD) goal complete "$(ID)"
 
 goal-stop:
 	@test "$(ID)" || (echo "❌ Error: ID parameter required. Usage: make goal-stop ID=<goal-id>" && exit 1)
 	@echo "⏹️  Stopping work on goal: $(ID)"
-	bun run src/index.ts goal stop "$(ID)"
+	@$(DEV_CMD) goal stop "$(ID)"
 
 goal-delete:
 	@test "$(ID)" || (echo "❌ Error: ID parameter required. Usage: make goal-delete ID=<goal-id>" && exit 1)
 	@echo "🗑️  Deleting goal: $(ID)"
-	bun run src/index.ts goal delete "$(ID)"
+	@$(DEV_CMD) goal delete "$(ID)"
 
 # Git operations using Dev Agent
 git-status:

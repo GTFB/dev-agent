@@ -36,41 +36,41 @@ make goal-list                      # List all goals
 make config-set KEY=github.owner VALUE=myuser  # Configure GitHub
 
 # Or using dev command directly
-bun run dev init                    # Initialize project  
-bun run dev goal create "My Goal"   # Create new goal
-bun run dev goal list               # List all goals
+bun run dev/src/index.ts init                    # Initialize project  
+bun run dev/src/index.ts goal create "My Goal"   # Create new goal
+bun run dev/src/index.ts goal list               # List all goals
 ```
 
 ### Installation
 
-Dev Agent is designed to be integrated into your project as a Git subtree.
+Dev Agent is designed to be integrated into your monorepo as a Git subtree in the `dev/` folder.
 
-1. **Add Dev Agent as subtree to your project:**
+1. **Add Dev Agent as subtree to your monorepo:**
    ```bash
-   # In your project root
-   git subtree add --prefix=dev-agent https://github.com/your-org/dev-agent.git main --squash
+   # In your monorepo root
+   git subtree add --prefix=dev https://github.com/your-org/dev-agent.git main --squash
    ```
 
-2. **Install dependencies (if needed):**
+2. **Install dependencies for Dev Agent:**
    ```bash
-   cd dev-agent
+   cd dev
    bun install
    cd ..
    ```
 
-3. **Initialize Dev Agent in your project:**
+3. **Initialize Dev Agent in your monorepo:**
    ```bash
-   bun run dev-agent/src/index.ts init
+   bun run dev/src/index.ts init
    ```
 
 4. **Create your first goal:**
    ```bash
-   bun run dev-agent/src/index.ts goal create "Implement user authentication"
+   bun run dev/src/index.ts goal create "Implement user authentication"
    ```
 
 5. **Start working on the goal:**
    ```bash
-   bun run dev-agent/src/index.ts goal start g-a1b2c3
+   bun run dev/src/index.ts goal start g-a1b2c3
    ```
 
 ## 📖 Usage Guide
@@ -79,50 +79,50 @@ Dev Agent is designed to be integrated into your project as a Git subtree.
 
 #### Project Initialization
 ```bash
-# Initialize Dev Agent in current project
-bun run dev init
+# Initialize Dev Agent in current monorepo
+bun run dev/src/index.ts init
 # or: make init
 ```
 
 #### Goal Management
 ```bash
 # Create a new goal
-bun run dev goal create "goal title" -d "Optional description"
+bun run dev/src/index.ts goal create "goal title" -d "Optional description"
 # or: make goal-create TITLE="goal title"
 
 # List all goals
-bun run dev goal list
+bun run dev/src/index.ts goal list
 # or: make goal-list
 
 # List goals by status
-bun run dev goal list --status=in_progress
+bun run dev/src/index.ts goal list --status=in_progress
 
 # Start working on a goal
-bun run dev goal start g-a1b2c3
+bun run dev/src/index.ts goal start g-a1b2c3
 # or: make goal-start ID=g-a1b2c3
 
 # Complete a goal
-bun run dev goal complete g-a1b2c3
+bun run dev/src/index.ts goal complete g-a1b2c3
 # or: make goal-complete ID=g-a1b2c3
 
 # Stop working on a goal
-bun run dev goal stop g-a1b2c3
+bun run dev/src/index.ts goal stop g-a1b2c3
 # or: make goal-stop ID=g-a1b2c3
 ```
 
 #### Configuration
 ```bash
 # Set configuration value
-bun run dev config set github.owner "your-org"
-bun run dev config set github.repo "your-repo"
+bun run dev/src/index.ts config set github.owner "your-org"
+bun run dev/src/index.ts config set github.repo "your-repo"
 # or: make config-set KEY=github.owner VALUE="your-org"
 
 # Get configuration value
-bun run dev config get github.owner
+bun run dev/src/index.ts config get github.owner
 # or: make config-get KEY=github.owner
 
 # List all configuration
-bun run dev config list
+bun run dev/src/index.ts config list
 # or: make config-list
 ```
 
@@ -130,29 +130,29 @@ bun run dev config list
 
 Here's a typical development workflow using Dev Agent:
 
-1. **Initialize the project:**
+1. **Initialize the monorepo:**
    ```bash
    make init
-   # or: bun run dev init
+   # or: bun run dev/src/index.ts init
    ```
 
 2. **Configure GitHub repository:**
    ```bash
    make config-set KEY=github.owner VALUE="your-org"
-   make config-set KEY=github.repo VALUE="your-project"
-   # or: bun run dev config set github.owner "your-org"
+   make config-set KEY=github.repo VALUE="your-monorepo"
+   # or: bun run dev/src/index.ts config set github.owner "your-org"
    ```
 
 3. **Create a goal:**
    ```bash
    make goal-create TITLE="Add user authentication"
-   # or: bun run dev goal create "Add user authentication" -d "Implement JWT-based authentication system"
+   # or: bun run dev/src/index.ts goal create "Add user authentication" -d "Implement JWT-based authentication system"
    ```
 
 4. **Start working:**
    ```bash
    make goal-start ID=g-a1b2c3
-   # or: bun run dev goal start g-a1b2c3
+   # or: bun run dev/src/index.ts goal start g-a1b2c3
    ```
    This will:
    - Switch to `develop` branch
@@ -163,7 +163,7 @@ Here's a typical development workflow using Dev Agent:
 5. **Complete the goal:**
    ```bash
    make goal-complete ID=g-a1b2c3
-   # or: bun run dev goal complete g-a1b2c3
+   # or: bun run dev/src/index.ts goal complete g-a1b2c3
    ```
 
 ## 🏗️ Architecture
@@ -283,19 +283,33 @@ dev/                           # Dev Agent - автоматизация разр
 
 **Слой 2: Проект (монорепозиторий)**
 ```
-your-project/                  # Монорепозиторий проекта
-├── .dev-agent.db             # База данных (все проектные сущности)
-├── dev/                      # Dev Agent (автоматизация)
-├── docs/                     # Проектная документация
-│   ├── architecture/         # Архитектура проекта
-│   ├── api/                  # API документация
-│   ├── deployment/           # Деплой и инфраструктура
-│   └── user-guides/          # Пользовательские руководства
-├── src/                      # Исходный код проекта
-├── tests/                    # Тесты проекта
-├── scripts/                  # Скрипты проекта
-├── config/                   # Конфигурация проекта
-└── README.md                 # Описание проекта
+/monorepo/                    # Монорепозиторий проекта
+├── .git/                     # Git репозиторий
+├── .github/                  # GitHub конфигурация
+│
+├── apps/                     # === ПРОДУКТОВЫЕ ПРИЛОЖЕНИЯ ===
+│   ├── web/                  # Веб-приложение
+│   └── google-sheets-integrator/ # Интегратор с Google Sheets
+│
+├── packages/                 # === ПРОДУКТОВЫЕ БИБЛИОТЕКИ ===
+│   ├── ui/                   # UI компоненты
+│   ├── utils/                # Утилиты
+│   ├── eslint-config-custom/ # ESLint конфигурация
+│   └── tsconfig/             # TypeScript конфигурация
+│
+├── dev/                      # === ИНСТРУМЕНТАРИЙ РАЗРАБОТКИ ===
+│                             # (Git subtree dev-agent)
+│   ├── .dev-agent.json       # Конфиг агента (генерируется)
+│   ├── .dev-agent.db         # База данных (генерируется)
+│   ├── src/                  # Исходники dev-agent
+│   ├── docs/                 # Документация dev-agent
+│   ├── package.json          # Зависимости dev-agent
+│   └── tsconfig.json         # TypeScript конфигурация dev-agent
+│
+├── .gitignore
+├── package.json              # Корневой package.json монорепозитория
+├── bun.lockb
+└── turbo.json                # Turborepo конфигурация
 ```
 
 ### 🏗️ Двухслойная архитектура
@@ -306,11 +320,13 @@ your-project/                  # Монорепозиторий проекта
 - Git операции и интеграция с GitHub
 - Управление ветками и workflow
 
-**Проект (вся остальная структура)**
-- Все файлы и документы хранятся в БД с AID идентификаторами
-- Связь между задачами и файлами проекта
-- Централизованное управление проектной документацией
-- API endpoints, скрипты и промпты как проектные сущности
+**Проект (монорепозиторий)**
+- **apps/** - Продуктовые приложения (web, google-sheets-integrator)
+- **packages/** - Переиспользуемые библиотеки (ui, utils, конфигурации)
+- **dev/** - Инструментарий разработки (Dev Agent как Git subtree)
+- Все проектные сущности (задачи, документы, API) хранятся в БД dev-agent
+- Связь между задачами и файлами монорепозитория
+- Централизованное управление через Dev Agent
 
 ## 📚 Documentation
 
