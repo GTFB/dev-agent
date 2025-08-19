@@ -20,7 +20,19 @@
     "config:show": "bun run src/scripts/config-manager.ts show",
     "config:set": "bun run src/scripts/config-manager.ts set",
     "config:validate": "bun run src/scripts/config-manager.ts validate",
-    "config:reset": "bun run src/scripts/config-manager.ts reset"
+    "config:reset": "bun run src/scripts/config-manager.ts reset",
+    "llm:add": "bun run src/scripts/llm-manager.ts add",
+    "llm:remove": "bun run src/scripts/llm-manager.ts remove",
+    "llm:list": "bun run src/scripts/llm-manager.ts list",
+    "llm:test": "bun run src/scripts/llm-manager.ts test",
+    "llm:default": "bun run src/scripts/llm-manager.ts default",
+    "llm:update": "bun run src/scripts/llm-manager.ts update",
+    "github:setup": "bun run src/scripts/github-manager.ts setup",
+    "github:branches": "bun run src/scripts/github-manager.ts branches",
+    "github:goals": "bun run src/scripts/github-manager.ts goals",
+    "github:show": "bun run src/scripts/github-manager.ts show",
+    "github:test": "bun run src/scripts/github-manager.ts test",
+    "github:remove": "bun run src/scripts/github-manager.ts remove"
   },
   "bin": {
     "dev": "./src/index.ts"
