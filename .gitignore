@@ -8,6 +8,9 @@
 # LLM Configuration (contains API keys)
 .llm-config.json
 
+# GitHub Configuration (contains API tokens)
+.github-config.json
+
 # Dependencies
 node_modules/
 bun.lockb

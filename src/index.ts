@@ -253,6 +253,114 @@ async function main(): Promise<void> {
       }
     });
 
+  configCommand
+    .command("github")
+    .description("Configure GitHub integration")
+    .option("-t, --token <token>", "GitHub personal access token")
+    .option("-o, --owner <owner>", "Repository owner (organization or username)")
+    .option("-r, --repo <repo>", "Repository name")
+    .option("-f, --file", "Load configuration from .github-config.json file")
+    .action(async (options: { token?: string; owner?: string; repo?: string; file?: boolean }) => {
+      try {
+        await initializeServices();
+        
+        // Load from file if requested
+        if (options.file) {
+          try {
+            const fs = await import("fs/promises");
+            const configPath = ".github-config.json";
+            
+            if (await fs.access(configPath).then(() => true).catch(() => false)) {
+              const configContent = await fs.readFile(configPath, "utf-8");
+              const config = JSON.parse(configContent);
+              
+              if (config.github?.owner) {
+                await workflowService.setConfiguration("github.owner", config.github.owner);
+                console.log("✅ GitHub owner loaded from file:", config.github.owner);
+              }
+              
+              if (config.github?.repo) {
+                await workflowService.setConfiguration("github.repo", config.github.repo);
+                console.log("✅ GitHub repo loaded from file:", config.github.repo);
+              }
+              
+              if (config.github?.token && config.github.token !== "YOUR_GITHUB_PERSONAL_ACCESS_TOKEN_HERE") {
+                process.env.GITHUB_TOKEN = config.github.token;
+                await workflowService.setConfiguration("github.token", config.github.token);
+                console.log("✅ GitHub token loaded from file and saved to configuration");
+                
+                // Try to initialize GitHub integration
+                const result = await workflowService.initializeGitHub(config.github.token);
+                if (result.success) {
+                  console.log("✅ GitHub integration initialized successfully");
+                } else {
+                  console.log("⚠️  GitHub integration initialization failed:", result.message);
+                }
+              } else {
+                console.log("⚠️  GitHub token not configured in file or using placeholder value");
+              }
+            } else {
+              console.log("❌ .github-config.json file not found");
+              console.log("💡 Copy .github-config.example.json to .github-config.json and configure it");
+            }
+          } catch (error) {
+            console.error("❌ Failed to load configuration from file:", error);
+          }
+        }
+        
+        // Process command line options
+        if (options.owner) {
+          await workflowService.setConfiguration("github.owner", options.owner);
+          console.log("✅ GitHub owner set to:", options.owner);
+        }
+        
+        if (options.repo) {
+          await workflowService.setConfiguration("github.repo", options.repo);
+          console.log("✅ GitHub repo set to:", options.repo);
+        }
+        
+        if (options.token) {
+          // Store token in environment variable and configuration for security
+          process.env.GITHUB_TOKEN = options.token;
+          await workflowService.setConfiguration("github.token", options.token);
+          console.log("✅ GitHub token set (stored in environment and configuration)");
+          
+          // Try to initialize GitHub integration
+          const result = await workflowService.initializeGitHub(options.token);
+          if (result.success) {
+            console.log("✅ GitHub integration initialized successfully");
+          } else {
+            console.log("⚠️  GitHub integration initialization failed:", result.message);
+          }
+        }
+        
+        // Show current configuration if no options provided
+        if (!options.token && !options.owner && !options.repo && !options.file) {
+          console.log("📋 Current GitHub configuration:");
+          const result = await workflowService.getAllConfiguration();
+          if (result.success && result.data) {
+            Object.entries(result.data)
+              .filter(([key]) => key.startsWith("github."))
+              .forEach(([key, value]) => {
+                if (key === "github.token") {
+                  console.log(`   ${key} = [HIDDEN]`);
+                } else {
+                  console.log(`   ${key} = ${value}`);
+                }
+              });
+          }
+          
+          console.log("\n💡 Use --file to load from .github-config.json");
+          console.log("💡 Use -t, -o, -r options to set values manually");
+        }
+      } catch (error) {
+        console.error("❌ Failed to configure GitHub:", error);
+        process.exit(1);
+      } finally {
+        storageService.close();
+      }
+    });
+
   // Goal commands
   const goalCommand = program.command("goal").description("Manage goals");
 
@@ -426,6 +534,35 @@ async function main(): Promise<void> {
         console.log("✅", `Goal ${goalId} deleted successfully`);
       } catch (error) {
         console.error("❌", `Failed to delete goal ${goalId}:`, error);
+        process.exit(1);
+      } finally {
+        storageService.close();
+      }
+    });
+
+  goalCommand
+    .command("update-status")
+    .description("Update goal status")
+    .argument("<goal-id>", "Goal ID")
+    .argument("<status>", "New status (todo, in_progress, done, archived)")
+    .option("-b, --branch <branch>", "Branch name")
+    .action(async (goalId: string, status: string, options: { branch?: string }) => {
+      try {
+        await initializeServices();
+        
+        const updates: any = { status };
+        if (options.branch) {
+          updates.branch_name = options.branch;
+        }
+        
+        await storageService.updateGoal(goalId, updates);
+        console.log("✅", `Goal ${goalId} status updated to ${status}`);
+        
+        if (options.branch) {
+          console.log(`Branch name updated to: ${options.branch}`);
+        }
+      } catch (error) {
+        console.error("❌", `Failed to update goal ${goalId}:`, error);
         process.exit(1);
       } finally {
         storageService.close();

@@ -1,0 +1,17 @@
+{
+  "github": {
+    "owner": "your-organization-or-username",
+    "repo": "your-repository-name",
+    "token": "ghp_your_github_personal_access_token_here"
+  },
+  "branches": {
+    "main": "main",
+    "develop": "develop",
+    "feature_prefix": "feature",
+    "release_prefix": "release"
+  },
+  "goals": {
+    "default_status": "todo",
+    "id_pattern": "^g-[a-z0-9]{6}$"
+  }
+}
