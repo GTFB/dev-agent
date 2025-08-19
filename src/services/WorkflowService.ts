@@ -140,13 +140,24 @@ export class WorkflowService {
         };
       }
 
-      // Update develop branch
-      await this.git.checkoutBranch("develop");
-      await this.git.pull("origin", "develop");
+      // Get current branch and ensure we're on develop
+      const currentBranch = await this.git.getCurrentBranch();
+      const developBranch = this.context.config.branches.develop;
+      
+      if (currentBranch !== developBranch) {
+        // Switch to develop branch
+        await this.git.checkoutBranch(developBranch);
+        logger.info(`Switched to ${developBranch} branch`);
+      }
+      
+      // Pull latest changes from develop
+      await this.git.pull("origin", developBranch);
+      logger.info(`Updated ${developBranch} branch with latest changes`);
 
       // Create feature branch
       const branchName = this.generateFeatureBranchName(goal);
       await this.git.createBranch(branchName);
+      logger.info(`Created feature branch: ${branchName}`);
 
       // Update goal status
       await this.storage.updateGoal(goalId, {
@@ -231,7 +242,25 @@ export class WorkflowService {
         completed_at: new Date().toISOString(),
       });
 
-      logger.success(`Goal ${goalId} marked as completed`);
+      // Switch back to develop branch
+      const developBranch = this.context.config.branches.develop;
+      await this.git.checkoutBranch(developBranch);
+      logger.info(`Switched back to ${developBranch} branch`);
+
+      // Delete the feature branch locally
+      try {
+        await this.git.deleteBranch(goal.branch_name!);
+        logger.info(`Deleted local feature branch: ${goal.branch_name}`);
+      } catch (error) {
+        logger.warn(`Failed to delete local feature branch: ${goal.branch_name}`, error as Error);
+      }
+
+      // Clear branch name from goal
+      await this.storage.updateGoal(goalId, {
+        branch_name: undefined,
+      });
+
+      logger.success(`Goal ${goalId} marked as completed and feature branch cleaned up`);
       return {
         success: true,
         message: `Goal ${goalId} completed successfully`,
@@ -277,7 +306,19 @@ export class WorkflowService {
       }
 
       // Switch back to develop branch
-      await this.git.checkoutBranch("develop");
+      const developBranch = this.context.config.branches.develop;
+      await this.git.checkoutBranch(developBranch);
+      logger.info(`Switched back to ${developBranch} branch`);
+
+      // Delete the feature branch locally
+      if (goal.branch_name) {
+        try {
+          await this.git.deleteBranch(goal.branch_name);
+          logger.info(`Deleted local feature branch: ${goal.branch_name}`);
+        } catch (error) {
+          logger.warn(`Failed to delete local feature branch: ${goal.branch_name}`, error as Error);
+        }
+      }
 
       // Update goal status
       await this.storage.updateGoal(goalId, {
@@ -285,7 +326,7 @@ export class WorkflowService {
         branch_name: undefined,
       });
 
-      logger.success(`Stopped working on goal ${goalId}`);
+      logger.success(`Stopped working on goal ${goalId} and cleaned up feature branch`);
       return {
         success: true,
         message: `Stopped working on goal ${goalId}`,
@@ -328,6 +369,71 @@ export class WorkflowService {
       return {
         success: false,
         message: "Failed to list goals",
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }
+
+  /**
+   * Cleanup completed goals and their branches
+   * This method automatically removes feature branches for completed goals
+   */
+  async cleanupCompletedGoals(): Promise<CommandResult> {
+    try {
+      logger.info("Cleaning up completed goals and their branches");
+
+      // Get all completed goals
+      const completedGoals = await this.storage.listGoals("done");
+      let cleanedCount = 0;
+      let errors: string[] = [];
+
+      for (const goal of completedGoals) {
+        if (goal.branch_name) {
+          try {
+            // Try to delete remote branch if it exists
+            try {
+              await this.git.deleteRemoteBranch("origin", goal.branch_name);
+              logger.info(`Deleted remote branch: ${goal.branch_name}`);
+            } catch (error) {
+              // Branch might not exist remotely, which is fine
+              logger.debug(`Remote branch ${goal.branch_name} not found or already deleted`);
+            }
+
+            // Clear branch name from goal
+            await this.storage.updateGoal(goal.id, {
+              branch_name: undefined,
+            });
+
+            cleanedCount++;
+            logger.info(`Cleaned up goal ${goal.id}: ${goal.title}`);
+          } catch (error) {
+            const errorMsg = `Failed to cleanup goal ${goal.id}: ${error instanceof Error ? error.message : String(error)}`;
+            errors.push(errorMsg);
+            logger.error(errorMsg, error as Error);
+          }
+        }
+      }
+
+      if (errors.length > 0) {
+        logger.warn(`Cleanup completed with ${errors.length} errors`);
+        return {
+          success: true,
+          message: `Cleanup completed: ${cleanedCount} goals cleaned up, ${errors.length} errors`,
+          data: { cleanedCount, errors },
+        };
+      }
+
+      logger.success(`Successfully cleaned up ${cleanedCount} completed goals`);
+      return {
+        success: true,
+        message: `Successfully cleaned up ${cleanedCount} completed goals`,
+        data: { cleanedCount },
+      };
+    } catch (error) {
+      logger.error("Failed to cleanup completed goals", error as Error);
+      return {
+        success: false,
+        message: "Failed to cleanup completed goals",
         error: error instanceof Error ? error.message : String(error),
       };
     }

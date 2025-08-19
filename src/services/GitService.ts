@@ -330,6 +330,19 @@ export class GitService {
   }
 
   /**
+   * Delete remote branch
+   */
+  async deleteRemoteBranch(remote: string, branchName: string): Promise<void> {
+    try {
+      await this.git.push(remote, `:${branchName}`);
+      logger.info(`Deleted remote branch: ${remote}/${branchName}`);
+    } catch (error) {
+      logger.error(`Failed to delete remote branch ${remote}/${branchName}`, error as Error);
+      throw error;
+    }
+  }
+
+  /**
    * Get remote URL
    */
   async getRemoteUrl(remote: string = "origin"): Promise<string> {

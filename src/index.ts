@@ -589,6 +589,41 @@ async function main(): Promise<void> {
       }
     });
 
+  goalCommand
+    .command("cleanup")
+    .description("Cleanup completed goals and their branches")
+    .action(async () => {
+      try {
+        const result = await workflowService.cleanupCompletedGoals();
+
+        if (result.success) {
+          console.log("✅", result.message);
+          if (result.data) {
+            if (result.data.cleanedCount > 0) {
+              console.log(`🧹 Cleaned up ${result.data.cleanedCount} completed goals`);
+            }
+            if (result.data.errors && result.data.errors.length > 0) {
+              console.log(`⚠️  ${result.data.errors.length} errors occurred during cleanup`);
+              result.data.errors.forEach((error: string) => {
+                console.error(`  - ${error}`);
+              });
+            }
+          }
+        } else {
+          console.error("❌", result.message);
+          if (result.error) {
+            console.error("Error:", result.error);
+          }
+          process.exit(1);
+        }
+      } catch (error) {
+        console.error("❌ Failed to cleanup goals:", error);
+        process.exit(1);
+      } finally {
+        storageService.close();
+      }
+    });
+
   // Git commands
   const gitCommand = program.command("git").description("Git operations");
 
