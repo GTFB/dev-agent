@@ -886,6 +886,16 @@ async function main(): Promise<void> {
       console.log('  dev config set <key> <value> - Set configuration');
       console.log('  dev config get <key>         - Get configuration');
       console.log('  dev config list              - List all configuration');
+      console.log('\nGit Operations:');
+      console.log('  dev git status               - Show Git status');
+      console.log('  dev git commit "message"     - Create commit (add --add-all to stage)');
+      console.log('  dev git branch <name>        - Create/switch branch (add --create)');
+      console.log('  dev git push                 - Push to remote');
+      console.log('  dev git pull                 - Pull from remote');
+      console.log('  dev git pr "title"           - Create pull request');
+      console.log('\nValidation:');
+      console.log('  dev goal validate <goal-id>  - Validate specific goal');
+      console.log('  dev goal validate-all        - Validate all goals');
       console.log('\nGitHub Integration:');
       console.log('  dev sync                     - Sync issues from GitHub');
       console.log('  dev sync-goal <goal-id>      - Sync goal status to GitHub');
