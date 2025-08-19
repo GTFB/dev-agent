@@ -84,7 +84,10 @@ export class GitService {
    */
   async createBranch(branchName: string): Promise<void> {
     try {
-      await this.git.checkoutBranch(branchName);
+      // First create the branch from current HEAD
+      await this.git.branch([branchName]);
+      // Then checkout the new branch
+      await this.git.checkout(branchName);
       logger.info(`Created and checked out branch: ${branchName}`);
     } catch (error) {
       logger.error(`Failed to create branch ${branchName}`, error as Error);
