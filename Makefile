@@ -320,6 +320,17 @@ git-branch:
 	@echo "🌿 Creating and switching to branch: $(NAME)"
 	@$(DEV_CMD) git branch "$(NAME)" --create
 
+# Language validation
+lang-check:
+	@test "$(TEXT)" || (echo "❌ Error: TEXT parameter required. Usage: make lang-check TEXT=\"<text>\"" && exit 1)
+	@echo "🔍 Checking language compliance: $(TEXT)"
+	@$(DEV_CMD) lang check "$(TEXT)" --translate
+
+lang-validate-file:
+	@test "$(FILE)" || (echo "❌ Error: FILE parameter required. Usage: make lang-validate-file FILE=<file-path>" && exit 1)
+	@echo "🔍 Validating file language: $(FILE)"
+	@$(DEV_CMD) lang validate-file "$(FILE)" --translate
+
 # Pull Request operations
 pr-create:
 	@test "$(TITLE)" || (echo "❌ Error: TITLE parameter required. Usage: make pr-create TITLE=\"<title>\"" && exit 1)

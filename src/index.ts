@@ -805,6 +805,131 @@ async function main(): Promise<void> {
       }
     });
 
+  // Language validation commands
+  const langCommand = program
+    .command('lang')
+    .description('Language validation and translation');
+
+  langCommand
+    .command('check')
+    .description('Check content language compliance')
+    .argument('<text>', 'Text to check')
+    .option('-s, --strict', 'Strict mode - fail on non-English content')
+    .option('-t, --translate', 'Auto-translate if needed')
+    .action(async (text: string, options: { strict?: boolean; translate?: boolean }) => {
+      try {
+        await initializeServices();
+        
+        const { LanguageValidationMiddleware } = await import('./middleware/LanguageValidationMiddleware.js');
+        const middleware = new LanguageValidationMiddleware();
+        
+        const result = await middleware.validateBeforeSave({
+          entityType: 'comment',
+          fieldName: 'content',
+          content: text,
+          autoTranslate: options.translate,
+          strictMode: options.strict
+        });
+
+        console.log('\n🔍 Language Validation Results:');
+        console.log('================================');
+        console.log(`Content: "${text}"`);
+        console.log(`Detected Language: ${result.detectedLanguage} (confidence: ${(result.confidence * 100).toFixed(1)}%)`);
+        console.log(`Needs Translation: ${result.needsTranslation ? 'Yes' : 'No'}`);
+        console.log(`Valid: ${result.valid ? '✅ Yes' : '❌ No'}`);
+
+        if (result.translatedContent) {
+          console.log(`\n🔄 Auto-translation:`);
+          console.log(`Original: "${result.originalContent}"`);
+          console.log(`Translated: "${result.translatedContent}"`);
+        }
+
+        if (result.issues.length > 0) {
+          console.log('\n🚨 Issues:');
+          result.issues.forEach(issue => console.log(`  - ${issue}`));
+        }
+
+        if (result.warnings.length > 0) {
+          console.log('\n⚠️  Warnings:');
+          result.warnings.forEach(warning => console.log(`  - ${warning}`));
+        }
+
+        if (result.suggestions.length > 0) {
+          console.log('\n💡 Suggestions:');
+          result.suggestions.forEach(suggestion => console.log(`  - ${suggestion}`));
+        }
+
+        if (!result.valid && options.strict) {
+          process.exit(1);
+        }
+      } catch (error) {
+        console.error('❌ Failed to check language:', error);
+        process.exit(1);
+      } finally {
+        storageService.close();
+      }
+    });
+
+  langCommand
+    .command('validate-file')
+    .description('Validate language in a file')
+    .argument('<file-path>', 'Path to file to validate')
+    .option('-s, --strict', 'Strict mode - fail on non-English content')
+    .option('-t, --translate', 'Auto-translate if needed')
+    .action(async (filePath: string, options: { strict?: boolean; translate?: boolean }) => {
+      try {
+        await initializeServices();
+        
+        const fs = await import('fs/promises');
+        const path = await import('path');
+        
+        // Check if file exists
+        try {
+          await fs.access(filePath);
+        } catch {
+          console.error(`❌ File not found: ${filePath}`);
+          process.exit(1);
+        }
+
+        const content = await fs.readFile(filePath, 'utf-8');
+        const { LanguageValidationMiddleware } = await import('./middleware/LanguageValidationMiddleware.js');
+        const middleware = new LanguageValidationMiddleware();
+        
+        const result = await middleware.validateFileContent(filePath, content);
+
+        console.log(`\n🔍 Language Validation for: ${filePath}`);
+        console.log('==========================================');
+        console.log(`Detected Language: ${result.detectedLanguage} (confidence: ${(result.confidence * 100).toFixed(1)}%)`);
+        console.log(`Needs Translation: ${result.needsTranslation ? 'Yes' : 'No'}`);
+        console.log(`Valid: ${result.valid ? '✅ Yes' : '❌ No'}`);
+
+        if (result.translatedContent) {
+          console.log(`\n🔄 Auto-translation available`);
+          console.log(`Original: "${result.originalContent.substring(0, 100)}..."`);
+          console.log(`Translated: "${result.translatedContent.substring(0, 100)}..."`);
+        }
+
+        if (result.issues.length > 0) {
+          console.log('\n🚨 Issues:');
+          result.issues.forEach(issue => console.log(`  - ${issue}`));
+        }
+
+        if (result.suggestions.length > 0) {
+          console.log('\n💡 Suggestions:');
+          result.suggestions.forEach(suggestion => console.log(`  - ${suggestion}`));
+        }
+
+        if (!result.valid && options.strict) {
+          process.exit(1);
+        }
+      } catch (error) {
+        console.error('❌ Failed to validate file:', error);
+        process.exit(1);
+      } finally {
+        storageService.close();
+      }
+    });
+
   // Document management commands
   const docCommand = program
     .command('doc')
@@ -983,9 +1108,12 @@ async function main(): Promise<void> {
       console.log('\nValidation:');
       console.log('  dev/src/index.ts goal validate <goal-id>  - Validate specific goal');
       console.log('  dev/src/index.ts goal validate-all        - Validate all goals');
-      console.log('\nDocumentation:');
-      console.log('  dev/src/index.ts doc create <title> <type> <content>  - Create project document');
-      console.log('  dev/src/index.ts doc list                              - List project documents');
+      console.log('\nLanguage Validation:');
+console.log('  dev/src/index.ts lang check "text"                     - Check text language compliance');
+console.log('  dev/src/index.ts lang validate-file <path>             - Validate file language');
+console.log('\nDocumentation:');
+console.log('  dev/src/index.ts doc create <title> <type> <content>  - Create project document');
+console.log('  dev/src/index.ts doc list                              - List project documents');
       console.log('\nGitHub Integration:');
       console.log('  dev/src/index.ts sync                     - Sync issues from GitHub');
       console.log('  dev/src/index.ts sync-goal <goal-id>      - Sync goal status to GitHub');
