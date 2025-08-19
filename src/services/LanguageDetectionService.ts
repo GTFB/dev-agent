@@ -30,14 +30,8 @@ export class LanguageDetectionService {
     /\b(if|else|for|while|switch|case|default|return|break|continue)\b/i,
   ];
 
-  private readonly russianPatterns = [
-    /\b(and|in|on|with|by|for|from|to|out|behind|under|above|between|through)\b/i,
-    /\b(this|that|these|those|he|she|it|they|his|her|their|self)\b/i,
-    /\b(is|are|was|were|been|become|becoming)\b/i,
-    /\b(function|class|interface|type|constant|variable)\b/i,
-    /\b(if|else|for|while|switch|case|return)\b/i,
-    /\b(test|automatic|translation|system|work|project)\b/i,
-  ];
+  // Russian language detection is based on Cyrillic character detection
+  // No need for word patterns - Unicode ranges are more reliable
 
   /**
    * Detect language of the given text
@@ -56,10 +50,6 @@ export class LanguageDetectionService {
       text,
       this.englishPatterns,
     );
-    const russianScore = this.calculateLanguageScore(
-      text,
-      this.russianPatterns,
-    );
 
     // Additional heuristics
     const hasCyrillic = /[\u0400-\u04FF\u0500-\u052F]/i.test(text);
@@ -72,10 +62,10 @@ export class LanguageDetectionService {
 
     if (hasCyrillic) {
       detectedLanguage = "russian";
-      confidence = Math.min((russianScore + 5) / 10, 1); // Boost confidence for Cyrillic
+      confidence = 0.9; // High confidence for Cyrillic detection
       isEnglish = false;
       needsTranslation = true;
-    } else if (hasLatin && englishScore > russianScore) {
+    } else if (hasLatin && englishScore > 3) {
       detectedLanguage = "english";
       confidence = Math.min(englishScore / 10, 1);
       isEnglish = true;

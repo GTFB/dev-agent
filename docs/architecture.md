@@ -473,7 +473,7 @@ The layered design ensures that changes in one layer don't affect others, making
 
 ## Next Steps
 
-- [Getting Started Guide](01-getting-started.md)
-- [CLI Commands Reference](02-cli-commands.md)
-- [Configuration Guide](03-configuration.md)
-- [Developer Guide](04-developer-guide.md)
+- [Getting Started Guide](getting-started.md)
+- [CLI Commands Reference](cli-commands.md)
+- [Configuration Guide](configuration.md)
+- [Developer Guide](developer-guide.md)

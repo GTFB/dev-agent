@@ -451,7 +451,7 @@ bun run dev-agent/src/index.ts config list
 
 ## Next Steps
 
-- [Getting Started Guide](01-getting-started.md)
-- [Configuration Guide](03-configuration.md)
-- [Developer Guide](04-developer-guide.md)
-- [Architecture Overview](05-architecture.md)
+- [Getting Started Guide](getting-started.md)
+- [Configuration Guide](configuration.md)
+- [Developer Guide](developer-guide.md)
+- [Architecture Overview](architecture.md)

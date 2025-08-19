@@ -328,7 +328,7 @@ Dev Agent validates configuration values:
 
 ## Next Steps
 
-- [Getting Started Guide](01-getting-started.md)
-- [CLI Commands Reference](02-cli-commands.md)
-- [Developer Guide](04-developer-guide.md)
-- [Architecture Overview](05-architecture.md)
+- [Getting Started Guide](getting-started.md)
+- [CLI Commands Reference](cli-commands.md)
+- [Developer Guide](developer-guide.md)
+- [Architecture Overview](architecture.md)

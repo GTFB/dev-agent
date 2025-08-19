@@ -464,10 +464,10 @@ test(aid): add edge case test coverage
 
 ## Next Steps
 
-- [Getting Started Guide](01-getting-started.md)
-- [CLI Commands Reference](02-cli-commands.md)
-- [Configuration Guide](03-configuration.md)
-- [Architecture Overview](05-architecture.md)
+- [Getting Started Guide](getting-started.md)
+- [CLI Commands Reference](cli-commands.md)
+- [Configuration Guide](configuration.md)
+- [Architecture Overview](architecture.md)
 
 ## Resources
 

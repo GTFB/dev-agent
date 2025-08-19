@@ -365,6 +365,11 @@ export const SCHEMA_MIGRATIONS = {
     DROP TABLE IF EXISTS files;
     DROP TABLE IF EXISTS scripts;
   `,
+
+  "011": `
+    -- Remove project_config table - configuration now in config table
+    DROP TABLE IF EXISTS project_config;
+  `,
 };
 
 /**

@@ -6,14 +6,16 @@ Welcome to the Dev Agent documentation! This comprehensive guide will help you u
 
 ### 🚀 Getting Started
 
-- **[Getting Started Guide](01-getting-started.md)** - Quick start and first steps
-- **[CLI Commands Reference](02-cli-commands.md)** - Complete command reference
-- **[Configuration Guide](03-configuration.md)** - System configuration and customization
+- **[Getting Started Guide](getting-started.md)** - Quick start and first steps
+- **[CLI Commands Reference](cli-commands.md)** - Complete command reference
+- **[Configuration Guide](configuration.md)** - System configuration and customization
+- **[Language Compliance](language-compliance.md)** - Language policy enforcement
+- **[Backups](backups.md)** - Backup directory documentation
 
 ### 🛠️ Development
 
-- **[Developer Guide](04-developer-guide.md)** - Contributing and development setup
-- **[Architecture Overview](05-architecture.md)** - System design and architecture
+- **[Developer Guide](developer-guide.md)** - Contributing and development setup
+- **[Architecture Overview](architecture.md)** - System design and architecture
 
 ### 📋 Protocols
 
@@ -228,7 +230,7 @@ bun run docs:generate
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Developer Guide](04-developer-guide.md) for details on:
+We welcome contributions! Please see our [Developer Guide](developer-guide.md) for details on:
 
 - Development setup
 - Code style guidelines

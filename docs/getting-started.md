@@ -148,10 +148,10 @@ your-project/
 
 ## Next Steps
 
-- [CLI Commands Reference](02-cli-commands.md)
-- [Configuration Guide](03-configuration.md)
-- [Developer Guide](04-developer-guide.md)
-- [Architecture Overview](05-architecture.md)
+- [CLI Commands Reference](cli-commands.md)
+- [Configuration Guide](configuration.md)
+- [Developer Guide](developer-guide.md)
+- [Architecture Overview](architecture.md)
 - [Development Protocols](protocols/README.md)
 
 ## Troubleshooting
@@ -176,5 +176,5 @@ your-project/
 ### Getting Help
 
 - Run `bun run dev-agent/src/index.ts help` for command overview
-- Check the [CLI Commands Reference](02-cli-commands.md) for detailed usage
+- Check the [CLI Commands Reference](cli-commands.md) for detailed usage
 - Review logs in the `.logs/` directory for debugging information

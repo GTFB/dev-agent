@@ -260,4 +260,4 @@ By following this protocol and using Dev Agent for automation, teams can achieve
 
 ---
 
-_This protocol is implemented and enforced by Dev Agent v2.0. For technical details on the implementation, see the [Architecture Overview](../05-architecture.md)._
+_This protocol is implemented and enforced by Dev Agent v2.0. For technical details on the implementation, see the [Architecture Overview](../architecture.md)._

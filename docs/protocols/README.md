@@ -116,10 +116,10 @@ Dev Agent automates key aspects of these protocols:
 
 ## 📚 Related Documentation
 
-- [Getting Started Guide](../01-getting-started.md) - Basic setup and usage
-- [CLI Commands Reference](../02-cli-commands.md) - Complete command documentation
-- [Architecture Overview](../05-architecture.md) - Technical implementation details
-- [Developer Guide](../04-developer-guide.md) - Contributing to Dev Agent
+- [Getting Started Guide](../getting-started.md) - Basic setup and usage
+- [CLI Commands Reference](../cli-commands.md) - Complete command documentation
+- [Architecture Overview](../architecture.md) - Technical implementation details
+- [Developer Guide](../developer-guide.md) - Contributing to Dev Agent
 
 ## 🔧 Customization
 
@@ -139,9 +139,9 @@ bun run dev-agent/src/index.ts config set github.repo "your-project"
 
 For questions about implementing these protocols:
 
-- Check the [CLI Commands Reference](../02-cli-commands.md) for specific commands
-- Review the [Configuration Guide](../03-configuration.md) for customization options
-- See the [Developer Guide](../04-developer-guide.md) for advanced usage
+- Check the [CLI Commands Reference](../cli-commands.md) for specific commands
+- Review the [Configuration Guide](../configuration.md) for customization options
+- See the [Developer Guide](../developer-guide.md) for advanced usage
 
 ---
 
