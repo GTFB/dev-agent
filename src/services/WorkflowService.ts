@@ -677,13 +677,24 @@ export class WorkflowService {
         };
       }
 
+      // Get token from parameter, environment, or storage
+      const authToken = token || process.env.GITHUB_TOKEN || await this.storage.getConfig("github.token");
+
+      if (!authToken) {
+        return {
+          success: false,
+          message: "GitHub token not provided. Please set github.token or GITHUB_TOKEN environment variable",
+          error: "Missing GitHub token",
+        };
+      }
+
       const config = {
         owner,
         repo,
-        token,
+        token: authToken,
       };
 
-      await this.github.initialize(config, token);
+      await this.github.initialize(config, authToken);
 
       logger.success("GitHub integration initialized successfully");
       return {
