@@ -805,6 +805,93 @@ async function main(): Promise<void> {
       }
     });
 
+  // Document management commands
+  const docCommand = program
+    .command('doc')
+    .description('Manage project documents');
+
+  docCommand
+    .command('create')
+    .description('Create a new project document')
+    .argument('<title>', 'Document title')
+    .argument('<type>', 'Document type (architecture, api, deployment, user-guide)')
+    .argument('<content>', 'Document content or file path')
+    .option('-t, --tags <tags>', 'Comma-separated tags')
+    .option('-g, --goal <goal-id>', 'Associated goal ID')
+    .option('-f, --file-path <path>', 'File path relative to project root')
+    .action(async (title: string, type: string, content: string, options: { tags?: string; goal?: string; filePath?: string }) => {
+      try {
+        await initializeServices();
+        
+        const { generateUniqueEntityId } = await import('./core/aid-generator.js');
+        const docId = generateUniqueEntityId('D', {
+          prefix: 'D',
+          title: title,
+          type: 'document',
+          status: 'draft'
+        });
+        
+        const tags = options.tags ? options.tags.split(',').map(t => t.trim()) : [];
+        
+        // For now, we'll store the document in the database
+        // TODO: Implement document storage service
+        console.log(`📄 Creating document: ${title}`);
+        console.log(`  ID: ${docId}`);
+        console.log(`  Type: ${type}`);
+        console.log(`  Tags: ${tags.join(', ') || 'none'}`);
+        if (options.goal) {
+          console.log(`  Goal: ${options.goal}`);
+        }
+        if (options.filePath) {
+          console.log(`  File: ${options.filePath}`);
+        }
+        
+        console.log('\n💡 Document storage service will be implemented in the next iteration');
+        console.log('   This will allow storing documents in the database with full AID tracking');
+        
+      } catch (error) {
+        console.error('❌ Failed to create document:', error);
+        process.exit(1);
+      } finally {
+        storageService.close();
+      }
+    });
+
+  docCommand
+    .command('list')
+    .description('List all project documents')
+    .option('-t, --type <type>', 'Filter by document type')
+    .option('-s, --status <status>', 'Filter by status')
+    .option('-g, --goal <goal-id>', 'Filter by associated goal')
+    .action(async (options: { type?: string; status?: string; goal?: string }) => {
+      try {
+        await initializeServices();
+        
+        console.log('📚 Project Documents');
+        console.log('===================\n');
+        
+        // TODO: Implement document listing from database
+        console.log('💡 Document listing will be implemented in the next iteration');
+        console.log('   This will show all documents stored in the database');
+        
+        if (options.type) {
+          console.log(`   Filter by type: ${options.type}`);
+        }
+        if (options.status) {
+          console.log(`   Filter by status: ${options.status}`);
+        }
+        if (options.goal) {
+          console.log(`   Filter by goal: ${options.goal}`);
+        }
+        
+      } catch (error) {
+        console.error('❌ Failed to list documents:', error);
+        process.exit(1);
+      } finally {
+        storageService.close();
+      }
+    });
+
   // GitHub sync commands
   program
     .command('sync')
@@ -896,6 +983,9 @@ async function main(): Promise<void> {
       console.log('\nValidation:');
       console.log('  dev goal validate <goal-id>  - Validate specific goal');
       console.log('  dev goal validate-all        - Validate all goals');
+      console.log('\nDocumentation:');
+      console.log('  dev doc create <title> <type> <content>  - Create project document');
+      console.log('  dev doc list                              - List project documents');
       console.log('\nGitHub Integration:');
       console.log('  dev sync                     - Sync issues from GitHub');
       console.log('  dev sync-goal <goal-id>      - Sync goal status to GitHub');
