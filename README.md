@@ -106,6 +106,78 @@ make lang-setup-openai API_KEY=your_openai_api_key
 bun run dev/src/index.ts lang setup-llm custom your_api_key -u https://your-api.com/v1/chat
 ```
 
+## 🔗 GitHub Integration Setup
+
+Dev Agent can automatically sync with GitHub issues, create milestones, and manage pull request workflows. This requires proper configuration to protect your sensitive data.
+
+### ⚠️ Security Notice
+
+**Never commit your actual GitHub configuration file!** It contains sensitive tokens that should remain private.
+
+### Configuration Steps
+
+1. **Copy the example configuration:**
+
+   ```bash
+   cp .github-config.example.json .github-config.json
+   ```
+
+2. **Edit `.github-config.json` with your actual values:**
+
+   ```json
+   {
+     "github": {
+       "owner": "your-actual-username",
+       "repo": "your-actual-repository",
+       "token": "your-actual-github-token"
+     },
+     "branches": {
+       "main": "main",
+       "develop": "develop",
+       "feature_prefix": "feature",
+       "release_prefix": "release"
+     },
+     "goals": {
+       "default_status": "todo",
+       "id_pattern": "^g-[a-z0-9]{6}$"
+     }
+   }
+   ```
+
+3. **Verify the file is ignored by Git:**
+
+   ```bash
+   git status
+   # .github-config.json should NOT appear in the output
+   ```
+
+4. **Initialize GitHub integration:**
+
+   ```bash
+   bun run dev/src/index.ts config set github.owner "your-username"
+   bun run dev/src/index.ts config set github.repo "your-repository"
+   ```
+
+### GitHub Features
+
+- **Automatic Milestone Creation** - Creates milestones when goal status changes
+- **Issue Synchronization** - Syncs GitHub issues to local goals
+- **Pull Request Tracking** - Monitors PR status and updates goals automatically
+- **Branch Management** - Automatically creates and cleans up feature branches
+
+### Commands
+
+```bash
+# Sync issues from GitHub
+bun run dev/src/index.ts sync
+
+# Sync specific goal to GitHub
+bun run dev/src/index.ts sync-goal g-a1b2c3
+
+# Check pull request status
+bun run dev/src/index.ts goal check-pr g-a1b2c3
+```
+
 ### Configuration Management
 
 ```bash
@@ -303,16 +375,32 @@ Dev Agent uses an **Atomic ID (AID)** system for reliable entity identification:
 
 ### Entity Types
 
-- **G** - Goals (задачи и цели)
-- **D** - Documents (проектная документация)
-- **F** - Files (файлы проекта)
-- **A** - API endpoints (API endpoints)
-- **S** - Scripts (скрипты автоматизации)
-- **P** - Prompts (AI промпты)
-- **C** - Config (конфигурации)
-- **M** - Milestones (майлстоуны)
-- **R** - Releases (релизы)
-- **T** - Tests (тесты)
+- **G** - Goals/Tasks
+- **A** - Archive/Documents
+- **B** - Base/Inventory
+- **C** - Contractor/Legal entities
+- **D** - Deal/Sales deals
+- **E** - Employee/Staff
+- **F** - Finance/Transactions
+- **H** - Human/Natural persons
+- **I** - Invoice/Bills
+- **J** - Journal/System logs
+- **K** - Key/API keys, tokens
+- **L** - Location/Geo points
+- **M** - Message/Messages
+- **N** - Notice/Notifications
+- **O** - Outreach/Marketing
+- **P** - Product/Products
+- **Q** - Qualification/Assessments
+- **R** - Routine/Automation
+- **S** - Segment/Segments
+- **T** - Text/Content
+- **U** - University/LMS/Education
+- **V** - Vote/Surveys
+- **W** - Wallet/Wallets
+- **X** - Xpanse/Spaces
+- **Y** - Yard/Gamification
+- **Z** - Zoo/Animals
 
 ## 🧪 Development
 

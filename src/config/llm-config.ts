@@ -37,9 +37,9 @@ export class LLMConfigManager {
     try {
       const data = await fs.readFile(this.configPath, "utf-8");
       this.config = JSON.parse(data);
-    } catch (error) {
-      // File doesn't exist or is invalid, use default config
-      this.config = { providers: {} };
+    } catch {
+      // Silently fail if config cannot be loaded
+      // logger.warn("Failed to load LLM config, using defaults");
     }
   }
 

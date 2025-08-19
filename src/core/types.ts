@@ -260,7 +260,7 @@ export interface CommandResult {
   /** Error details if failed */
   error?: string;
   /** Additional data */
-  data?: any;
+  data?: unknown;
 }
 
 /**

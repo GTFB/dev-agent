@@ -8,7 +8,7 @@
 # LLM Configuration (contains API keys)
 .llm-config.json
 
-# GitHub Configuration (contains API tokens)
+# GitHub Configuration (contains tokens and sensitive data)
 .github-config.json
 
 # Dependencies

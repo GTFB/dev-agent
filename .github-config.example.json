@@ -1,8 +1,8 @@
 {
   "github": {
-    "owner": "your-organization-or-username",
-    "repo": "your-repository-name",
-    "token": "ghp_your_github_personal_access_token_here"
+    "owner": "your-username",
+    "repo": "your-repository",
+    "token": "your-github-token-here"
   },
   "branches": {
     "main": "main",
