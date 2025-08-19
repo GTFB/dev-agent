@@ -184,6 +184,83 @@ export class GitHubService {
   }
 
   /**
+   * Fetch only TODO issues from GitHub repository
+   * According to the HARD ALGORITHM: only fetch issues with "Todo" milestone
+   */
+  async fetchTodoIssues(): Promise<GitHubIssue[]> {
+    if (!this.octokit || !this.config) {
+      throw new Error("GitHub service not initialized");
+    }
+
+    try {
+      logger.info("Fetching only TODO issues from GitHub (with 'Todo' milestone)...");
+
+      const issues: GitHubIssue[] = [];
+      let page = 1;
+      const perPage = 100;
+
+      while (true) {
+        const { data } = await this.octokit.rest.issues.listForRepo({
+          owner: this.config.owner,
+          repo: this.config.repo,
+          state: "open",
+          per_page: perPage,
+          page,
+          sort: "updated",
+          direction: "desc",
+        });
+
+        if (data.length === 0) break;
+
+        // Filter out pull requests and only include issues with "Todo" milestone
+        const filteredIssues = data
+          .filter((issue) => !issue.pull_request)
+          .filter((issue) => {
+            // Only include issues with "Todo" milestone
+            return issue.milestone && 
+                   issue.milestone.title.toLowerCase() === "todo" &&
+                   issue.milestone.state === "open";
+          })
+          .map((issue) => ({
+            number: issue.number,
+            title: issue.title,
+            body: issue.body || undefined,
+            state: issue.state as "open" | "closed",
+            milestone: issue.milestone
+              ? {
+                  id: issue.milestone.id,
+                  title: issue.milestone.title,
+                  state: issue.milestone.state as "open" | "closed",
+                }
+              : undefined,
+            labels: issue.labels.map((label) => ({
+              name: typeof label === "string" ? label : label.name || "",
+              color: typeof label === "string" ? "" : label.color || "",
+            })),
+            assignee: issue.assignee
+              ? {
+                  login: issue.assignee.login,
+                }
+              : undefined,
+            created_at: issue.created_at,
+            updated_at: issue.updated_at,
+          }));
+
+        issues.push(...filteredIssues);
+
+        if (data.length < perPage) break;
+        page++;
+      }
+
+      logger.success(`Fetched ${issues.length} TODO issues from GitHub (with 'Todo' milestone)`);
+      return issues;
+    } catch (error) {
+      logger.error("Failed to fetch TODO issues from GitHub", error as Error);
+      throw error;
+    }
+  }
+
+  /**
    * Fetch all milestones from GitHub repository
    */
   async fetchMilestones(
@@ -200,7 +277,7 @@ export class GitHubService {
         owner: this.config.owner,
         repo: this.config.repo,
         state,
-        sort: "updated",
+        sort: "due_on",
         direction: "desc",
       });
 
@@ -292,6 +369,7 @@ export class GitHubService {
 
   /**
    * Sync GitHub issues to local goals
+   * According to the HARD ALGORITHM: only sync issues with "Todo" milestone
    */
   async syncIssuesToGoals(): Promise<{
     created: number;
@@ -303,7 +381,8 @@ export class GitHubService {
     try {
       logger.info("Starting GitHub issues sync...");
 
-      const issues = await this.fetchIssues("open");
+      // According to HARD ALGORITHM: only fetch issues with "Todo" milestone
+      const issues = await this.fetchTodoIssues();
 
       for (const issue of issues) {
         try {
