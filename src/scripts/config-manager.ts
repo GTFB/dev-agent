@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 
 /**
- * Configuration Management Script
- * Allows viewing and updating configuration settings
+ * Configuration Manager CLI
+ * Manages Dev Agent configuration via command line
  */
 
 import { configManager } from "../config/config.js";
@@ -15,36 +15,88 @@ interface CommandOptions {
 }
 
 async function showConfig() {
-  const config = configManager.getConfig();
-  console.log("🔧 Current Configuration:");
-  console.log(JSON.stringify(config, null, 2));
+  console.log("🔧 Dev Agent Configuration");
+  console.log("==========================\n");
+  
+  // Show database config
+  const dbConfig = configManager.getDatabaseConfig();
+  console.log("📊 Database Configuration:");
+  console.log(`   Type: ${dbConfig.type}`);
+  console.log(`   Path: ${dbConfig.path}\n`);
+  
+  // Show project config
+  const projectConfig = configManager.getProjectConfig();
+  console.log("📁 Project Configuration:");
+  console.log(`   Name: ${projectConfig.name}`);
+  console.log(`   Version: ${projectConfig.version}`);
+  console.log(`   Description: ${projectConfig.description}`);
+  console.log(`   Author: ${projectConfig.author}`);
+  console.log(`   License: ${projectConfig.license}`);
+  console.log(`   Repository: ${projectConfig.repository}\n`);
+  
+  // Show GitHub config
+  const githubConfig = configManager.getGitHubConfig();
+  if (githubConfig) {
+    console.log("🐙 GitHub Configuration:");
+    console.log(`   Owner: ${githubConfig.owner}`);
+    console.log(`   Repository: ${githubConfig.repo}`);
+    if (githubConfig.baseUrl) {
+      console.log(`   Base URL: ${githubConfig.baseUrl}`);
+    }
+    console.log("");
+  } else {
+    console.log("🐙 GitHub Configuration: Not configured\n");
+  }
+  
+  // Show LLM config
+  const llmProviders = configManager.getAllLLMProviders();
+  console.log("🤖 LLM Configuration:");
+  if (llmProviders.length > 0) {
+    llmProviders.forEach(provider => {
+      const status = provider.isDefault ? ' (default)' : '';
+      console.log(`   ${provider.provider}: ${provider.model}${status}`);
+    });
+  } else {
+    console.log("   No LLM providers configured");
+  }
+  console.log("");
+  
+  // Show logging config
+  const loggingConfig = configManager.getLoggingConfig();
+  console.log("📝 Logging Configuration:");
+  console.log(`   Level: ${loggingConfig.level}`);
+  console.log(`   Console: ${loggingConfig.console ? 'enabled' : 'disabled'}\n`);
+  
+  // Show storage config
+  const storageConfig = configManager.getStorageConfig();
+  console.log("💾 Storage Configuration:");
+  console.log(`   Data Directory: ${storageConfig.dataDir}`);
+  console.log(`   Backup Directory: ${storageConfig.backupDir}\n`);
+  
+  // Show configuration statistics
+  const stats = configManager.getStats();
+  console.log("📈 Configuration Statistics:");
+  console.log(`   Total Configurations: ${stats.totalConfigs}`);
+  console.log(`   LLM Providers: ${stats.totalLLMProviders}`);
+  console.log(`   Categories: ${stats.categories.join(', ')}`);
 }
 
 async function setConfig(key: string, value: string) {
   try {
-    // Parse the key path (e.g., "database.path" -> ["database", "path"])
-    const keys = key.split('.');
-    const config = configManager.getConfig();
+    // Determine category from key
+    const category = key.split('.')[0];
     
-    // Navigate to the nested property
-    let current: any = config;
-    for (let i = 0; i < keys.length - 1; i++) {
-      if (!(keys[i] in current)) {
-        current[keys[i]] = {};
-      }
-      current = current[keys[i]];
-    }
+    // Set the configuration
+    configManager.setConfig(key, value, 'string', `Set via CLI`, category);
     
-    // Set the value
-    const lastKey = keys[keys.length - 1];
-    current[lastKey] = value;
-    
-    // Save the configuration
-    await configManager.updateConfig(config);
     console.log(`✅ Set ${key} = ${value}`);
     
+    // Show updated configuration
+    const currentValue = configManager.getConfig(key);
+    console.log(`📋 Current value: ${currentValue}`);
+    
   } catch (error) {
-    console.error(`❌ Failed to set ${key}:`, error);
+    console.error("❌ Failed to set configuration:", error);
   }
 }
 
@@ -64,20 +116,37 @@ async function initDatabase() {
 }
 
 async function validateConfig() {
-  const errors = configManager.validate();
-  if (errors.length === 0) {
-    console.log("✅ Configuration is valid");
-  } else {
-    console.error("❌ Configuration errors:");
-    errors.forEach(error => console.error(`   - ${error}`));
+  try {
+    // Get configuration statistics
+    const stats = configManager.getStats();
+    
+    if (stats.totalConfigs > 0) {
+      console.log("✅ Configuration is valid");
+      console.log(`📊 Total configurations: ${stats.totalConfigs}`);
+      console.log(`🤖 LLM providers: ${stats.totalLLMProviders}`);
+      console.log(`📂 Categories: ${stats.categories.join(', ')}`);
+    } else {
+      console.log("⚠️  No configurations found");
+    }
+  } catch (error) {
+    console.error("❌ Configuration validation failed:", error);
   }
 }
 
 async function resetConfig() {
   try {
-    // Reset to defaults
-    await configManager.updateConfig(configManager.getConfig());
+    console.log("🔄 Resetting configuration to defaults...");
+    
+    // Re-initialize default configuration
+    const newConfigManager = new (await import("../config/config.js")).ConfigManager();
+    
     console.log("✅ Configuration reset to defaults");
+    
+    // Show new configuration
+    const stats = newConfigManager.getStats();
+    console.log(`📊 Total configurations: ${stats.totalConfigs}`);
+    
+    newConfigManager.close();
   } catch (error) {
     console.error("❌ Failed to reset configuration:", error);
   }
@@ -110,9 +179,6 @@ async function main() {
   }
   
   try {
-    // Load configuration first
-    await configManager.load();
-    
     switch (options.action) {
       case 'show':
         await showConfig();
@@ -141,6 +207,8 @@ async function main() {
   } catch (error) {
     console.error("❌ Error:", error);
     process.exit(1);
+  } finally {
+    configManager.close();
   }
 }
 

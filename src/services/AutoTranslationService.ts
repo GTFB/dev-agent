@@ -55,8 +55,6 @@ export class AutoTranslationService {
    * Initialize configuration
    */
   async initializeConfig(): Promise<void> {
-    await this.configManager.load();
-
     // If no provider was passed, try to load default from config
     if (!this._llmService.isAvailable()) {
       const defaultProvider = this.configManager.getDefaultProvider();
