@@ -236,7 +236,7 @@ export class StorageService {
     try {
       await this.ensureInitialized();
       const result = this.db.get<ProjectConfig>(
-        "SELECT value FROM project_config WHERE key = ?",
+        "SELECT value FROM config WHERE key = ?",
         [key],
       );
       return result?.value || null;
@@ -254,7 +254,7 @@ export class StorageService {
       await this.ensureInitialized();
       this.db.run(
         `
-        INSERT OR REPLACE INTO project_config (key, value) 
+        INSERT OR REPLACE INTO config (key, value) 
         VALUES (?, ?)
       `,
         [key, value],
@@ -274,7 +274,7 @@ export class StorageService {
     try {
       await this.ensureInitialized();
       const configs = this.db.all<ProjectConfig>(
-        "SELECT * FROM project_config ORDER BY key",
+        "SELECT * FROM config ORDER BY key",
       );
       return configs;
     } catch (error) {
@@ -288,7 +288,7 @@ export class StorageService {
    */
   async deleteConfig(key: string): Promise<void> {
     try {
-      this.db.run("DELETE FROM project_config WHERE key = ?", [key]);
+      this.db.run("DELETE FROM config WHERE key = ?", [key]);
       logger.info(`Config deleted: ${key}`);
     } catch (error) {
       logger.error(`Failed to delete config ${key}`, error as Error);
