@@ -7,7 +7,6 @@
 
 import { DatabaseManager } from "../core/database.js";
 import { configManager } from "../config/config.js";
-import { logger } from "../utils/logger.js";
 
 async function main() {
   try {

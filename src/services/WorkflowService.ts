@@ -16,7 +16,7 @@ import {
   WorkflowContext,
 } from "../core/types.js";
 import { logger } from "../utils/logger.js";
-import { getEnv, hasEnv } from "../utils/env-loader.js";
+import { getEnv } from "../utils/env-loader.js";
 
 /**
  * Workflow Service class

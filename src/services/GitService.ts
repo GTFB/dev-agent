@@ -226,7 +226,7 @@ export class GitService {
   /**
    * Get commit history
    */
-  async getCommitHistory(branch?: string, limit: number = 10): Promise<any[]> {
+  async getCommitHistory(branch?: string, limit: number = 10): Promise<Array<{ hash: string; message: string; author: string; date: string }>> {
     try {
       const options = ["--oneline", `-${limit}`];
       if (branch) {

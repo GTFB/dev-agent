@@ -12,7 +12,7 @@ export interface LLMProviderConfig {
   apiKey: string;
   apiBase?: string;
   model: string;
-  config?: any;
+  config?: Record<string, unknown>;
   isDefault: boolean;
   status: 'active' | 'inactive' | 'testing';
 }
@@ -21,7 +21,7 @@ export class LLMConfigManager {
   /**
    * Add or update LLM provider
    */
-  addProvider(provider: string, apiKey: string, model: string, apiBase?: string, config?: any): void {
+  addProvider(provider: string, apiKey: string, model: string, apiBase?: string, config?: Record<string, unknown>): void {
     configManager.setLLMProvider(provider, apiKey, model, apiBase, config);
   }
 
@@ -40,7 +40,7 @@ export class LLMConfigManager {
   updateProviderStatus(provider: string, status: 'active' | 'inactive' | 'testing'): void {
     // This would need to be implemented in ConfigManager
     // For now, we'll use a direct database approach
-    const db = (configManager as any).db;
+    const db = (configManager as unknown as { db: { prepare: (sql: string) => { run: (...args: unknown[]) => void } } }).db;
     if (db) {
       const stmt = db.prepare("UPDATE llm SET status = ? WHERE provider = ?");
       stmt.run(status, provider);
@@ -105,7 +105,7 @@ export class LLMConfigManager {
       
       // For now, just return true if we have the basic config
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -157,7 +157,7 @@ export class LLMConfigManager {
   /**
    * Get retry configuration for provider
    */
-  getRetryConfig(provider: string): {
+  getRetryConfig(): {
     maxRetries: number;
     retryDelay: number;
     backoffMultiplier: number;

@@ -14,8 +14,8 @@ import { join } from "path";
 
 export class ConfigurationManager {
   private static instance: ConfigurationManager;
-  private providers: Map<string, ConfigurationProvider<any>> = new Map();
-  private configCache: Map<string, any> = new Map();
+  private providers: Map<string, ConfigurationProvider<BaseConfig>> = new Map();
+  private configCache: Map<string, BaseConfig> = new Map();
   private initialized = false;
 
   private constructor() {
@@ -76,7 +76,7 @@ export class ConfigurationManager {
           logger.warn(`⚠️  Found database file in root directory: ${file}`);
           logger.warn("   This file should be in data/ directory for better organization");
         }
-      } catch (error) {
+      } catch {
         // Ignore errors during validation
       }
     }

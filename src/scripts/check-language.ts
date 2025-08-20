@@ -24,7 +24,7 @@ const IGNORE_FILES = [
 ];
 
 // Database path
-const DB_PATH = path.join(process.cwd(), 'dev-agent.db');
+const DB_PATH = path.join(process.cwd(), 'data', '.dev-agent.db');
 
 /**
  * Pre-install configurations in database
@@ -132,7 +132,7 @@ function getStagedFiles(): string[] {
   try {
     const output = execSync('git diff --cached --name-only --diff-filter=ACM', { encoding: 'utf8' });
     return output.trim().split('\n').filter(Boolean);
-  } catch (error) {
+  } catch {
     console.log('No staged files or not a git repository');
     return [];
   }
@@ -184,6 +184,7 @@ function checkFileLanguage(filePath: string): LanguageCheckResult {
   } catch (error) {
     return {
       file: filePath,
+      hasRussian: false,
       error: error instanceof Error ? error.message : 'Unknown error'
     };
   }

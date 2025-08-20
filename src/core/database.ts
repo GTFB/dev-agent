@@ -6,7 +6,7 @@
 import { Database } from "bun:sqlite";
 import { logger } from "../utils/logger.js";
 import { configManager } from "../config/config.js";
-import { SCHEMA_MIGRATIONS, getMigrationVersions, getMigrationSQL } from "./schema.js";
+import { getMigrationVersions, getMigrationSQL } from "./schema.js";
 
 /**
  * Database Manager class
@@ -198,11 +198,11 @@ export class DatabaseManager {
   /**
    * Get table schema
    */
-  getTableSchema(tableName: string): any[] {
+  getTableSchema(tableName: string): Array<Record<string, unknown>> {
     if (!this.db) return [];
     
     try {
-      return this.db.prepare(`PRAGMA table_info(${tableName})`).all() as any[];
+      return this.db.prepare(`PRAGMA table_info(${tableName})`).all() as Array<Record<string, unknown>>;
     } catch {
       return [];
     }
@@ -216,12 +216,30 @@ export class DatabaseManager {
       throw new Error("Database not initialized");
     }
 
+    // For in-memory databases, we can't backup to file
+    if (this.dbPath === ":memory:" || this.dbPath.startsWith(":memory:")) {
+      logger.warn("Cannot backup in-memory database to file");
+      return;
+    }
+
     try {
-      const backupDb = new Database(backupPath);
-      this.db.backup(backupDb);
-      backupDb.close();
+      // Close current connection temporarily
+      this.db.close();
+      
+      // Copy the database file
+      const sourceFile = Bun.file(this.dbPath);
+      const sourceBuffer = await sourceFile.arrayBuffer();
+      await Bun.write(backupPath, sourceBuffer);
+      
+      // Reopen the database
+      this.db = new Database(this.dbPath);
+      
       logger.info(`Database backed up to ${backupPath}`);
     } catch (error) {
+      // Reopen the database even if backup failed
+      if (!this.db || this.db === null) {
+        this.db = new Database(this.dbPath);
+      }
       logger.error("Failed to backup database", error as Error);
       throw error;
     }

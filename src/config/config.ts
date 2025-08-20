@@ -65,7 +65,7 @@ export class ConfigManager {
   private configPath: string;
 
   constructor() {
-    this.configPath = join(process.cwd(), "dev-agent.db");
+    this.configPath = join(process.cwd(), "data", ".dev-agent.db");
     this.db = new Database(this.configPath);
     this.ensureTables();
   }
@@ -149,7 +149,7 @@ export class ConfigManager {
   private getDefaultConfig(): AppConfig {
     return {
       database: {
-        path: join(process.cwd(), "dev-agent.db"),
+        path: join(process.cwd(), "data", ".dev-agent.db"),
         type: "sqlite"
       },
       github: undefined,
@@ -231,7 +231,7 @@ export class ConfigManager {
   /**
    * Set LLM provider configuration
    */
-  setLLMProvider(provider: string, apiKey: string, model: string, apiBase?: string, config?: any): void {
+  setLLMProvider(provider: string, apiKey: string, model: string, apiBase?: string, config?: Record<string, unknown>): void {
     const stmt = this.db.prepare(`
       INSERT OR REPLACE INTO llm (provider, api_key, model, api_base, config, updated_at)
       VALUES (?, ?, ?, ?, ?, (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')))
@@ -244,7 +244,7 @@ export class ConfigManager {
   /**
    * Get LLM provider configuration
    */
-  getLLMProvider(provider: string): { apiKey: string; model: string; apiBase?: string; config?: any } | undefined {
+  getLLMProvider(provider: string): { apiKey: string; model: string; apiBase?: string; config?: Record<string, unknown> } | undefined {
     const stmt = this.db.prepare("SELECT api_key, model, api_base, config FROM llm WHERE provider = ?");
     const result = stmt.get(provider) as { api_key: string; model: string; api_base?: string; config?: string } | undefined;
     
@@ -303,7 +303,7 @@ export class ConfigManager {
     const config = this.getConfigByCategory('database');
     
     return {
-      path: config['database.path'] || join(process.cwd(), "dev-agent.db"),
+      path: config['database.path'] || join(process.cwd(), "data", ".dev-agent.db"),
       type: (config['database.type'] as 'sqlite' | 'postgresql' | 'mysql') || 'sqlite'
     };
   }
@@ -374,7 +374,7 @@ export class ConfigManager {
     
     return {
       level: (config['logging.level'] as 'debug' | 'info' | 'warn' | 'error') || 'info',
-      console: config['logging.console'] === 'true'
+      console: config['logging.console'] === 'true' || config['logging.console'] === undefined
     };
   }
 

@@ -2,8 +2,9 @@
 
 **CLI assistant for automating the High-Efficiency Standard Operating Protocol**
 
-[![Version](https://img.shields.io/badge/version-0.2.0-alpha.1-alpha.1-alpha.1-blue.svg)](https://github.com/your-org/dev-agent)
+[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/your-org/dev-agent)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+![Test Coverage](docs/assets/coverage.svg)
 [![Bun](https://img.shields.io/badge/runtime-Bun-000000.svg)](https://bun.sh)
 [![TypeScript](https://img.shields.io/badge/language-TypeScript-3178C6.svg)](https://www.typescriptlang.org/)
 
@@ -24,6 +25,17 @@ Dev Agent is a powerful CLI tool that automates and standardizes the complete so
 - **Testing**: Bun test runner
 - **Linting**: ESLint with TypeScript rules
 - **Git Hooks**: Automated language compliance checking
+
+### CI/CD Pipeline
+
+Our project uses GitHub Actions for automated testing, quality checks, and deployment:
+
+- **🔄 Continuous Integration**: Automated testing on every push and PR
+- **📊 Quality Gates**: 90%+ test coverage, linting, security audits
+- **🚀 Automated Releases**: Version management and GitHub releases
+- **📈 Coverage Badge**: Real-time test coverage monitoring
+
+See [CI/CD Documentation](docs/ci-cd.md) for detailed information.
 
 ### Language Requirements
 

@@ -39,7 +39,10 @@ export interface RetryConfig {
 export class LLMTranslationService {
   private provider?: LLMProvider;
   private defaultModel: string = "gpt-3.5-turbo";
-  private configManager?: any; // Will be imported dynamically
+  private configManager?: {
+    getRetryConfig(): RetryConfig | undefined;
+    setRetryConfig(config: RetryConfig): Promise<void>;
+  };
   private retryConfig: RetryConfig = {
     maxRetries: 2,
     retryDelayMs: 20000, // 20 seconds
@@ -53,7 +56,10 @@ export class LLMTranslationService {
   /**
    * Set config manager for persistent storage
    */
-  setConfigManager(configManager: any): void {
+  setConfigManager(configManager: {
+    getRetryConfig(): RetryConfig | undefined;
+    setRetryConfig(config: RetryConfig): Promise<void>;
+  }): void {
     this.configManager = configManager;
 
     // Load retry config from persistent storage

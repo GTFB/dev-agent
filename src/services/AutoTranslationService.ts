@@ -253,7 +253,7 @@ export class AutoTranslationService {
     // If this was the current provider, clear it
     const currentProvider = this._llmService.getProviderInfo();
     if (currentProvider?.name === name) {
-      this._llmService.setProvider(undefined as any);
+      this._llmService.setProvider(undefined);
     }
   }
 
