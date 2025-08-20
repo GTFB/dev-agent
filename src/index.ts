@@ -11,7 +11,7 @@ import { GitService } from "./services/GitService.js";
 import { WorkflowService } from "./services/WorkflowService.js";
 import { WorkflowContext, Goal } from "./core/types.js";
 import { logger, LogLevel } from "./utils/logger.js";
-import { loadEnvironment, getEnv } from "./utils/env-loader.js";
+import { loadEnvironment } from "./utils/env-loader.js";
 import { ProjectConfigService } from "./services/ProjectConfigService.js";
 
 // CLI version
@@ -151,10 +151,10 @@ async function main(): Promise<void> {
         
         // Load project configuration
         const projectConfigService = new ProjectConfigService();
-        let projectConfig: any = null;
+        let projectConfig: Record<string, unknown> | null = null;
         try {
           projectConfig = await projectConfigService.getFullConfig();
-        } catch (error) {
+        } catch {
           console.log("⚠️  Warning: Could not load .dev-agent.json configuration");
         }
         
@@ -578,7 +578,7 @@ async function main(): Promise<void> {
       try {
         await initializeServices();
         
-        const updates: any = { status };
+        const updates: Record<string, unknown> = { status };
         if (options.branch) {
           updates.branch_name = options.branch;
         }
@@ -591,6 +591,7 @@ async function main(): Promise<void> {
         }
       } catch (error) {
         console.error("❌", `Failed to update goal ${goalId}:`, error);
+        // Log error for debugging
         process.exit(1);
       } finally {
         storageService.close();

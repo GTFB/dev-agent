@@ -14,7 +14,7 @@ export class StorageService {
   private db: DatabaseManager;
   private initialized: boolean = false;
 
-  constructor(dbPath: string = ".dev-agent.db") {
+  constructor(dbPath: string = "data/.dev-agent.db") {
     this.db = new DatabaseManager(dbPath);
   }
 

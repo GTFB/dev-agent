@@ -5,8 +5,8 @@
  * Automates version updates across all project files
  */
 
-import { readFile, writeFile, mkdir } from "fs/promises";
-import { join, dirname } from "path";
+import { readFile, writeFile } from "fs/promises";
+import { join } from "path";
 import { existsSync } from "fs";
 import { execSync } from "child_process";
 import { logger } from "../utils/logger.js";
@@ -22,14 +22,7 @@ interface PreReleaseInfo {
   number: number;
 }
 
-interface FileUpdate {
-  path: string;
-  patterns: Array<{
-    find: string | RegExp;
-    replace: string;
-    description: string;
-  }>;
-}
+
 
 class VersionManager {
   private readonly projectRoot: string;
@@ -72,9 +65,9 @@ class VersionManager {
   }
 
   /**
-   * Bump version by type
+   * Calculate next version by type
    */
-  private bumpVersion(version: string, type: 'major' | 'minor' | 'patch'): string {
+  private calculateNextVersion(version: string, type: 'major' | 'minor' | 'patch'): string {
     const [major, minor, patch] = version.split('.').map(Number);
     
     switch (type) {
@@ -290,7 +283,7 @@ ${changelogContent}`;
       const currentVersion = config.version;
       
       // Calculate new version
-      const newVersion = this.bumpVersion(currentVersion, type);
+      const newVersion = this.calculateNextVersion(currentVersion, type);
       
       logger.info(`📈 Bumping version from ${currentVersion} to ${newVersion}`);
       
@@ -354,10 +347,11 @@ ${changelogContent}`;
       logger.info(`   2. Push branch: git push origin ${branchName}`);
       logger.info(`   3. Create Pull Request for testing`);
       
-    } catch (error) {
-      logger.error("Pre-release creation failed:", error as Error);
-      throw error;
-    }
+          } catch (error) {
+        logger.error("Pre-release creation failed:", error as Error);
+        // Re-throw for proper error handling
+        throw error;
+      }
   }
 
   /**
@@ -388,12 +382,13 @@ ${changelogContent}`;
         } else {
           logger.info(`   Git Status: Clean working directory`);
         }
-      } catch (error) {
+      } catch {
         logger.warn("Could not check git status");
       }
       
     } catch (error) {
       logger.error("Failed to show version info:", error as Error);
+      // Log error for debugging
     }
   }
 }
@@ -411,12 +406,13 @@ async function main() {
   const command = args[0];
   
   switch (command) {
-    case 'bump':
+    case 'bump': {
       const type = args[1] as 'major' | 'minor' | 'patch' || 'patch';
       await versionManager.bumpVersion(type);
       break;
+    }
       
-    case 'pre-release':
+    case 'pre-release': {
       const preReleaseType = args[1] as 'alpha' | 'beta' | 'rc';
       if (!preReleaseType) {
         logger.error("Pre-release type required: alpha, beta, or rc");
@@ -424,6 +420,7 @@ async function main() {
       }
       await versionManager.createPreRelease(preReleaseType);
       break;
+    }
       
     case 'info':
       await versionManager.showVersionInfo();

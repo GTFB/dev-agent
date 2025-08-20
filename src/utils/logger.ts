@@ -107,7 +107,7 @@ export class Logger {
   /**
    * Log info message
    */
-  info(message: string, ...args: any[]): void {
+  info(message: string, ...args: unknown[]): void {
     if (this.config.level <= LogLevel.INFO) {
       const formattedMessage = `[INFO] ${message}`;
       console.info(this.formatTimestamp() + formattedMessage, ...args);
@@ -118,7 +118,7 @@ export class Logger {
   /**
    * Log warning message
    */
-  warn(message: string, ...args: any[]): void {
+  warn(message: string, ...args: unknown[]): void {
     if (this.config.level <= LogLevel.WARN) {
       const formattedMessage = `[WARN] ${message}`;
       console.warn(this.formatTimestamp() + formattedMessage, ...args);
@@ -129,7 +129,7 @@ export class Logger {
   /**
    * Log error message
    */
-  error(message: string, error?: Error, ...args: any[]): void {
+  error(message: string, error?: Error, ...args: unknown[]): void {
     if (this.config.level <= LogLevel.ERROR) {
       const formattedMessage = `[ERROR] ${message}`;
       console.error(this.formatTimestamp() + formattedMessage, ...args);
@@ -155,7 +155,7 @@ export class Logger {
   /**
    * Log success message
    */
-  success(message: string, ...args: any[]): void {
+  success(message: string, ...args: unknown[]): void {
     if (this.config.level <= LogLevel.INFO) {
       const formattedMessage = `[SUCCESS] ${message}`;
       console.log(this.formatTimestamp() + formattedMessage, ...args);

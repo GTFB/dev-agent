@@ -8,14 +8,14 @@
 import { Database } from 'bun:sqlite';
 import { join } from 'path';
 
-const DB_PATH = join(process.cwd(), 'dev-agent.db');
+const DB_PATH = join(process.cwd(), 'data', '.dev-agent.db');
 
 interface LLMProvider {
   provider: string;
   apiKey: string;
   apiBase?: string;
   model: string;
-  config?: any;
+  config?: Record<string, unknown>;
   isDefault: boolean;
   status: string;
 }
@@ -49,7 +49,7 @@ class LLMManager {
 
   addProvider(provider: string, apiKey: string, model: string, options: {
     apiBase?: string;
-    config?: any;
+    config?: Record<string, unknown>;
     setAsDefault?: boolean;
   } = {}): void {
     const {
@@ -138,7 +138,7 @@ class LLMManager {
 
   testProvider(provider: string): void {
     const stmt = this.db.prepare("SELECT * FROM llm WHERE provider = ?");
-    const result = stmt.get(provider) as any;
+    const result = stmt.get(provider) as LLMProvider | undefined;
     
     if (!result) {
       console.log(`❌ Provider not found: ${provider}`);
@@ -146,24 +146,23 @@ class LLMManager {
     }
 
     console.log(`🧪 Testing provider: ${provider}`);
-    console.log(`   API Key: ${result.api_key ? '✅ Set' : '❌ Missing'}`);
+    console.log(`   API Key: ${result.apiKey ? '✅ Set' : '❌ Missing'}`);
     console.log(`   Model: ${result.model}`);
     console.log(`   Status: ${result.status}`);
-    console.log(`   Rate Limit: ${result.rate_limit_ms}ms`);
     
     // Here you could add actual API testing logic
     console.log(`   ⚠️  API testing not implemented yet`);
   }
 
   updateProviderConfig(provider: string, updates: Partial<LLMProvider>): void {
-    const current = this.db.prepare("SELECT * FROM llm WHERE provider = ?").get(provider) as any;
+    const current = this.db.prepare("SELECT * FROM llm WHERE provider = ?").get(provider) as LLMProvider | undefined;
     if (!current) {
       console.log(`❌ Provider not found: ${provider}`);
       return;
     }
 
     const fields: string[] = [];
-    const values: any[] = [];
+    const values: (string | number | boolean)[] = [];
     
     if (updates.apiKey !== undefined) {
       fields.push("api_key = ?");
@@ -262,7 +261,10 @@ async function main(): Promise<void> {
         }
         
         const [, provider, apiKey, model, ...options] = args;
-        const parsedOptions: any = {};
+        const parsedOptions: {
+          apiBase?: string;
+          setAsDefault?: boolean;
+        } = {};
         
         for (let i = 0; i < options.length; i += 2) {
           if (options[i].startsWith('--')) {
@@ -322,7 +324,7 @@ async function main(): Promise<void> {
         }
         
         const provider = args[1];
-        const updates: any = {};
+        const updates: Partial<LLMProvider> = {};
         
         for (let i = 2; i < args.length; i += 2) {
           if (args[i].startsWith('--')) {

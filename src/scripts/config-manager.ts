@@ -170,7 +170,7 @@ async function main() {
   }
   
   const options: CommandOptions = {
-    action: args[0] as any
+    action: args[0] as 'show' | 'set' | 'init' | 'validate' | 'reset'
   };
   
   if (args[0] === 'set' && args.length >= 3) {

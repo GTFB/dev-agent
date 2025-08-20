@@ -29,6 +29,22 @@ export interface ValidationResult {
   confidence: number;
 }
 
+export interface GoalData {
+  title?: string;
+  description?: string;
+  [key: string]: unknown;
+}
+
+export interface DocumentData {
+  title?: string;
+  content?: string;
+  [key: string]: unknown;
+}
+
+export interface TranslationMap {
+  [originalContent: string]: string;
+}
+
 export class LanguageValidationMiddleware {
   private languageService: LanguageDetectionService;
   private translationService: AutoTranslationService;
@@ -170,7 +186,7 @@ export class LanguageValidationMiddleware {
   /**
    * Validate goal content before saving
    */
-  async validateGoalContent(goalData: any): Promise<ValidationResult[]> {
+  async validateGoalContent(goalData: GoalData): Promise<ValidationResult[]> {
     const results: ValidationResult[] = [];
 
     // Validate title
@@ -203,7 +219,7 @@ export class LanguageValidationMiddleware {
   /**
    * Validate document content before saving
    */
-  async validateDocumentContent(docData: any): Promise<ValidationResult[]> {
+  async validateDocumentContent(docData: DocumentData): Promise<ValidationResult[]> {
     const results: ValidationResult[] = [];
 
     // Validate title
@@ -265,8 +281,8 @@ export class LanguageValidationMiddleware {
   /**
    * Apply translations to content if available
    */
-  applyTranslations(results: ValidationResult[]): any {
-    const translations: Record<string, string> = {};
+  applyTranslations(results: ValidationResult[]): TranslationMap {
+    const translations: TranslationMap = {};
 
     for (const result of results) {
       if (

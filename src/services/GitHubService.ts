@@ -7,7 +7,7 @@ import { Octokit } from "@octokit/rest";
 import { StorageService } from "./StorageService.js";
 import { Goal, GitHubConfig } from "../core/types.js";
 import { logger } from "../utils/logger.js";
-import { getEnv, hasEnv } from "../utils/env-loader.js";
+import { getEnv } from "../utils/env-loader.js";
 
 export interface GitHubIssue {
   number: number;
@@ -220,7 +220,8 @@ export class GitHubService {
       let page = 1;
       const perPage = 100;
 
-      while (true) {
+      const maxPages = 10; // Prevent infinite loops
+      while (page <= maxPages) {
         const { data } = await this.octokit.rest.issues.listForRepo({
           owner: this.config.owner,
           repo: this.config.repo,

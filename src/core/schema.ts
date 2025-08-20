@@ -130,7 +130,7 @@ export const SCHEMA_MIGRATIONS = {
     ('project.repository', 'https://github.com/dev-agent/dev-agent', 'string', 'Project repository', 'project', 1);
     
     INSERT OR REPLACE INTO config (key, value, type, description, category, required) VALUES
-    ('database.path', 'dev-agent.db', 'string', 'Database file path', 'database', 1);
+    ('database.path', 'data/.dev-agent.db', 'string', 'Database file path', 'database', 1);
     
     INSERT OR REPLACE INTO config (key, value, type, description, category, required) VALUES
     ('database.type', 'sqlite', 'string', 'Database type', 'database', 1);

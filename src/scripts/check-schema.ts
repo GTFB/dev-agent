@@ -3,7 +3,7 @@
 import { Database } from 'bun:sqlite';
 import { join } from 'path';
 
-const DB_PATH = join(process.cwd(), 'dev-agent.db');
+const DB_PATH = join(process.cwd(), 'data', '.dev-agent.db');
 
 async function main(): Promise<void> {
   const db = new Database(DB_PATH);

@@ -8,7 +8,7 @@
 import { Database } from 'bun:sqlite';
 import { join } from 'path';
 
-const DB_PATH = join(process.cwd(), 'dev-agent.db');
+const DB_PATH = join(process.cwd(), 'data', '.dev-agent.db');
 
 interface GitHubConfig {
   owner: string;
@@ -114,13 +114,18 @@ class GitHubManager {
       return null;
     }
 
-    const config: any = {};
+    const config: Record<string, string> = {};
     results.forEach(row => {
       const key = row.key.replace('github.', '');
       config[key] = row.value;
     });
 
-    return config as GitHubConfig;
+    // Validate required fields before casting
+    if (!config.owner || !config.repo || !config.token) {
+      return null;
+    }
+
+    return config as unknown as GitHubConfig;
   }
 
   getBranchConfig(): BranchConfig | null {
@@ -131,16 +136,21 @@ class GitHubManager {
       return null;
     }
 
-    const config: any = {};
+    const config: Record<string, string> = {};
     results.forEach(row => {
       const key = row.key.replace('branches.', '');
       config[key] = row.value;
     });
 
-    return config as BranchConfig;
+    // Validate required fields before casting
+    if (!config.main || !config.develop || !config.featurePrefix || !config.releasePrefix || !config.hotfixPrefix) {
+      return null;
+    }
+
+    return config as unknown as BranchConfig;
   }
 
-  getGoalConfig(): any {
+  getGoalConfig(): Record<string, string> | null {
     const stmt = this.db.prepare("SELECT key, value FROM config WHERE category = 'goals'");
     const results = stmt.all() as Array<{ key: string; value: string }>;
     
@@ -148,7 +158,7 @@ class GitHubManager {
       return null;
     }
 
-    const config: any = {};
+    const config: Record<string, string> = {};
     results.forEach(row => {
       const key = row.key.replace('goals.', '');
       config[key] = row.value;

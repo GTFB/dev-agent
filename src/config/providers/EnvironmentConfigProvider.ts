@@ -30,7 +30,7 @@ export class EnvironmentConfigProvider implements ConfigurationProvider<Environm
     return this.config;
   }
 
-  validate(config: EnvironmentConfig): boolean {
+  validate(): boolean {
     // Environment config is always valid as it's just a wrapper around process.env
     return true;
   }
