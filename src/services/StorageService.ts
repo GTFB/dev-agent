@@ -249,15 +249,15 @@ export class StorageService {
   /**
    * Set configuration value
    */
-  async setConfig(key: string, value: string): Promise<void> {
+  async setConfig(key: string, value: string, type: string = 'string', description?: string, category: string = 'general'): Promise<void> {
     try {
       await this.ensureInitialized();
       this.db.run(
         `
-        INSERT OR REPLACE INTO config (key, value) 
-        VALUES (?, ?)
+        INSERT OR REPLACE INTO config (key, value, type, description, category) 
+        VALUES (?, ?, ?, ?, ?)
       `,
-        [key, value],
+        [key, value, type, description || '', category],
       );
 
       logger.info(`Config updated: ${key} = ${value}`);
