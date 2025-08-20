@@ -1,6 +1,6 @@
 {
   "name": "dev-agent",
-  "version": "2.0.0",
+  "version": "0.2.0",
   "description": "CLI assistant for automating the High-Efficiency Standard Operating Protocol.",
   "type": "module",
   "scripts": {
@@ -32,7 +32,17 @@
     "github:goals": "bun run src/scripts/github-manager.ts goals",
     "github:show": "bun run src/scripts/github-manager.ts show",
     "github:test": "bun run src/scripts/github-manager.ts test",
-    "github:remove": "bun run src/scripts/github-manager.ts remove"
+    "github:remove": "bun run src/scripts/github-manager.ts remove",
+    "version:info": "bun run src/scripts/version-manager.ts info",
+    "version:bump": "bun run src/scripts/version-manager.ts bump",
+    "version:patch": "bun run src/scripts/version-manager.ts bump patch",
+    "version:minor": "bun run src/scripts/version-manager.ts bump minor",
+    "version:major": "bun run src/scripts/version-manager.ts bump major",
+    "pre-release:alpha": "bun run src/scripts/version-manager.ts pre-release alpha",
+    "pre-release:beta": "bun run src/scripts/version-manager.ts pre-release beta",
+    "pre-release:rc": "bun run src/scripts/version-manager.ts pre-release rc",
+    "release:prepare": "bun run src/scripts/version-manager.ts bump patch",
+    "release:validate": "bun run src/scripts/validate-structure.ts && bun test"
   },
   "bin": {
     "dev": "./src/index.ts"
