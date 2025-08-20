@@ -577,7 +577,9 @@ export class WorkflowService {
     try {
       logger.info(`Setting configuration: ${key} = ${value}`);
 
-      await this.storage.setConfig(key, value);
+      // Extract category from key (e.g., github.owner -> github)
+      const category = key.split('.')[0] || 'general';
+      await this.storage.setConfig(key, value, 'string', `Configuration for ${key}`, category);
 
       logger.success(`Configuration updated: ${key} = ${value}`);
       return {
