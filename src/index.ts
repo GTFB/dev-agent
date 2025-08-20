@@ -11,6 +11,8 @@ import { GitService } from "./services/GitService.js";
 import { WorkflowService } from "./services/WorkflowService.js";
 import { WorkflowContext, Goal } from "./core/types.js";
 import { logger, LogLevel } from "./utils/logger.js";
+import { loadEnvironment, getEnv } from "./utils/env-loader.js";
+import { ProjectConfigService } from "./services/ProjectConfigService.js";
 
 // CLI version
 const VERSION = "2.0.0";
@@ -144,19 +146,45 @@ async function main(): Promise<void> {
     .description("Initialize Dev Agent in the current project")
     .action(async () => {
       try {
+        // Load environment configuration first
+        const envConfig = loadEnvironment();
+        
+        // Load project configuration
+        const projectConfigService = new ProjectConfigService();
+        let projectConfig: any = null;
+        try {
+          projectConfig = await projectConfigService.getFullConfig();
+        } catch (error) {
+          console.log("⚠️  Warning: Could not load .dev-agent.json configuration");
+        }
+        
         const result = await workflowService.initializeProject();
 
         if (result.success) {
           console.log("✅", result.message);
           console.log("\n🎉 Dev Agent initialized successfully!");
-          console.log("\nNext steps:");
-          console.log(
-            "1. Configure GitHub repository: dev config set github.owner <owner>",
-          );
-          console.log(
-            '2. Create your first goal: dev goal create "Goal title"',
-          );
-          console.log("3. Start working: dev goal start <goal-id>");
+          console.log("\n📋 Environment Configuration:");
+          console.log(`   GitHub Token: ${envConfig.GITHUB_TOKEN ? "✅ Configured" : "❌ Not set"}`);
+          console.log(`   OpenAI API: ${envConfig.OPENAI_API_KEY ? "✅ Configured" : "❌ Not set"}`);
+          console.log(`   Google API: ${envConfig.GOOGLE_API_KEY ? "✅ Configured" : "❌ Not set"}`);
+          
+          if (projectConfig) {
+            console.log("\n📋 Project Configuration (.dev-agent.json):");
+            console.log(`   GitHub Owner: ${projectConfig.github.owner}`);
+            console.log(`   GitHub Repo: ${projectConfig.github.repo}`);
+            console.log(`   Branch Pattern: ${projectConfig.branches.feature_prefix}/<id>-<title>`);
+            console.log(`   Goal Pattern: ${projectConfig.goals.id_pattern}`);
+          }
+          
+          console.log("\n💡 Next steps:");
+          if (!envConfig.GITHUB_TOKEN) {
+            console.log("1. Set GITHUB_TOKEN in your .env file for GitHub integration");
+          }
+          if (!projectConfig) {
+            console.log("2. Check .dev-agent.json file for project configuration");
+          }
+          console.log("3. Create your first goal: dev goal create \"Goal title\"");
+          console.log("4. Start working: dev goal start <goal-id>");
         } else {
           console.error("❌", result.message);
           if (result.error) {
@@ -285,7 +313,7 @@ async function main(): Promise<void> {
               }
               
               if (config.github?.token && config.github.token !== "YOUR_GITHUB_PERSONAL_ACCESS_TOKEN_HERE") {
-                process.env.GITHUB_TOKEN = config.github.token;
+                // Token will be loaded from .env file
                 await workflowService.setConfiguration("github.token", config.github.token);
                 console.log("✅ GitHub token loaded from file and saved to configuration");
                 
@@ -320,8 +348,7 @@ async function main(): Promise<void> {
         }
         
         if (options.token) {
-          // Store token in environment variable and configuration for security
-          process.env.GITHUB_TOKEN = options.token;
+          // Store token in configuration for security
           await workflowService.setConfiguration("github.token", options.token);
           console.log("✅ GitHub token set (stored in environment and configuration)");
           

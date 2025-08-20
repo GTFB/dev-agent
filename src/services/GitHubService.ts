@@ -7,6 +7,7 @@ import { Octokit } from "@octokit/rest";
 import { StorageService } from "./StorageService.js";
 import { Goal, GitHubConfig } from "../core/types.js";
 import { logger } from "../utils/logger.js";
+import { getEnv, hasEnv } from "../utils/env-loader.js";
 
 export interface GitHubIssue {
   number: number;
@@ -68,12 +69,21 @@ export class GitHubService {
   /**
    * Initialize GitHub client with configuration
    */
-  async initialize(config: GitHubConfig, token?: string): Promise<void> {
+  async initialize(config?: GitHubConfig, token?: string): Promise<void> {
     try {
-      this.config = config;
+      // Use configuration passed from WorkflowService (which reads from .dev-agent.json)
+      if (!config?.owner || !config?.repo) {
+        throw new Error("GitHub repository configuration not provided. Please check .dev-agent.json file");
+      }
+
+      this.config = {
+        owner: config.owner,
+        repo: config.repo,
+        token: token || getEnv("GITHUB_TOKEN") || config?.token || "",
+      };
 
       // Get token from environment or parameter
-      const authToken = token || process.env.GITHUB_TOKEN || config.token;
+      const authToken = token || getEnv("GITHUB_TOKEN") || config?.token;
 
       if (!authToken) {
         logger.warn(
@@ -91,7 +101,7 @@ export class GitHubService {
       await this.validateConnection();
 
       logger.info(
-        `GitHub service initialized for ${config.owner}/${config.repo}`,
+        `GitHub service initialized for ${this.config.owner}/${this.config.repo}`,
       );
     } catch (error) {
       logger.error("Failed to initialize GitHub service", error as Error);

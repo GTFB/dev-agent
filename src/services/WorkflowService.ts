@@ -8,6 +8,7 @@ import { GitService } from "./GitService.js";
 import { GitHubService } from "./GitHubService.js";
 import { ValidationService } from "./ValidationService.js";
 import { AIDService } from "./AIDService.js";
+import { ProjectConfigService } from "./ProjectConfigService.js";
 import {
   Goal,
   GoalStatus,
@@ -15,6 +16,7 @@ import {
   WorkflowContext,
 } from "../core/types.js";
 import { logger } from "../utils/logger.js";
+import { getEnv, hasEnv } from "../utils/env-loader.js";
 
 /**
  * Workflow Service class
@@ -25,6 +27,7 @@ export class WorkflowService {
   private github: GitHubService;
   private validation: ValidationService;
   private aid: AIDService;
+  private projectConfig: ProjectConfigService;
   private context: WorkflowContext;
 
   constructor(
@@ -37,6 +40,7 @@ export class WorkflowService {
     this.github = new GitHubService(storage);
     this.validation = new ValidationService(storage, git);
     this.aid = new AIDService(storage);
+    this.projectConfig = new ProjectConfigService();
     this.context = context;
   }
 
@@ -666,26 +670,25 @@ export class WorkflowService {
     try {
       logger.info("Initializing GitHub integration");
 
-      // Get GitHub configuration
-      const owner = await this.storage.getConfig("github.owner");
-      const repo = await this.storage.getConfig("github.repo");
+      // Get GitHub configuration from project config file
+      const { owner, repo } = await this.projectConfig.getGitHubConfig();
 
       if (!owner || !repo) {
         return {
           success: false,
           message:
-            "GitHub repository not configured. Please set github.owner and github.repo",
+            "GitHub repository not configured. Please check .dev-agent.json file",
           error: "Missing GitHub configuration",
         };
       }
 
       // Get token from parameter, environment, or storage
-      const authToken = token || process.env.GITHUB_TOKEN || await this.storage.getConfig("github.token");
+      const authToken = token || getEnv("GITHUB_TOKEN") || await this.storage.getConfig("github.token");
 
       if (!authToken) {
         return {
           success: false,
-          message: "GitHub token not provided. Please set github.token or GITHUB_TOKEN environment variable",
+          message: "GitHub token not provided. Please set GITHUB_TOKEN in your .env file",
           error: "Missing GitHub token",
         };
       }
