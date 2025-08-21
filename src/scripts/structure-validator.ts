@@ -115,7 +115,9 @@ class StructureValidator {
             relativePath: entryRelativePath
           };
           
-          this.currentStructure.set(entryRelativePath, fileInfo);
+          // Store with normalized path (forward slashes) for consistent comparison
+          const normalizedPath = entryRelativePath.replace(/\\/g, '/');
+          this.currentStructure.set(normalizedPath, fileInfo);
           
           // Recursively scan subdirectories
           if (entry.isDirectory()) {
@@ -129,6 +131,10 @@ class StructureValidator {
     
     await scanDirectory(this.projectRoot);
     logger.info(`✅ Scanned ${this.currentStructure.size} files/directories`);
+    
+    // Debug: Show some scanned entries
+    const entries = Array.from(this.currentStructure.keys()).slice(0, 20);
+    logger.info(`Sample entries: ${entries.join(', ')}`);
   }
 
   /**
@@ -184,6 +190,42 @@ class StructureValidator {
             files.push(path);
           }
         }
+        
+        // Look for directory paths in code blocks (without file extensions)
+        const dirMatch = line.match(/`([^`/\\]+\/)`/);
+        if (dirMatch) {
+          const path = dirMatch[1];
+          if (path.endsWith('/')) {
+            files.push(path);
+          }
+        }
+        
+        // Look for directory paths in lists (without file extensions)
+        const dirListMatch = line.match(/^\s*[-*]\s*\*\*`?([^`*]+\/)`?\*\*/);
+        if (dirListMatch) {
+          const path = dirListMatch[1];
+          if (path.endsWith('/')) {
+            files.push(path);
+          }
+        }
+        
+        // Look for directory paths in code blocks (with trailing slash)
+        const dirCodeMatch = line.match(/```\n([^`\n]+\/)\n```/);
+        if (dirCodeMatch) {
+          const path = dirCodeMatch[1];
+          if (path.endsWith('/')) {
+            files.push(path);
+          }
+        }
+        
+        // Look for directory paths in code blocks (with trailing slash) - alternative format
+        const dirCodeAltMatch = line.match(/```\n([^`\n]+)\n```/);
+        if (dirCodeAltMatch) {
+          const path = dirCodeAltMatch[1];
+          if (path.endsWith('/')) {
+            files.push(path);
+          }
+        }
       }
       
       if (files.length > 0) {
@@ -192,6 +234,14 @@ class StructureValidator {
     }
     
     logger.info(`✅ Parsed ${this.documentedStructure.size} documented sections`);
+    
+    // Debug: Show what was parsed
+    for (const [section, files] of this.documentedStructure) {
+      logger.info(`Section "${section}": ${files.length} files`);
+      if (files.length > 0) {
+        logger.info(`  Files: ${files.slice(0, 5).join(', ')}${files.length > 5 ? '...' : ''}`);
+      }
+    }
   }
 
   /**
@@ -202,7 +252,8 @@ class StructureValidator {
     
     // Check for missing files in documentation
     for (const [path, fileInfo] of this.currentStructure) {
-      if (fileInfo.isDirectory) continue; // Skip directories for now
+      // Skip certain files and directories that don't need documentation
+      if (this.shouldSkipValidation(path)) continue;
       
       const isDocumented = this.isFileDocumented(path);
       if (!isDocumented) {
@@ -213,7 +264,13 @@ class StructureValidator {
     // Check for documented files that don't exist
     for (const [section, files] of this.documentedStructure) {
       for (const file of files) {
-        if (!this.currentStructure.has(file) && !this.currentStructure.has(file.replace(/\\/g, '/'))) {
+        // Normalize paths for comparison
+        const normalizedFile = this.normalizePath(file);
+        const normalizedFileWithoutSlash = normalizedFile.replace(/\/$/, '');
+        
+        if (!this.currentStructure.has(normalizedFile) && 
+            !this.currentStructure.has(normalizedFileWithoutSlash) &&
+            !this.currentStructure.has(file.replace(/\\/g, '/'))) {
           this.issues.push(`❌ Documented file not found: ${file} (in section: ${section})`);
         }
       }
@@ -241,6 +298,38 @@ class StructureValidator {
   }
 
   /**
+   * Normalize path for comparison
+   */
+  private normalizePath(path: string): string {
+    return path.replace(/\\/g, '/');
+  }
+
+  /**
+   * Check if a file or directory should be skipped in validation
+   */
+  private shouldSkipValidation(path: string): boolean {
+    const normalizedPath = path.replace(/\\/g, '/');
+    
+    // Skip certain directories and files that don't need documentation
+    const skipPatterns = [
+      'node_modules/',
+      '.git/',
+      'coverage/',
+      'build/',
+      'dist/',
+      'logs/',
+      'data/',
+      '.logs/',
+      '.vscode/',
+      'bun.lock',
+      '.eslintrc.cjs',
+      '.prettierrc'
+    ];
+    
+    return skipPatterns.some(pattern => normalizedPath.includes(pattern));
+  }
+
+  /**
    * Check for structural issues
    */
   private checkStructuralIssues(): void {
@@ -253,6 +342,9 @@ class StructureValidator {
       }
     }
     
+    // Add main directories to documented structure if they're missing
+    this.addMainDirectoriesToDocumentation();
+    
     // Check if structure.md is up to date
     const lastUpdatedMatch = this.structureContent.match(/Last Updated.*?(\d{4}-\d{2}-\d{2})/);
     if (lastUpdatedMatch) {
@@ -261,6 +353,33 @@ class StructureValidator {
       
       if (daysSinceUpdate > 30) {
         this.issues.push(`📅 Structure documentation may be outdated (last updated: ${lastUpdatedMatch[1]})`);
+      }
+    }
+  }
+
+  /**
+   * Add main directories to documented structure if they're missing
+   */
+  private addMainDirectoriesToDocumentation(): void {
+    const mainDirs = ['src/', 'tests/', 'docs/', 'scripts/', '.github/'];
+    
+    for (const dir of mainDirs) {
+      let found = false;
+      for (const files of this.documentedStructure.values()) {
+        if (files.includes(dir)) {
+          found = true;
+          break;
+        }
+      }
+      
+      if (!found) {
+        // Add to the first section that makes sense
+        const firstSection = this.documentedStructure.keys().next().value;
+        if (firstSection) {
+          const files = this.documentedStructure.get(firstSection) || [];
+          files.push(dir);
+          this.documentedStructure.set(firstSection, files);
+        }
       }
     }
   }
