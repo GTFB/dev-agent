@@ -26,13 +26,13 @@
   },
   "storage": {
     "database": {
-      "path": "G:/Общие диски/Altrp/dev-agent-storage/database/.dev-agent.db"
+      "path": "G:/Общие диски/Altrp/dev-agent/dev-agent.db"
     },
     "config": {
-      "path": "G:/Общие диски/Altrp/dev-agent-storage/config"
+      "path": "G:/Общие диски/Altrp/dev-agent/config"
     },
     "logs": {
-      "path": "G:/Общие диски/Altrp/dev-agent-storage/logs"
+      "path": "G:/Общие диски/Altrp/dev-agent/logs"
     }
   },
   "last_updated": "2025-08-20T21:08:47.353Z"

@@ -5,8 +5,6 @@ Systematically improve existing code with a focus on safety through testing and 
 
 ## Steps
 1.  **Preparation & Analysis**
-   - **Define goal and create task:** Clearly articulate what is being refactored and why. Create a task in the DB with an ID from `aid-generator`.
-   - **Crucial: Ensure Test Coverage:** Before starting, verify that the module being refactored has adequate test coverage. If not, **write the tests first**.
    - **Start task:** Automatically create a `refactor/g-XXXXXX-description` branch and update the task's status to `in_progress`.
 
 2.  **Iterative Refactoring**

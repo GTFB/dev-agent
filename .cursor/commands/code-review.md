@@ -1,7 +1,7 @@
 # Code Review
 
 ## Overview
-Comprehensive checklist for conducting thorough code reviews to ensure quality, security, and maintainability.
+Think Hard. Comprehensive checklist for conducting thorough code reviews to ensure quality, security, and maintainability.
 
 ## Review Categories
 

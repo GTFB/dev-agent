@@ -638,6 +638,35 @@ async function main(): Promise<void> {
     });
 
   goalCommand
+    .command("sync-status")
+    .description("Sync goal status to GitHub")
+    .argument("<goal-id>", "Goal ID")
+    .action(async (goalId: string) => {
+      try {
+        // Load environment configuration first
+        loadDatabaseConfig();
+        
+        await initializeServices();
+        const result = await workflowService.syncGoalToGitHub(goalId);
+
+        if (result.success) {
+          console.log("✅", result.message);
+        } else {
+          console.error("❌", result.message);
+          if (result.error) {
+            console.error("Error:", result.error);
+          }
+          process.exit(1);
+        }
+      } catch (error) {
+        console.error("❌", `Failed to sync goal ${goalId}:`, error);
+        process.exit(1);
+      } finally {
+        storageService.close();
+      }
+    });
+
+  goalCommand
     .command("validate")
     .description("Validate a goal")
     .argument("<goal-id>", "Goal ID to validate")
@@ -1647,7 +1676,14 @@ async function main(): Promise<void> {
     .option("-t, --token <token>", "GitHub token (or use GITHUB_TOKEN env var)")
     .action(async (options: { token?: string }) => {
       try {
-        await initializeServices();
+        // Load environment configuration first
+        loadDatabaseConfig();
+        
+        // Initialize services only if not already initialized
+        if (!workflowService) {
+          await initializeServices();
+        }
+        
         const result = await workflowService.syncFromGitHub(options.token);
 
         if (result.success) {
