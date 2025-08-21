@@ -403,16 +403,20 @@ export class GitHubService {
     try {
       logger.info("Starting GitHub issues sync...");
 
-      const issues = await this.fetchAllIssues();
+      // HARD ALGORITHM: Only fetch issues with "Todo" milestone
+      const issues = await this.fetchTodoIssues();
 
       for (const issue of issues) {
         try {
+          logger.info(`Processing issue #${issue.number}: "${issue.title}"`);
+          
           // Check if goal already exists for this issue
           const existingGoal = await this.storage.findGoalByGitHubIssue(
             issue.number,
           );
 
           if (existingGoal) {
+            logger.info(`Found existing goal ${existingGoal.id} for issue #${issue.number}`);
             // Update existing goal
             const shouldUpdate =
               existingGoal.title !== issue.title ||
@@ -425,11 +429,14 @@ export class GitHubService {
                 updated_at: new Date().toISOString(),
               });
               result.updated++;
-              logger.debug(
+              logger.info(
                 `Updated goal ${existingGoal.id} from issue #${issue.number}`,
               );
+            } else {
+              logger.info(`Goal ${existingGoal.id} is up to date, no update needed`);
             }
           } else {
+            logger.info(`No existing goal found for issue #${issue.number}, creating new one...`);
             // Create new goal from issue
             const goalId = this.generateGoalIdFromIssue();
 
@@ -439,10 +446,11 @@ export class GitHubService {
               description: issue.body,
               status: "todo",
               github_issue_id: issue.number,
+              branch_name: undefined, // Will be set when work begins
             });
 
             result.created++;
-            logger.debug(`Created goal ${goalId} from issue #${issue.number}`);
+            logger.info(`Created goal ${goalId} from issue #${issue.number}`);
           }
         } catch (error) {
           const errorMsg = `Failed to sync issue #${issue.number}: ${error instanceof Error ? error.message : "Unknown error"}`;

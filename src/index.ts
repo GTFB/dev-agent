@@ -1647,7 +1647,14 @@ async function main(): Promise<void> {
     .option("-t, --token <token>", "GitHub token (or use GITHUB_TOKEN env var)")
     .action(async (options: { token?: string }) => {
       try {
-        await initializeServices();
+        // Load environment configuration first
+        loadDatabaseConfig();
+        
+        // Initialize services only if not already initialized
+        if (!workflowService) {
+          await initializeServices();
+        }
+        
         const result = await workflowService.syncFromGitHub(options.token);
 
         if (result.success) {
