@@ -20,6 +20,7 @@ Automatically determines the current task (either from a user request or an auto
    - **Run Task Validator:** Validate the task against the system architecture to ensure compliance and generate a detailed execution plan.
    - **Command:** `make task-validate TASK="Task title" DESC="Description" [OPTIONS]`
    - **Goal:** Prevent architectural drift before work begins.
+   - Before you write the code, explain the core principles of the Observer design pattern and why it's the right choice for managing state updates in this UI component. Once I confirm your explanation, proceed with the implementation.
 
 **Step 4: Protocol Execution**
    - **Apply Protocol:** Select and apply the corresponding workflow protocol based on the determined task type.
