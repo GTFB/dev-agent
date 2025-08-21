@@ -1,5 +1,7 @@
 # Version Management System
 
+> **🚀 Quick version management for Dev Agent projects**
+
 ## Overview
 
 Dev Agent uses a comprehensive version management system that automates version updates across all project files and integrates with GitHub for seamless release management.
@@ -123,8 +125,8 @@ git push origin release/v0.1.1
 When bumping version, the following files are automatically updated:
 
 ### 1. Configuration Files
-- **`config/.dev-agent.json`**: Project version and metadata
-- **`data/.dev-agent.db`**: Database version (if connected)
+- **`config.json`**: Project configuration and current version
+- **Database**: Version (if connected)
 
 ### 2. Documentation
 - **`README.md`**: Version badge and references
@@ -155,8 +157,7 @@ await versionManager.showVersionInfo();
 If you need to update versions manually:
 
 ```bash
-# Update config version
-jq '.version = "0.1.1"' config/.dev-agent.json > temp.json && mv temp.json config/.dev-agent.json
+jq '.version = "0.1.1"' config.json > temp.json && mv temp.json config.json
 
 # Update README badge
 sed -i 's/version-0\.1\.0/version-0.1.1/g' README.md
@@ -171,7 +172,7 @@ sed -i 's/version-0\.1\.0/version-0.1.1/g' README.md
 
 The version manager reads configuration from:
 
-- **`config/.dev-agent.json`**: Project configuration and current version
+- **`config.json`**: Project configuration and current version
 - **Environment variables**: For database connections and API keys
 
 ### Customization
@@ -190,7 +191,7 @@ You can customize the version manager by modifying:
 #### Version Mismatch
 ```bash
 # Check version consistency
-bun run src/scripts/validate-structure.ts
+make validate
 
 # Verify all files have same version
 grep -r "0.1.0" . --exclude-dir=node_modules --exclude-dir=.git
@@ -209,11 +210,11 @@ git pull origin develop
 #### File Permission Issues
 ```bash
 # Check file permissions
-ls -la config/.dev-agent.json
+ls -la config.json
 ls -la README.md
 
 # Fix permissions if needed
-chmod 644 config/.dev-agent.json
+chmod 644 config.json
 chmod 644 README.md
 ```
 

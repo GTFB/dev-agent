@@ -75,7 +75,7 @@ export class EnvironmentConfigProvider implements ConfigurationProvider<Environm
     const errors: string[] = [];
     
     // Only validate critical secrets that are absolutely required
-    // Project rules (GITHUB_OWNER, GITHUB_REPO) should come from .dev-agent.json
+    // Project rules (GITHUB_OWNER, GITHUB_REPO) should come from config.json
     // and are not required in .env for local development
     
     // Note: GITHUB_TOKEN is optional for local development without GitHub integration

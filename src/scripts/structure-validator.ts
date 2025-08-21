@@ -103,7 +103,7 @@ class StructureValidator {
             continue;
           }
           
-          // Skip hidden files (except .dev-agent.json, .gitignore, etc.)
+          // Skip hidden files (except config.json, .gitignore, etc.)
           if (entry.name.startsWith(".") && !this.isImportantHiddenFile(entry.name)) {
             continue;
           }
@@ -139,7 +139,7 @@ class StructureValidator {
    */
   private isImportantHiddenFile(filename: string): boolean {
     const importantFiles = [
-      ".dev-agent.json",
+      "config.json",
       ".gitignore",
       ".gitattributes",
       ".eslintrc",
@@ -240,7 +240,7 @@ class StructureValidator {
     logger.info("🔍 Validating structure consistency...");
     
     // Check for missing files in documentation
-    for (const [path, fileInfo] of this.currentStructure) {
+    for (const [path] of this.currentStructure) {
       // Skip certain files and directories that don't need documentation
       if (this.shouldSkipValidation(path)) continue;
       
@@ -471,7 +471,7 @@ class StructureValidator {
     
     // Auto-add missing important files
     const importantFiles = [
-      '.dev-agent.json',
+      "config.json",
       'package.json',
       'bun.lock',
       'tsconfig.json',

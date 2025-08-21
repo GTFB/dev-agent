@@ -672,7 +672,7 @@ export class WorkflowService {
         return {
           success: false,
           message:
-            "GitHub repository not configured. Please check .dev-agent.json file",
+            "GitHub repository not configured. Please check config.json file",
           error: "Missing GitHub configuration",
         };
       }

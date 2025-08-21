@@ -1,6 +1,6 @@
 {
   "name": "dev-agent",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Dev Agent - CLI assistant for the High-Efficiency Standard Operating Protocol",
   "github": {
     "owner": "GTFB",

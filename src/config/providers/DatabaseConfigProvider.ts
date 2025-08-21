@@ -1,55 +1,61 @@
 #!/usr/bin/env bun
 
 /**
- * Database Configuration Provider
- * Loads configuration from database or provides defaults
+ * Loads database configuration from config.json
  */
 
-import { DatabaseConfig, ConfigurationProvider } from "../types.js";
-import { logger } from "../../utils/logger.js";
 import { join } from "path";
+import { logger } from "../../utils/logger.js";
+import { DatabaseConfig } from "../types.js";
+import { ConfigValidator } from "../validators/ConfigValidator.js";
 
-export class DatabaseConfigProvider implements ConfigurationProvider<DatabaseConfig> {
-  private config: DatabaseConfig | null = null;
+/**
+ * Loads database configuration from config.json
+ */
+export class DatabaseConfigProvider {
+  private configPath: string;
 
-  async load(): Promise<DatabaseConfig> {
-    if (this.config) {
-      return this.config;
-    }
+  constructor() {
+    this.configPath = join(process.cwd(), "config.json");
+  }
 
-    // Load configuration from .dev-agent.json
-    let dbPath: string;
-    
+  async load(): Promise<DatabaseConfig | null> {
     try {
-      const configFile = join(process.cwd(), ".dev-agent.json");
-      const configContent = await Bun.file(configFile).text();
-      const config = JSON.parse(configContent);
-      
-      if (config.storage && config.storage.database && config.storage.database.path) {
-        dbPath = config.storage.database.path;
-        logger.info(`Database path loaded from config: ${dbPath}`);
-      } else {
-        throw new Error("Database path not configured in .dev-agent.json");
+      // Check if config file exists
+      if (!await Bun.file(this.configPath).exists()) {
+        logger.warn("Config file not found, using defaults");
+        return null;
       }
+
+      // Read and parse config file
+      const configContent = await Bun.file(this.configPath).text();
+      const config = JSON.parse(configContent);
+
+      // Validate configuration with ZOD
+      const validation = ConfigValidator.validate(config);
+      if (!validation.success) {
+        logger.error("❌ Configuration validation failed:");
+        logger.error(ConfigValidator.formatErrors(validation.errors));
+        throw new Error("Invalid configuration file");
+      }
+
+      if (!validation.data.storage?.database?.path) {
+        throw new Error("Database path not configured in config.json");
+      }
+
+      const databaseConfig: DatabaseConfig = {
+        source: 'project',
+        priority: 100,
+        path: validation.data.storage.database.path
+      };
+
+      logger.info("Database configuration loaded from config.json");
+      return databaseConfig;
+
     } catch (error) {
-      logger.error("Failed to load database configuration from .dev-agent.json", error as Error);
-      throw new Error("Database configuration is required. Please create .dev-agent.json with storage.database.path");
+      logger.error("Failed to load database configuration from config.json", error as Error);
+      throw new Error("Database configuration is required. Please create config.json with storage.database.path");
     }
-
-    // Validate that we're not trying to create database in project root
-    if (dbPath.includes(process.cwd()) && !dbPath.includes("storage")) {
-      throw new Error("Database must be created in external storage, not in project directory");
-    }
-
-    this.config = {
-      source: 'database',
-      priority: 300,
-      path: dbPath,
-      type: 'sqlite',
-    };
-
-    logger.info("Database configuration loaded from external storage");
-    return this.config;
   }
 
   validate(config: DatabaseConfig): boolean {

@@ -71,9 +71,9 @@ export class GitHubService {
    */
   async initialize(config?: GitHubConfig, token?: string): Promise<void> {
     try {
-      // Use configuration passed from WorkflowService (which reads from .dev-agent.json)
+      // Use configuration passed from WorkflowService (which reads from config.json)
       if (!config?.owner || !config?.repo) {
-        throw new Error("GitHub repository configuration not provided. Please check .dev-agent.json file");
+        throw new Error("GitHub repository configuration not provided. Please check config.json file");
       }
 
       this.config = {

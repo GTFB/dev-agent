@@ -2,46 +2,56 @@
 
 /**
  * Storage Initialization Script
- * Creates external storage directories as configured in .dev-agent.json
+ * Creates external storage directories as configured in config.json
  */
 
 import { join } from "path";
 import { logger } from "../src/utils/logger.js";
+import { ConfigValidator } from "../src/config/validators/ConfigValidator.js";
 
 async function initializeStorage(): Promise<void> {
   try {
     // Read configuration
-    const configFile = join(process.cwd(), ".dev-agent.json");
+    const configFile = join(process.cwd(), "config.json");
     const configContent = await Bun.file(configFile).text();
     const config = JSON.parse(configContent);
 
-    if (!config.storage) {
-      throw new Error("Storage configuration not found in .dev-agent.json");
+    // Validate configuration with ZOD
+    const validation = ConfigValidator.validate(config);
+    if (!validation.success) {
+      logger.error("❌ Configuration validation failed:");
+      console.error(ConfigValidator.formatErrors(validation.errors));
+      process.exit(1);
     }
 
-    const storagePath = config.storage;
-    logger.info(`Initializing external storage at: ${storagePath}`);
+    if (!validation.data.storage) {
+      throw new Error("Storage configuration not found in config.json");
+    }
 
-    // Create storage directories
+    const storageConfig = validation.data.storage;
+    logger.info(`Initializing external storage...`);
+
+    // Create storage directories from config
     const directories = [
-      storagePath,
-      join(storagePath, "database"),
-      join(storagePath, "logs"),
-      join(storagePath, "config"),
-      join(storagePath, "backups")
-    ];
+      storageConfig.database?.path,
+      storageConfig.config?.path,
+      storageConfig.logs?.path
+    ].filter(Boolean); // Remove undefined values
 
     for (const dir of directories) {
-      try {
-        await Bun.write(join(dir, ".gitkeep"), "");
-        logger.info(`Created directory: ${dir}`);
-      } catch {
-        logger.warn(`Directory might already exist: ${dir}`);
+      if (dir) {
+        try {
+          // Create parent directory if it doesn't exist
+          const parentDir = join(dir, "..");
+          await Bun.write(join(parentDir, ".gitkeep"), "");
+          logger.info(`Created directory: ${parentDir}`);
+        } catch {
+          logger.warn(`Directory might already exist: ${dir}`);
+        }
       }
     }
 
     logger.info("✅ External storage initialized successfully!");
-    logger.info(`📁 Storage location: ${storagePath}`);
     logger.info("💡 You can now safely delete the local 'data/' folder");
 
   } catch (error) {

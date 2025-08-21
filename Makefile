@@ -1,24 +1,37 @@
 # Dev Agent Makefile
 
-.PHONY: help test test-coverage build clean validate ci-check docs-generate task-validate docs-check dev-init dev-sync dev-goals-list dev-goals-create
+.PHONY: help test test-coverage build clean validate ci-check docs-generate task-validate dev-init dev-sync dev-goals-list dev-goals-create protect-branches restore-branches
 
 help:
 	@echo "Dev Agent - Available Commands:"
-	@echo "  test           Run test suite"
-	@echo "  test-coverage  Run tests with coverage report"
-	@echo "  build          Build the project"
-	@echo "  clean          Clean build artifacts"
-	@echo "  validate       Validate project structure"
-	@echo "  ci-check       Run all CI checks locally"
-	@echo "  docs-generate  Generate API documentation"
-	@echo "  task-validate  Validate task and generate execution plan"
-	@echo "  docs-check     Check documentation for redundancy"
+	@echo ""
+	@echo "Development Commands:"
+	@echo "  test            Run test suite"
+	@echo "  test-coverage   Run tests with coverage report"
+	@echo "  build           Build the project"
+	@echo "  clean           Clean build artifacts"
+	@echo "  validate        Validate project structure"
+	@echo "  ci-check        Run all CI checks locally"
+	@echo "  docs-generate   Generate API documentation"
+	@echo "  task-validate   Validate task and generate execution plan"
 	@echo ""
 	@echo "Dev Agent Commands:"
-	@echo "  dev-init       Initialize Dev Agent project"
-	@echo "  dev-sync       Sync with GitHub (HARD ALGORITHM)"
-	@echo "  dev-goals-list List all goals"
-	@echo "  dev-goals-create Create new goal (TITLE='title' [DESC='description'])"
+	@echo "  dev-init        Initialize Dev Agent project"
+	@echo "  dev-sync        Sync with GitHub (HARD ALGORITHM)"
+	@echo "  dev-goals-list  List all goals"
+	@echo "  dev-goals-create Create new goal (TITLE='title')"
+	@echo "  dev-goals-delete Delete goal (ID='goal-id')"
+	@echo "  dev-config-set  Set config (KEY='key' VALUE='value')"
+	@echo "  dev-config-get  Get config (KEY='key')"
+	@echo "  dev-config-list List all config"
+	@echo ""
+	@echo "Database & Environment:"
+	@echo "  db-init         Initialize database"
+	@echo "  env-setup       Create .env file template"
+	@echo ""
+	@echo "Branch Protection Commands:"
+	@echo "  protect-branches Check protection for critical branches"
+	@echo "  restore-branches Restore any missing critical branches"
 
 test:
 	bun test
@@ -31,10 +44,8 @@ build:
 	bun run build
 
 clean:
-	rm -rf build/
-	rm -rf coverage/
-	rm -rf .logs/
-	rm -rf logs/
+	@echo "Cleaning up build artifacts..."
+	@if exist build rmdir /s /q build
 
 validate:
 	bun run src/scripts/validate-structure.ts
@@ -74,39 +85,76 @@ task-validate:
 		echo "Example: make task-validate TASK='Task title'"; \
 	fi
 
-docs-check:
-	@echo "Checking documentation for redundancy and completeness..."
-	@echo "📊 Documentation Statistics:"
-	@echo "  - Task Validation: $(shell wc -l < docs/task-validation.md) lines"
-	@echo "  - Architecture: $(shell wc -l < docs/architecture.md) lines"
-	@echo "  - Developer Guide: $(shell wc -l < docs/developer-guide.md) lines"
-	@echo "  - Structure: $(shell wc -l < docs/structure.md) lines"
-	@echo ""
-	@echo "✅ Documentation optimized - no redundancy detected"
-	@echo "💡 Use 'make task-validate' to validate tasks against architecture"
-
 # Dev Agent Commands
 dev-init:
 	@echo "Initializing Dev Agent project..."
-	bun run src/index.ts init
+	@bun run src/index.ts init
 
 dev-sync:
-	@echo "Syncing with GitHub (HARD ALGORITHM: only issues with 'Todo' milestone)..."
-	bun run src/index.ts sync
+	@echo "Syncing with GitHub (HARD ALGORITHM)..."
+	@bun run src/index.ts sync
 
 dev-goals-list:
 	@echo "Listing all goals..."
-	bun run src/index.ts goal list
+	@bun run src/index.ts goal list
 
 dev-goals-create:
 	@echo "Creating new goal..."
-	@if [ -n "$(TITLE)" ]; then \
-		if [ -n "$(DESC)" ]; then \
-			bun run src/index.ts goal create "$(TITLE)" --description "$(DESC)"; \
-		else \
-			bun run src/index.ts goal create "$(TITLE)"; \
-		fi; \
-	else \
-		echo "Usage: make dev-goals-create TITLE='Goal title' [DESC='Goal description']"; \
-		echo "Example: make dev-goals-create TITLE='Fix bug' DESC='Fix critical description'"; \
-	fi
+	@bun run src/index.ts goal create "$(TITLE)"
+
+dev-goals-delete:
+	@echo "Deleting goal..."
+	@bun run src/index.ts goal delete "$(ID)"
+
+dev-config-set:
+	@echo "Setting configuration..."
+	@bun run src/index.ts config set "$(KEY)" "$(VALUE)"
+
+dev-config-get:
+	@echo "Getting configuration..."
+	@bun run src/index.ts config get "$(KEY)"
+
+dev-config-list:
+	@echo "Listing all configuration..."
+	@bun run src/index.ts config list
+
+# Branch Protection Commands
+protect-branches:
+	@echo "Checking critical branch protection..."
+	@powershell -ExecutionPolicy Bypass -File scripts/protect-branches.ps1
+
+restore-branches:
+	@echo "Restoring critical branches if needed..."
+	@echo "Checking main branch..."
+	@git rev-parse --verify main >/dev/null 2>&1 && ( \
+		echo "Main branch exists" \
+	) || ( \
+		echo "Creating main branch from origin/main..."; \
+		git checkout -b main origin/main; \
+		echo "Main branch restored!" \
+	)
+	@echo "Checking develop branch..."
+	@git rev-parse --verify develop >/dev/null 2>&1 && ( \
+		echo "Develop branch exists" \
+	) || ( \
+		echo "Creating develop branch from origin/develop..."; \
+		git checkout -b develop origin/develop; \
+		echo "Develop branch restored!" \
+	)
+
+# Database & Environment
+db-init:
+	@echo "Initializing database..."
+	@bun run scripts/init-storage.ts
+
+env-setup:
+	@echo "Setting up environment file..."
+	@if not exist .env ( \
+		echo "Creating .env file..."; \
+		echo "# Dev Agent Environment Variables" > .env; \
+		echo "GITHUB_TOKEN=your_token_here" >> .env; \
+		echo "OPENAI_API_KEY=your_key_here" >> .env; \
+		echo ".env file created. Please update with your actual values." \
+	) else ( \
+		echo ".env file already exists" \
+	)

@@ -97,81 +97,130 @@ Workflow for managing releases when merging PRs to `main`.
 - Dependency audit must pass
 - No secrets should be in code
 
-## Project Structure
+## Project Structure Validation
 
-Pipeline checks for required directories:
-- `src/` - source code
-- `config/` - configuration files
-- `data/` - data and database
+The CI/CD pipeline validates the following project structure:
 
-## Coverage Badge
+### Required Files
+- `config.json` - Main project configuration
+- `package.json` - Dependencies and scripts
+- `tsconfig.json` - TypeScript configuration
+- `Makefile` - Build automation
+- `.gitignore` - Git ignore patterns
 
-Automatically generates SVG badge with current test coverage and saves it to `docs/assets/coverage.svg`. Badge is updated on every push to `main`.
+### Required Directories
+- `src/` - Source code
+- `tests/` - Test files
+- `docs/` - Documentation
+- `scripts/` - Utility scripts
+- `.github/` - GitHub workflows
 
-## Monitoring
+### Forbidden Files
+- Database files in root directory (should be in external storage)
+- Old structure remnants (`config/`, `data/` directories)
 
-### GitHub Actions
-- All workflows available in repository Actions section
-- Detailed execution logs for each job
-- Execution status on PR page
+## Configuration
 
-### Notifications
-- Automatic comments in PRs
-- Deployment status in GitHub
-- Integration with external services (Slack, Discord)
+### Environment Variables
+- `GITHUB_TOKEN` - GitHub API access
+- `NODE_ENV` - Environment (development, testing, production)
 
-## Local Testing
+### Secrets Management
+- GitHub secrets stored in repository settings
+- Environment-specific configuration in `.env` files
+- Database credentials in external storage
 
-Before sending code, run locally:
+## Monitoring and Alerts
 
-```bash
-# Linting
-bun run lint
+### Success Notifications
+- GitHub status checks
+- Coverage badge updates
+- Release notifications
 
-# Tests with coverage
-bun test --coverage
-
-# Generate badge
-bun run test:coverage:badge
-
-# Build
-bun run build
-```
+### Failure Alerts
+- Test failure notifications
+- Security audit failures
+- Structure validation errors
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Coverage below 90%**
-   - Add tests for missing functions
-   - Ensure all code branches are covered
+#### Test Failures
+```bash
+# Run tests locally
+make test
 
-2. **Linter errors**
-   - Run `bun run lint` locally
-   - Fix all warnings
+# Check coverage
+make test-coverage
 
-3. **Database files in root**
-   - Ensure tests use in-memory databases
-   - Check paths in configuration
+# Validate structure
+make validate
+```
 
-4. **Build errors**
-   - Check dependencies
-   - Ensure TypeScript compiles without errors
+#### Build Failures
+```bash
+# Clean and rebuild
+make clean
+make build
 
-### Logs
+# Check dependencies
+bun install
+```
 
-All execution logs are available in GitHub Actions. When issues arise:
-1. Open failed workflow
-2. Study failed job logs
-3. Fix issue locally
-4. Send fix
+#### Structure Validation
+```bash
+# Run validation locally
+make validate
 
-## Extension
+# Check specific files
+ls -la config.json
+ls -la src/
+```
 
-Pipeline is easily extended by adding new jobs or steps:
+### Debug Mode
 
-1. Add new job to appropriate workflow
-2. Define dependencies and execution conditions
-3. Add necessary steps
-4. Test locally
-5. Send changes
+Enable verbose logging:
+
+```bash
+# Set debug environment variable
+DEBUG=true make ci-check
+
+# Or modify workflow files for more verbose output
+```
+
+## Best Practices
+
+### 1. Commit Messages
+- Use conventional commit format
+- Include issue references
+- Be descriptive but concise
+
+### 2. Branch Management
+- Keep `develop` stable
+- Use feature branches for development
+- Test thoroughly before merging
+
+### 3. Configuration
+- Store secrets in GitHub secrets
+- Use environment variables for configuration
+- Keep sensitive data out of code
+
+### 4. Testing
+- Write comprehensive tests
+- Maintain high coverage
+- Test edge cases
+
+## Future Enhancements
+
+Planned improvements:
+
+- **Automated dependency updates** - Dependabot integration
+- **Performance testing** - Lighthouse CI integration
+- **Security scanning** - CodeQL analysis
+- **Deployment automation** - Auto-deploy to staging
+- **Monitoring integration** - Application performance monitoring
+
+---
+
+**💡 Tip**: Use `make ci-check` to run all CI checks locally before pushing!
