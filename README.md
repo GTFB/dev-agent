@@ -170,16 +170,8 @@ Dev Agent uses an **Atomic ID (AID)** system for reliable entity identification:
 - **Format**: `[prefix]-[a-z0-9]{6}`
 - **Examples**:
   - `g-a1b2c3` (goal/task)
-  - `d-d4e5f6` (document)
-  - `s-x7y8z9` (script)
-
-### Entity Type Prefixes
-
-- **G** - Goals/Tasks
-- **D** - Documents
-- **S** - Scripts
-- **A** - API endpoints
-- **F** - Files
+  - `a-d4e5f6` (document)
+  - `t-x7y8z9` (text)
 
 ## 📋 Essential Commands
 
