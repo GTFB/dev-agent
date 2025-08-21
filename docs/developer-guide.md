@@ -2,9 +2,19 @@
 
 ## Overview
 
-This guide is for developers who want to contribute to Dev Agent or understand its internal architecture. It covers the development setup, code structure, testing, and contribution guidelines.
+This guide is for developers who want to contribute to Dev Agent or understand its internal architecture. 
+
+> **💡 For basic setup and usage, see the [main README](../README.md) first!**
+
+This guide covers:
+- Development environment setup
+- Code structure and architecture
+- Testing and quality assurance
+- Contribution guidelines
 
 ## Development Setup
+
+> **📖 Basic setup instructions are in the [main README](../README.md#-quick-start)**
 
 ### Prerequisites
 
@@ -38,30 +48,90 @@ This guide is for developers who want to contribute to Dev Agent or understand i
 ## Project Structure
 
 ```
-dev-agent/
-├── src/                    # Source code
-│   ├── core/              # Core types, database, AID generator
-│   │   ├── types.ts       # TypeScript interfaces and types
-│   │   ├── schema.ts      # Database schema and migrations
-│   │   ├── database.ts    # Database connection and management
-│   │   └── aid-generator.ts # AID generation and validation
-│   ├── services/          # Business logic services
-│   │   ├── StorageService.ts    # Data access layer
-│   │   ├── GitService.ts        # Git operations
-│   │   └── WorkflowService.ts   # Business logic orchestration
-│   ├── utils/             # Utility functions
-│   │   └── logger.ts      # Logging system
-│   └── index.ts           # CLI entry point
-├── tests/                 # Test files
-│   ├── core/              # Core module tests
-│   ├── services/          # Service layer tests
-│   └── integration/       # Integration tests
-├── docs/                  # Documentation
-├── prompts/               # AI prompt templates
-├── package.json           # Dependencies and scripts
-├── tsconfig.json          # TypeScript configuration
-├── Makefile               # Development commands
-└── README.md              # Project overview
+dev-agent/                  # PROJECT ROOT
+├── 🔧 CONFIGURATION
+│   ├── package.json        # Dependencies & scripts
+│   ├── tsconfig.json      # TypeScript configuration
+│   ├── bun.lock           # Locked dependencies
+│   ├── Makefile           # Build automation
+│   ├── .eslintrc.cjs      # ESLint configuration
+│   ├── .prettierrc        # Prettier configuration
+│   └── .dev-agent.json    # Dev Agent configuration
+│
+├── 📁 SOURCE CODE
+│   └── src/               # All source code
+│       ├── index.ts       # CLI entry point
+│       ├── core/          # Core system components
+│       │   ├── types.ts   # TypeScript interfaces and types
+│       │   ├── schema.ts  # Database schema & migrations
+│       │   ├── database.ts # Database connection & management
+│       │   └── aid-generator.ts # AID generation & validation
+│       ├── services/      # Business logic services
+│       │   ├── AIDService.ts
+│       │   ├── AutoTranslationService.ts
+│       │   ├── GitHubService.ts
+│       │   ├── GitService.ts
+│       │   ├── LanguageDetectionService.ts
+│       │   ├── LLMTranslationService.ts
+│       │   ├── ProjectConfigService.ts
+│       │   ├── StorageService.ts
+│       │   ├── ValidationService.ts
+│       │   └── WorkflowService.ts
+│       ├── config/        # Configuration management
+│       │   ├── config.ts  # Database-backed config
+│       │   ├── ConfigurationManager.ts
+│       │   ├── llm-config.ts
+│       │   ├── types.ts
+│       │   └── providers/ # Configuration providers
+│       ├── middleware/    # Request/response middleware
+│       │   └── LanguageValidationMiddleware.ts
+│       ├── scripts/       # Utility scripts
+│       │   ├── check-language.ts
+│       │   ├── check-schema.ts
+│       │   ├── config-manager.ts
+│       │   ├── generate-coverage-badge.ts
+│       │   ├── github-manager.ts
+│       │   ├── init-db.ts
+│       │   ├── llm-manager.ts
+│       │   ├── validate-structure.ts
+│       │   └── version-manager.ts
+│       └── utils/         # Utility functions
+│           ├── env-loader.ts
+│           ├── logger.ts
+│           └── types.ts
+│
+├── 🧪 TESTING
+│   └── tests/             # Test files (mirrors src/)
+│       ├── core/          # Core module tests
+│       ├── services/      # Service layer tests
+│       ├── config/        # Configuration tests
+│       ├── scripts/       # Script tests
+│       └── utils/         # Utility tests
+│
+├── 📖 DOCUMENTATION
+│   ├── docs/              # Documentation files
+│   │   ├── api/           # Auto-generated API docs
+│   │   ├── protocols/     # Development protocols
+│   │   ├── README.md      # Documentation index
+│   │   ├── developer-guide.md
+│   │   ├── architecture.md
+│   │   ├── ci-cd.md
+│   │   ├── versioning.md
+│   │   ├── structure.md
+│   │   ├── structure-validation.md
+│   │   └── CHANGELOG.md
+│   └── README.md          # Main project overview
+│
+├── 🔧 DEVELOPMENT
+│   ├── scripts/           # Build & utility scripts
+│   │   └── set-db-path.ts
+│   ├── .github/           # GitHub Actions workflows
+│   ├── .cursor/           # Cursor IDE configuration
+│   └── .git/              # Git repository
+│
+└── 📦 DEPENDENCIES
+    ├── node_modules/      # Installed packages
+    └── bun.lock           # Locked dependency versions
 ```
 
 ## Architecture Overview
@@ -114,11 +184,13 @@ Dev Agent follows a clean, layered architecture:
 
 #### Core Layer
 
-- **Types**: TypeScript interfaces and type definitions
-- **Database**: SQLite connection and schema management
+- **[Types](api/modules.html)**: TypeScript interfaces and type definitions
+- **[Database](api/classes/DatabaseManager.html)**: SQLite connection and schema management
 - **AID Generator**: Unique identifier generation and validation
 
 ## Core Components
+
+> **📖 For complete API reference, see [API Documentation](api/)**
 
 ### 1. AID System (`src/core/aid-generator.ts`)
 
@@ -145,6 +217,8 @@ const prefix = getAIDPrefix("g-a1b2c3"); // "G"
 
 ### 2. Database Management (`src/core/database.ts`)
 
+> **API Reference**: [DatabaseManager](api/classes/DatabaseManager.html)
+
 Handles SQLite database operations with automatic migrations:
 
 ```typescript
@@ -161,6 +235,8 @@ await db.initialize(); // Creates tables and applies migrations
 
 ### 3. Storage Service (`src/services/StorageService.ts`)
 
+> **API Reference**: [StorageService](api/classes/StorageService.html)
+
 High-level data access layer:
 
 ```typescript
@@ -168,19 +244,19 @@ const storage = new StorageService();
 await storage.initialize();
 
 // Create task
-await storage.createTask({
+await storage.createGoal({
   id: "g-a1b2c3",
   title: "Fix login bug",
   status: "todo",
 });
 
 // Query tasks
-const tasks = await storage.listTasks("todo");
+const goals = await storage.listGoals("todo");
 ```
 
 **Key Methods:**
 
-- Task CRUD operations
+- Goal CRUD operations
 - Configuration management
 - Transaction handling
 - Automatic initialization
@@ -464,10 +540,9 @@ test(aid): add edge case test coverage
 
 ## Next Steps
 
-- [Getting Started Guide](getting-started.md)
-- [CLI Commands Reference](cli-commands.md)
-- [Configuration Guide](configuration.md)
-- [Architecture Overview](architecture.md)
+- [Main README](../README.md) - Complete setup guide and essential commands
+- [Architecture Overview](architecture.md) - System design and architecture
+- [API Reference](api/) - Auto-generated TypeScript documentation
 
 ## Resources
 

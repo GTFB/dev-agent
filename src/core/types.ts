@@ -1,6 +1,11 @@
 /**
  * Core types for Dev Agent system
- * All types follow the AID (Atomic ID) system with typed prefixes
+ * 
+ * All types follow the AID (Atomic ID) system with typed prefixes for
+ * consistent identification across the system. Each entity type has a
+ * specific prefix and status management.
+ * 
+ * @packageDocumentation
  */
 
 /**

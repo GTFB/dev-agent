@@ -1,22 +1,24 @@
 # Architecture Overview
 
+> **💡 For basic usage and setup, see the [main README](../README.md) first!**
+
 ## System Architecture
 
 Dev Agent is built with a clean, layered architecture that promotes separation of concerns, testability, and maintainability. The system follows the **Dependency Inversion Principle** where high-level modules depend on abstractions rather than concrete implementations.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    CLI Layer                                │
-│              (Commander.js Interface)                      │
+│                      CLI Layer                              │
+│               (Commander.js Interface)                      │
 ├─────────────────────────────────────────────────────────────┤
 │                 Workflow Service                            │
-│           (Business Logic Orchestrator)                    │
+│            (Business Logic Orchestrator)                    │
 ├─────────────────────────────────────────────────────────────┤
 │                   Service Layer                             │
-│         Storage | Git | GitHub | AI | Notification        │
+│           Storage | Git | GitHub | AI | Notification        │
 ├─────────────────────────────────────────────────────────────┤
 │                    Core Layer                               │
-│            Types | Database | AID Gen | Utils             │
+│              Types | Database | AID Gen | Utils             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -250,8 +252,30 @@ try {
 export const AID_REGISTRY = {
   A: "Archive (Documents)",
   B: "Base (Logistics, Inventory)",
+  C: "Contractor (Legal Entities)",
+  D: "Deal (Deals)",
+  E: "Employee (Employees)",
+  F: "Finance (Transactions)",
   G: "Goal (Tasks)",
-  // ... 26 entity types
+  H: "Human (Individuals / Natural Persons)",
+  I: "Invoice (Invoices for Payment / Bills)",
+  J: "Journal (System Logs)",
+  K: "Key (API Keys, Tokens)",
+  L: "Location (Geo. Points)",
+  M: "Message (Messages)",
+  N: "Notice (Notifications)",
+  O: "Outreach (Marketing)",
+  P: "Product (Products)",
+  Q: "Qualification (Assessments / Ratings)",
+  R: "Routine (Automation)",
+  S: "Segment (Segments)",
+  T: "Text (Content)",
+  U: "University (LMS / Learning)",
+  V: "Vote (Polls / Surveys)",
+  W: "Wallet (Wallets)",
+  X: "Xpanse (Spaces)",
+  Y: "Yard (Gamification)",
+  Z: "Zoo (Animals)"
 };
 ```
 

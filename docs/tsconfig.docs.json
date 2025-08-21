@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": ["ESNext"],
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "types": ["bun"]
+  },
+  "include": ["docs-entry.ts", "../src/core/types.ts", "../src/core/database.ts", "../src/services/StorageService.ts", "../src/utils/logger.ts"],
+  "exclude": ["../node_modules", "../tests", "../src/config", "../src/middleware", "../src/services/AIDService.ts", "../src/services/AutoTranslationService.ts", "../src/services/GitService.ts", "../src/services/LLMTranslationService.ts"]
+}

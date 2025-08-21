@@ -38,15 +38,19 @@ jobs:
       - name: Run tests with coverage
         run: bun test --coverage
         
-      - name: Generate coverage badge
-        run: bun run test:coverage:badge
-        
-      - name: Upload coverage badge
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-badge
-          path: docs/assets/coverage.svg
-          retention-days: 30
+             - name: Generate coverage report
+         run: bun run test:coverage:badge
+         
+       - name: Update coverage badge in README
+         run: bun run scripts/update-coverage-badge.ts
+         
+       - name: Commit coverage badge update
+         run: |
+           git config --local user.email "action@github.com"
+           git config --local user.name "GitHub Action"
+           git add README.md
+           git commit -m "📊 Update coverage badges [skip ci]" || exit 0
+           git push
           
       - name: Check test coverage threshold
         id: coverage
@@ -94,10 +98,11 @@ jobs:
             exit 1
           fi
           
-          if [ ! -d "data" ]; then
-            echo "❌ data/ directory missing"
-            exit 1
-          fi
+          # Note: data/ directory is no longer required as we use external storage
+          # if [ ! -d "data" ]; then
+          #   echo "❌ data/ directory missing"
+          #   exit 1
+          # fi
           
           if [ ! -f "config/.dev-agent.json" ]; then
             echo "❌ config/.dev-agent.json missing"
@@ -196,51 +201,4 @@ jobs:
                Ready for review and merge to develop!`
              })
              
-  update-readme:
-     runs-on: ubuntu-latest
-     needs: [test, security]
-     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-     
-     steps:
-       - name: Checkout code
-         uses: actions/checkout@v4
-         with:
-           token: ${{ secrets.GITHUB_TOKEN }}
-           
-       - name: Setup Node.js
-         uses: actions/setup-node@v4
-         with:
-           node-version: '18'
-           cache: 'bun'
-           
-       - name: Setup Bun
-         uses: oven-sh/setup-bun@v1
-         with:
-           bun-version: latest
-           
-       - name: Install dependencies
-         run: bun install
-         
-       - name: Generate coverage badge
-         run: bun run test:coverage:badge
-         
-       - name: Update README with coverage
-         run: |
-           # Update coverage badge in README
-           COVERAGE_BADGE="![Test Coverage](docs/assets/coverage.svg)"
-           
-           # Replace existing coverage badge or add new one
-           if grep -q "Test Coverage" README.md; then
-             sed -i 's|!\[Test Coverage\].*|'"$COVERAGE_BADGE"'|' README.md
-           else
-             # Add after the first heading
-             sed -i '1a\'$'\n'"$COVERAGE_BADGE"$'\n' README.md
-           fi
-           
-       - name: Commit and push changes
-         run: |
-           git config --local user.email "action@github.com"
-           git config --local user.name "GitHub Action"
-           git add README.md docs/assets/coverage.svg
-           git commit -m "📊 Update coverage badge [skip ci]" || exit 0
-           git push
+  # Note: Coverage badge updates are now handled automatically in the test job

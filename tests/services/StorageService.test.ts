@@ -10,7 +10,7 @@ describe("StorageService", () => {
   let storageService: StorageService;
 
   beforeEach(async () => {
-    storageService = new StorageService();
+    storageService = new StorageService(":memory:");
     await storageService.initialize();
   });
 

@@ -5,7 +5,7 @@ on:
     branches: [main]
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
-      - 'config/.dev-agent.json'
+      - '.dev-agent.json'
       - 'CHANGELOG.md'
       - 'README.md'
 
@@ -49,7 +49,7 @@ jobs:
       - name: Check version consistency
         run: |
           # Check if version in .dev-agent.json matches CHANGELOG
-          CONFIG_VERSION=$(bun run -c "import { readFileSync } from 'fs'; const config = JSON.parse(readFileSync('config/.dev-agent.json', 'utf8')); console.log(config.version);")
+          CONFIG_VERSION=$(bun run -c "import { readFileSync } from 'fs'; const config = JSON.parse(readFileSync('.dev-agent.json', 'utf8')); console.log(config.version);")
           CHANGELOG_VERSION=$(grep -o '## \[[0-9]\+\.[0-9]\+\.[0-9]\+' CHANGELOG.md | head -1 | sed 's/## \[//')
           
           if [ "$CONFIG_VERSION" != "$CHANGELOG_VERSION" ]; then
@@ -89,7 +89,7 @@ jobs:
       - name: Get version from config
         id: version
         run: |
-          VERSION=$(bun run -c "import { readFileSync } from 'fs'; const config = JSON.parse(readFileSync('config/.dev-agent.json', 'utf8')); console.log(config.version);")
+          VERSION=$(bun run -c "import { readFileSync } from 'fs'; const config = JSON.parse(readFileSync('.dev-agent.json', 'utf8')); console.log(config.version);")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           
       - name: Create Release
