@@ -1,6 +1,11 @@
 /**
  * Storage Service for Dev Agent
- * Manages all data operations for tasks and configuration
+ * 
+ * Manages all data operations for goals, configuration, and project data.
+ * Provides a unified interface for database operations with automatic
+ * initialization and error handling.
+ * 
+ * @packageDocumentation
  */
 
 import { DatabaseManager } from "../core/database.js";
@@ -9,6 +14,9 @@ import { logger } from "../utils/logger.js";
 
 /**
  * Storage Service class
+ * 
+ * Provides methods for managing goals, configuration, and project data
+ * with automatic database initialization and transaction support.
  */
 export class StorageService {
   private db: DatabaseManager | null = null;
@@ -16,8 +24,8 @@ export class StorageService {
   private initialized: boolean = false;
 
   constructor(dbPath?: string) {
-    // Приоритет: переданный путь -> переменная окружения -> путь по умолчанию
-    const defaultPath = process.env.DEV_AGENT_DB_PATH || "data/.dev-agent.db";
+    // Приоритет: переданный путь -> переменная окружения -> in-memory для тестов
+    const defaultPath = process.env.DEV_AGENT_DB_PATH || ":memory:";
     const finalPath = dbPath || defaultPath;
     
     // НЕ создаем БД автоматически! Только сохраняем путь
@@ -27,6 +35,11 @@ export class StorageService {
 
   /**
    * Initialize storage service
+   * 
+   * Creates and initializes the database connection. This method must be
+   * called before any data operations can be performed.
+   * 
+   * @throws {Error} If database initialization fails
    */
   async initialize(): Promise<void> {
     try {
@@ -73,6 +86,10 @@ export class StorageService {
       await this.ensureInitialized();
       const now = new Date().toISOString();
 
+      if (!this.db) {
+        throw new Error("Database not initialized");
+      }
+
       this.db.run(
         `
         INSERT INTO goals (id, github_issue_id, title, status, branch_name, description, created_at, updated_at)
@@ -103,6 +120,11 @@ export class StorageService {
   async getGoal(id: string): Promise<Goal | null> {
     try {
       await this.ensureInitialized();
+      
+      if (!this.db) {
+        throw new Error("Database not initialized");
+      }
+
       const result = this.db.get<Goal>("SELECT * FROM goals WHERE id = ?", [
         id,
       ]);
@@ -122,6 +144,11 @@ export class StorageService {
   ): Promise<void> {
     try {
       await this.ensureInitialized();
+      
+      if (!this.db) {
+        throw new Error("Database not initialized");
+      }
+
       const now = new Date().toISOString();
       const fields = Object.keys(updates)
         .map((key) => `${key} = ?`)
@@ -150,6 +177,11 @@ export class StorageService {
   async listGoals(status?: GoalStatus): Promise<Goal[]> {
     try {
       await this.ensureInitialized();
+      
+      if (!this.db) {
+        throw new Error("Database not initialized");
+      }
+
       if (status) {
         return this.db.all<Goal>(
           "SELECT * FROM goals WHERE status = ? ORDER BY created_at DESC",
@@ -171,6 +203,11 @@ export class StorageService {
   async deleteGoal(id: string): Promise<void> {
     try {
       await this.ensureInitialized();
+      
+      if (!this.db) {
+        throw new Error("Database not initialized");
+      }
+
       this.db.run("DELETE FROM goals WHERE id = ?", [id]);
       logger.info(`Goal deleted: ${id}`);
     } catch (error) {
@@ -184,6 +221,12 @@ export class StorageService {
    */
   async getGoalCount(status?: GoalStatus): Promise<number> {
     try {
+      await this.ensureInitialized();
+      
+      if (!this.db) {
+        throw new Error("Database not initialized");
+      }
+
       if (status) {
         const result = this.db.get<{ count: number }>(
           "SELECT COUNT(*) as count FROM goals WHERE status = ?",
@@ -207,6 +250,12 @@ export class StorageService {
    */
   async findGoalByGitHubIssue(issueId: number): Promise<Goal | null> {
     try {
+      await this.ensureInitialized();
+      
+      if (!this.db) {
+        throw new Error("Database not initialized");
+      }
+
       const result = this.db.get<Goal>(
         "SELECT * FROM goals WHERE github_issue_id = ?",
         [issueId],
@@ -226,6 +275,12 @@ export class StorageService {
    */
   async findGoalByBranch(branchName: string): Promise<Goal | null> {
     try {
+      await this.ensureInitialized();
+      
+      if (!this.db) {
+        throw new Error("Database not initialized");
+      }
+
       const result = this.db.get<Goal>(
         "SELECT * FROM goals WHERE branch_name = ?",
         [branchName],
@@ -248,6 +303,11 @@ export class StorageService {
   async getConfig(key: string): Promise<string | null> {
     try {
       await this.ensureInitialized();
+      
+      if (!this.db) {
+        throw new Error("Database not initialized");
+      }
+
       const result = this.db.get<ProjectConfig>(
         "SELECT value FROM config WHERE key = ?",
         [key],
@@ -265,6 +325,11 @@ export class StorageService {
   async setConfig(key: string, value: string, type: string = 'string', description?: string, category: string = 'general'): Promise<void> {
     try {
       await this.ensureInitialized();
+      
+      if (!this.db) {
+        throw new Error("Database not initialized");
+      }
+
       this.db.run(
         `
         INSERT OR REPLACE INTO config (key, value, type, description, category) 
@@ -286,6 +351,11 @@ export class StorageService {
   async getAllConfig(): Promise<ProjectConfig[]> {
     try {
       await this.ensureInitialized();
+      
+      if (!this.db) {
+        throw new Error("Database not initialized");
+      }
+
       const configs = this.db.all<ProjectConfig>(
         "SELECT * FROM config ORDER BY key",
       );
@@ -301,6 +371,12 @@ export class StorageService {
    */
   async deleteConfig(key: string): Promise<void> {
     try {
+      await this.ensureInitialized();
+      
+      if (!this.db) {
+        throw new Error("Database not initialized");
+      }
+
       this.db.run("DELETE FROM config WHERE key = ?", [key]);
       logger.info(`Config deleted: ${key}`);
     } catch (error) {
@@ -316,6 +392,9 @@ export class StorageService {
    */
   isInitialized(): boolean {
     try {
+      if (!this.db) {
+        return false;
+      }
       // Try to query a simple table to check if DB is ready
       this.db.get("SELECT 1 FROM goals LIMIT 1");
       return true;
@@ -328,6 +407,9 @@ export class StorageService {
    * Get database path
    */
   getDatabasePath(): string {
+    if (!this.db) {
+      throw new Error("Database not initialized");
+    }
     return this.db.getDatabasePath();
   }
 
@@ -335,6 +417,9 @@ export class StorageService {
    * Begin transaction
    */
   beginTransaction(): void {
+    if (!this.db) {
+      throw new Error("Database not initialized");
+    }
     this.db.beginTransaction();
   }
 
@@ -342,6 +427,9 @@ export class StorageService {
    * Commit transaction
    */
   commitTransaction(): void {
+    if (!this.db) {
+      throw new Error("Database not initialized");
+    }
     this.db.commitTransaction();
   }
 
@@ -349,6 +437,9 @@ export class StorageService {
    * Rollback transaction
    */
   rollbackTransaction(): void {
+    if (!this.db) {
+      throw new Error("Database not initialized");
+    }
     this.db.rollbackTransaction();
   }
 
@@ -358,6 +449,11 @@ export class StorageService {
   async hasGoals(): Promise<boolean> {
     try {
       await this.ensureInitialized();
+      
+      if (!this.db) {
+        throw new Error("Database not initialized");
+      }
+
       const result = this.db.get("SELECT 1 FROM goals LIMIT 1");
       return result !== undefined;
     } catch (error) {

@@ -3,7 +3,13 @@
 .dev-agent.db
 .dev-agent.db-wal
 .dev-agent.db-shm
+
+# Log directories (created automatically during runtime)
 .logs/
+logs/
+
+# External storage (configured in .dev-agent.json)
+G:/Общие диски/Altrp/dev-agent-storage/
 
 # LLM Configuration (contains API keys)
 .llm-config.json

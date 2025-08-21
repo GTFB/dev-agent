@@ -17,32 +17,15 @@ interface StructureRule {
 }
 
 const PROJECT_STRUCTURE_RULES: StructureRule[] = [
-  // Configuration files should be in config/
+  // Configuration files should be in root (new structure)
   {
-    path: "config/.dev-agent.json",
-    description: "Project configuration file",
+    path: ".dev-agent.json",
+    description: "Project configuration file with external storage paths",
     required: true
   },
   {
-    path: "config/.env",
+    path: ".env",
     description: "Environment variables (optional)",
-    required: false
-  },
-
-  // Database files should be in data/
-  {
-    path: "data/.dev-agent.db",
-    description: "Main database file",
-    required: false
-  },
-  {
-    path: "data/backups",
-    description: "Backup files directory",
-    required: false
-  },
-  {
-    path: "data/temp",
-    description: "Temporary files directory",
     required: false
   },
 
@@ -53,6 +36,13 @@ const PROJECT_STRUCTURE_RULES: StructureRule[] = [
     required: true
   },
 
+  // Documentation should be in docs/
+  {
+    path: "docs",
+    description: "Documentation directory",
+    required: true
+  },
+
   // TypeScript configuration should be in root
   {
     path: "tsconfig.json",
@@ -60,28 +50,35 @@ const PROJECT_STRUCTURE_RULES: StructureRule[] = [
     required: true
   },
 
-  // Forbidden files in root
+  // Package configuration should be in root
+  {
+    path: "package.json",
+    description: "Package configuration",
+    required: true
+  },
+
+  // Forbidden files in root (old structure remnants)
+  {
+    path: "config/.dev-agent.json",
+    description: "Old config location (FORBIDDEN - moved to root)",
+    required: false,
+    forbidden: true
+  },
+  {
+    path: "data/.dev-agent.db",
+    description: "Old database location (FORBIDDEN - moved to external storage)",
+    required: false,
+    forbidden: true
+  },
   {
     path: "dev-agent.db",
-    description: "Database file in root (FORBIDDEN)",
+    description: "Database file in root (FORBIDDEN - should be in external storage)",
     required: false,
     forbidden: true
   },
   {
     path: ".dev-agent.db",
-    description: "Database file in root (FORBIDDEN)",
-    required: false,
-    forbidden: true
-  },
-  {
-    path: ".dev-agent.json",
-    description: "Config file in root (FORBIDDEN)",
-    required: false,
-    forbidden: true
-  },
-  {
-    path: ".env",
-    description: "Environment file in root (FORBIDDEN)",
+    description: "Database file in root (FORBIDDEN - should be in external storage)",
     required: false,
     forbidden: true
   }
@@ -99,7 +96,7 @@ export function validateProjectStructure(): { isValid: boolean; errors: string[]
     const exists = existsSync(fullPath);
 
     if (rule.forbidden && exists) {
-      errors.push(`❌ ${rule.description}: ${rule.path} should not exist in root directory`);
+      errors.push(`❌ ${rule.description}: ${rule.path} should not exist (old structure)`);
     } else if (rule.required && !exists) {
       errors.push(`❌ ${rule.description}: ${rule.path} is required but not found`);
     } else if (!rule.required && !rule.forbidden && exists) {
@@ -109,7 +106,7 @@ export function validateProjectStructure(): { isValid: boolean; errors: string[]
     }
   }
 
-  // Check for any database files in root
+  // Check for any database files in root (should be in external storage)
   const forbiddenDbFiles = [
     "dev-agent.db",
     ".dev-agent.db",
@@ -122,7 +119,20 @@ export function validateProjectStructure(): { isValid: boolean; errors: string[]
   for (const file of forbiddenDbFiles) {
     const fullPath = join(rootDir, file);
     if (existsSync(fullPath)) {
-      errors.push(`❌ Database file in root directory: ${file} (should be in data/)`);
+      errors.push(`❌ Database file in root directory: ${file} (should be in external storage)`);
+    }
+  }
+
+  // Check for old structure remnants
+  const oldStructurePaths = [
+    "config/",
+    "data/"
+  ];
+
+  for (const path of oldStructurePaths) {
+    const fullPath = join(rootDir, path);
+    if (existsSync(fullPath)) {
+      warnings.push(`⚠️  Old structure directory found: ${path} (consider removing if no longer needed)`);
     }
   }
 

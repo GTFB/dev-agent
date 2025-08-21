@@ -1,6 +1,11 @@
 /**
  * Database Manager for Dev Agent
- * Handles SQLite database operations and migrations
+ * 
+ * Handles SQLite database operations, migrations, and connection management.
+ * Provides a high-level interface for database operations with automatic
+ * migration handling and error recovery.
+ * 
+ * @packageDocumentation
  */
 
 import { Database } from "bun:sqlite";
@@ -10,6 +15,9 @@ import { getMigrationVersions, getMigrationSQL } from "./schema.js";
 
 /**
  * Database Manager class
+ * 
+ * Manages SQLite database connections, migrations, and provides methods
+ * for executing SQL statements with proper error handling.
  */
 export class DatabaseManager {
   private dbPath: string;
@@ -24,10 +32,16 @@ export class DatabaseManager {
    */
   async initialize(): Promise<void> {
     try {
-      // Ensure parent directory exists
-      const dir = this.dbPath.substring(0, this.dbPath.lastIndexOf('/'));
-      if (dir) {
-        await Bun.write(dir + '/.gitkeep', '');
+      // Only create directories for file-based databases, not in-memory
+      if (!this.dbPath.startsWith(':') && this.dbPath.includes('/')) {
+        const dir = this.dbPath.substring(0, this.dbPath.lastIndexOf('/'));
+        if (dir) {
+          try {
+            await Bun.write(dir + '/.gitkeep', '');
+          } catch {
+            // Directory might already exist, continue
+          }
+        }
       }
 
       this.db = new Database(this.dbPath);

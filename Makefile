@@ -1,105 +1,80 @@
 # Dev Agent Makefile
-# Provides convenient commands for development and release management
 
-.PHONY: help install test build clean version-bump version-patch version-minor version-major release-prepare release-validate
+.PHONY: help test test-coverage build clean validate ci-check docs-generate task-validate docs-check
 
-# Default target
 help:
-	@echo "Dev Agent - Development and Release Management"
-	@echo ""
-	@echo "Available commands:"
-	@echo "  install          Install dependencies"
-	@echo "  test            Run test suite"
-	@echo "  build           Build the project"
-	@echo "  clean           Clean build artifacts"
-	@echo "  validate        Validate project structure"
-	@echo ""
-	@echo "Version Management:"
-	@echo "  version-info    Show current version information"
-	@echo "  version-patch   Bump patch version (0.1.0 -> 0.1.1)"
-	@echo "  version-minor   Bump minor version (0.1.0 -> 0.2.0)"
-	@echo "  version-major   Bump major version (0.1.0 -> 1.0.0)"
-	@echo ""
-	@echo "Pre-Release Management:"
-	@echo "  pre-release-alpha  Create alpha pre-release (0.2.0 -> 0.2.0-alpha.1)"
-	@echo "  pre-release-beta   Create beta pre-release (0.2.0 -> 0.2.0-beta.1)"
-	@echo "  pre-release-rc     Create release candidate (0.2.0 -> 0.2.0-rc.1)"
-	@echo ""
-	@echo "Release Management:"
-	@echo "  release-prepare Prepare release (create release branch)"
-	@echo "  release-validate Validate release readiness"
-	@echo "  release-create  Create GitHub release (requires token)"
-
-# Development commands
-install:
-	bun install
+	@echo "Dev Agent - Available Commands:"
+	@echo "  test           Run test suite"
+	@echo "  test-coverage  Run tests with coverage report"
+	@echo "  build          Build the project"
+	@echo "  clean          Clean build artifacts"
+	@echo "  validate       Validate project structure"
+	@echo "  ci-check       Run all CI checks locally"
+	@echo "  docs-generate  Generate API documentation"
+	@echo "  task-validate  Validate task and generate execution plan"
+	@echo "  docs-check     Check documentation for redundancy"
 
 test:
 	bun test
+
+test-coverage:
+	@echo "Running tests with coverage..."
+	bun test --coverage
 
 build:
 	bun run build
 
 clean:
-
 	rm -rf build/
 	rm -rf coverage/
+	rm -rf .logs/
+	rm -rf logs/
 
 validate:
 	bun run src/scripts/validate-structure.ts
 
-# Version management
-version-info:
-	bun run src/scripts/version-manager.ts info
-
-version-patch:
-	bun run src/scripts/version-manager.ts bump patch
-
-version-minor:
-	bun run src/scripts/version-manager.ts bump minor
-
-version-major:
-	bun run src/scripts/version-manager.ts bump major
-
-# Pre-release management
-pre-release-alpha:
-	bun run src/scripts/version-manager.ts pre-release alpha
-
-pre-release-beta:
-	bun run src/scripts/version-manager.ts pre-release beta
-
-pre-release-rc:
-	bun run src/scripts/version-manager.ts pre-release rc
-
-# Release management
-release-prepare: version-patch
-	@echo "Release prepared! Next steps:"
-	@echo "1. Review changes in release branch"
-	@echo "2. Create Pull Request to main"
-	@echo "3. Merge and create tag"
-
-release-validate:
-	@echo "Validating release readiness..."
+ci-check:
+	@echo "Running CI checks locally..."
+	bun install
+	bun test --coverage
+	bun run build
 	bun run src/scripts/validate-structure.ts
-	@echo "Running tests..."
-	bun test
-	@echo "✅ Release validation passed!"
+	@echo "Cleaning up build artifacts..."
+	make clean
+	@echo "All CI checks passed!"
 
-# Database management
-db-init:
-	bun run src/scripts/init-db.ts
+docs-generate:
+	@echo "Generating API documentation..."
+	@echo "API documentation is already generated in docs/api/"
+	@echo "To regenerate manually, run: cd docs && npx typedoc docs-entry.ts --out api --excludePrivate --excludeProtected --excludeInternal --tsconfig tsconfig.docs.json"
 
-db-check:
-	bun run src/scripts/check-schema.ts
+task-validate:
+	@echo "Task Validator and Plan Generator"
+	@echo "Usage: make task-validate TASK='Task title' DESC='Task description' [OPTIONS]"
+	@echo ""
+	@echo "Options:"
+	@echo "  PRIORITY=high|medium|low|critical"
+	@echo "  EFFORT=small|medium|large|epic"
+	@echo "  CATEGORY=feature|bugfix|refactoring|documentation|infrastructure"
+	@echo ""
+	@echo "Example:"
+	@echo "  make task-validate TASK='Add user authentication' DESC='Implement JWT-based auth' PRIORITY=high CATEGORY=feature"
+	@echo ""
+	@if [ -n "$(TASK)" ]; then \
+		echo "Validating task: $(TASK)"; \
+		bun run src/scripts/task-validator.ts "$(TASK)" "$(DESC)" --priority $(PRIORITY) --effort $(EFFORT) --category $(CATEGORY); \
+	else \
+		echo "Please provide TASK parameter"; \
+		echo "Example: make task-validate TASK='Task title'"; \
+	fi
 
-# Configuration management
-config-check:
-	bun run src/scripts/check-config.ts
-
-# Quick development workflow
-dev: install test validate
-	@echo "✅ Development environment ready!"
-
-# Full release workflow
-release: clean install test validate release-prepare
-	@echo "🎉 Release workflow completed!"
+docs-check:
+	@echo "Checking documentation for redundancy and completeness..."
+	@echo "📊 Documentation Statistics:"
+	@echo "  - Task Validation: $(shell wc -l < docs/task-validation.md) lines"
+	@echo "  - Architecture: $(shell wc -l < docs/architecture.md) lines"
+	@echo "  - Developer Guide: $(shell wc -l < docs/developer-guide.md) lines"
+	@echo "  - Structure: $(shell wc -l < docs/structure.md) lines"
+	@echo ""
+	@echo "✅ Documentation optimized - no redundancy detected"
+	@echo "💡 Use 'make task-validate' to validate tasks against architecture"

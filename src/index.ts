@@ -2,7 +2,12 @@
 
 /**
  * Dev Agent CLI - Main Entry Point
- * Implements the High-Efficiency Standard Operating Protocol
+ * 
+ * Implements the High-Efficiency Standard Operating Protocol (HESOP) for automated
+ * development workflows. This CLI tool provides commands for managing goals,
+ * GitHub integration, version management, and workflow automation.
+ * 
+ * @packageDocumentation
  */
 
 import { Command } from "commander";
@@ -23,7 +28,12 @@ let gitService: GitService;
 let workflowService: WorkflowService;
 
 /**
- * Initialize services
+ * Initialize core services required for Dev Agent operation
+ * 
+ * Sets up the storage service, Git service, and workflow service with default
+ * configuration. This function must be called before any CLI commands can execute.
+ * 
+ * @throws {Error} If service initialization fails
  */
 async function initializeServices(): Promise<void> {
   try {
@@ -58,7 +68,13 @@ async function initializeServices(): Promise<void> {
 }
 
 /**
- * Display formatted goal list
+ * Display formatted goal list with status grouping
+ * 
+ * Groups goals by their status and displays them in a user-friendly format
+ * with emojis and counts for each status category.
+ * 
+ * @param goals - Array of goals to display
+ * @param counts - Record containing count of goals by status
  */
 function displayGoals(goals: Goal[], counts: Record<string, number>): void {
   console.log("\n📋 Goal Summary:");

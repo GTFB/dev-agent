@@ -10,6 +10,7 @@
     "test:coverage": "bun test --coverage",
     "test:coverage:html": "bun test --coverage --coverage-dir=coverage",
     "test:coverage:badge": "bun run src/scripts/generate-coverage-badge.ts",
+    "build": "bun build src/index.ts --outdir build --target bun",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write .",

@@ -1,6 +1,10 @@
 /**
  * Logger utility for Dev Agent
- * Provides consistent logging with different levels and formatting
+ * 
+ * Provides consistent logging with different levels, formatting, and optional
+ * file output. Supports configurable log levels, timestamps, and file logging.
+ * 
+ * @packageDocumentation
  */
 
 /**
@@ -39,11 +43,11 @@ export class Logger {
       level: LogLevel.INFO,
       includeTimestamp: true,
       fileLogging: false, // Default to false
-      logFilePath: ".logs/dev-agent.log",
+      logFilePath: undefined, // No default path - must be explicitly set
       ...config, // This should override defaults
     };
 
-    this.logFile = this.config.logFilePath || ".logs/dev-agent.log";
+    this.logFile = this.config.logFilePath || '';
 
     // Ensure logs directory exists only if fileLogging is enabled
     if (this.config.fileLogging) {

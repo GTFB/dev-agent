@@ -17,16 +17,30 @@ export class DatabaseConfigProvider implements ConfigurationProvider<DatabaseCon
       return this.config;
     }
 
-    // Ensure database is created only in data/ directory
-    const dbPath = join(process.cwd(), "data", ".dev-agent.db");
+    // Load configuration from .dev-agent.json
+    let dbPath: string;
     
-    // Validate that we're not trying to create database in root
-    if (dbPath.includes("dev-agent.db") && !dbPath.includes("data")) {
-      throw new Error("Database must be created in data/ directory, not in root");
+    try {
+      const configFile = join(process.cwd(), ".dev-agent.json");
+      const configContent = await Bun.file(configFile).text();
+      const config = JSON.parse(configContent);
+      
+      if (config.storage && config.storage.database && config.storage.database.path) {
+        dbPath = config.storage.database.path;
+        logger.info(`Database path loaded from config: ${dbPath}`);
+      } else {
+        throw new Error("Database path not configured in .dev-agent.json");
+      }
+    } catch (error) {
+      logger.error("Failed to load database configuration from .dev-agent.json", error as Error);
+      throw new Error("Database configuration is required. Please create .dev-agent.json with storage.database.path");
     }
 
-    // For now, provide default SQLite configuration
-    // In the future, this could load from database or other sources
+    // Validate that we're not trying to create database in project root
+    if (dbPath.includes(process.cwd()) && !dbPath.includes("storage")) {
+      throw new Error("Database must be created in external storage, not in project directory");
+    }
+
     this.config = {
       source: 'database',
       priority: 300,
@@ -34,7 +48,7 @@ export class DatabaseConfigProvider implements ConfigurationProvider<DatabaseCon
       type: 'sqlite',
     };
 
-    logger.info("Database configuration loaded (default SQLite)");
+    logger.info("Database configuration loaded from external storage");
     return this.config;
   }
 
