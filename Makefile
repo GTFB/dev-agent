@@ -1,6 +1,6 @@
 # Dev Agent Makefile
 
-.PHONY: help test test-coverage build clean validate ci-check docs-generate task-validate docs-check
+.PHONY: help test test-coverage build clean validate ci-check docs-generate task-validate docs-check dev-init dev-sync dev-goals-list dev-goals-create
 
 help:
 	@echo "Dev Agent - Available Commands:"
@@ -13,6 +13,12 @@ help:
 	@echo "  docs-generate  Generate API documentation"
 	@echo "  task-validate  Validate task and generate execution plan"
 	@echo "  docs-check     Check documentation for redundancy"
+	@echo ""
+	@echo "Dev Agent Commands:"
+	@echo "  dev-init       Initialize Dev Agent project"
+	@echo "  dev-sync       Sync with GitHub (HARD ALGORITHM)"
+	@echo "  dev-goals-list List all goals"
+	@echo "  dev-goals-create Create new goal (TITLE='title' [DESC='description'])"
 
 test:
 	bun test
@@ -78,3 +84,29 @@ docs-check:
 	@echo ""
 	@echo "✅ Documentation optimized - no redundancy detected"
 	@echo "💡 Use 'make task-validate' to validate tasks against architecture"
+
+# Dev Agent Commands
+dev-init:
+	@echo "Initializing Dev Agent project..."
+	bun run src/index.ts init
+
+dev-sync:
+	@echo "Syncing with GitHub (HARD ALGORITHM: only issues with 'Todo' milestone)..."
+	bun run src/index.ts sync
+
+dev-goals-list:
+	@echo "Listing all goals..."
+	bun run src/index.ts goal list
+
+dev-goals-create:
+	@echo "Creating new goal..."
+	@if [ -n "$(TITLE)" ]; then \
+		if [ -n "$(DESC)" ]; then \
+			bun run src/index.ts goal create "$(TITLE)" --description "$(DESC)"; \
+		else \
+			bun run src/index.ts goal create "$(TITLE)"; \
+		fi; \
+	else \
+		echo "Usage: make dev-goals-create TITLE='Goal title' [DESC='Goal description']"; \
+		echo "Example: make dev-goals-create TITLE='Fix bug' DESC='Fix critical description'"; \
+	fi

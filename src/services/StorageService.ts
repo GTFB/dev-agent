@@ -11,6 +11,7 @@
 import { DatabaseManager } from "../core/database.js";
 import { Goal, ProjectConfig, GoalStatus } from "../core/types.js";
 import { logger } from "../utils/logger.js";
+import { readFileSync, existsSync } from "fs";
 
 /**
  * Storage Service class
@@ -24,12 +25,25 @@ export class StorageService {
   private initialized: boolean = false;
 
   constructor(dbPath?: string) {
-    // Приоритет: переданный путь -> переменная окружения -> in-memory для тестов
-    const defaultPath = process.env.DEV_AGENT_DB_PATH || ":memory:";
-    const finalPath = dbPath || defaultPath;
+    // Priority: passed path -> environment variable -> path from .dev-agent.json -> in-memory for tests
+    let defaultPath = ":memory:";
     
-    // НЕ создаем БД автоматически! Только сохраняем путь
-    this.db = null as DatabaseManager | null; // Временно null
+    // Try to load path from .dev-agent.json
+    try {
+      if (existsSync('.dev-agent.json')) {
+        const config = JSON.parse(readFileSync('.dev-agent.json', 'utf8'));
+        if (config.storage?.database?.path) {
+          defaultPath = config.storage.database.path;
+        }
+      }
+    } catch (error) {
+      // Ignore configuration loading errors
+    }
+    
+    const finalPath = dbPath || process.env.DEV_AGENT_DB_PATH || defaultPath;
+    
+    // DO NOT create DB automatically! Only save the path
+    this.db = null as DatabaseManager | null; // Temporarily null
     this.dbPath = finalPath;
   }
 
@@ -182,15 +196,22 @@ export class StorageService {
         throw new Error("Database not initialized");
       }
 
+      logger.info(`Listing goals${status ? ` with status: ${status}` : ''}`);
+      
+      let goals: Goal[];
       if (status) {
-        return this.db.all<Goal>(
+        goals = this.db.all<Goal>(
           "SELECT * FROM goals WHERE status = ? ORDER BY created_at DESC",
           [status],
         );
+      } else {
+        goals = this.db.all<Goal>(
+          "SELECT * FROM goals ORDER BY created_at DESC",
+        );
       }
-      return this.db.all<Goal>(
-        "SELECT * FROM goals ORDER BY created_at DESC",
-      );
+      
+      logger.info(`Found ${goals.length} goals in database`);
+      return goals;
     } catch (error) {
       logger.error("Failed to list goals", error as Error);
       throw error;
@@ -256,10 +277,19 @@ export class StorageService {
         throw new Error("Database not initialized");
       }
 
+      logger.info(`Searching for goal with GitHub issue ID: ${issueId}`);
+      
       const result = this.db.get<Goal>(
         "SELECT * FROM goals WHERE github_issue_id = ?",
         [issueId],
       );
+      
+      if (result) {
+        logger.info(`Found goal: ${result.id} for GitHub issue ${issueId}`);
+      } else {
+        logger.info(`No goal found for GitHub issue ${issueId}`);
+      }
+      
       return result || null;
     } catch (error) {
       logger.error(

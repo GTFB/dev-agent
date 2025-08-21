@@ -4,10 +4,7 @@
 Systematically develop new functionality, from selecting a task in the database to handing off for testing.
 
 ## Steps
-1.  **Determine Task for Work**
-   - **Check for active work:** Query the DB for a task with `in_progress` status. **If found, resume work on it** by checking out its associated branch.
-   - **If no active tasks exist,** select a task from the queue: Find a task in the DB with `todo` status (by high priority or earliest date).
-   - **Sync if queue is empty:** If no `todo` tasks exist, sync with GitHub. New tasks are created in the DB with an ID from `aid-generator`.
+1. **Determine Task for Work**
    - **Start a new task:** Automatically create a `feature/g-XXXXXX-description` branch, update the selected `todo` task's status to `in_progress`, **and change its milestone on GitHub to "In Progress"**.
 
 2.  **Implement & Document**

@@ -1,7 +1,7 @@
 # Security Audit
 
 ## Overview
-Comprehensive security review to identify and fix vulnerabilities in the codebase.
+Think Hard. Comprehensive security review to identify and fix vulnerabilities in the codebase.
 
 ## Steps
 1. **Dependency audit**
