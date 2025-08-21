@@ -41,7 +41,7 @@ build:
 	bun run build
 
 clean:
-	rm -rf dist/
+
 	rm -rf build/
 	rm -rf coverage/
 

@@ -6,7 +6,6 @@
   "scripts": {
     "start": "bun run src/index.ts",
     "dev": "bun run src/index.ts",
-    "build": "bun build src/index.ts --outfile dist/dev --compile --minify",
     "test": "bun test",
     "test:coverage": "bun test --coverage",
     "test:coverage:html": "bun test --coverage --coverage-dir=coverage",

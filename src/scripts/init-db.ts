@@ -16,8 +16,10 @@ async function main() {
     const dbConfig = configManager.getDatabaseConfig();
     console.log(`📊 Database: ${dbConfig.type} at ${dbConfig.path}`);
     
-    // Initialize database
-    const dbManager = new DatabaseManager();
+    // Initialize database with external path
+    const dbPath = process.env.DEV_AGENT_DB_PATH || dbConfig.path;
+    console.log(`🔧 Using database path: ${dbPath}`);
+    const dbManager = new DatabaseManager(dbPath);
     await dbManager.initialize();
     
     // Get database statistics

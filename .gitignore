@@ -16,13 +16,18 @@ node_modules/
 bun.lockb
 
 # Build outputs
-dist/
+
 build/
 
 # Environment variables
 .env
 .env.local
 .env.*.local
+
+# Database configuration
+config/database.env
+config/*.env
+G:/Общие диски/Altrp/dev-agent/.env
 
 # IDE files
 .vscode/
@@ -87,7 +92,7 @@ jspm_packages/
 
 # Nuxt.js build / generate output
 .nuxt
-dist
+
 
 # Storybook build outputs
 .out

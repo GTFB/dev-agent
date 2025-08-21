@@ -11,11 +11,18 @@ import { logger } from "../utils/logger.js";
  * Storage Service class
  */
 export class StorageService {
-  private db: DatabaseManager;
+  private db: DatabaseManager | null = null;
+  private dbPath: string;
   private initialized: boolean = false;
 
-  constructor(dbPath: string = "data/.dev-agent.db") {
-    this.db = new DatabaseManager(dbPath);
+  constructor(dbPath?: string) {
+    // Приоритет: переданный путь -> переменная окружения -> путь по умолчанию
+    const defaultPath = process.env.DEV_AGENT_DB_PATH || "data/.dev-agent.db";
+    const finalPath = dbPath || defaultPath;
+    
+    // НЕ создаем БД автоматически! Только сохраняем путь
+    this.db = null as DatabaseManager | null; // Временно null
+    this.dbPath = finalPath;
   }
 
   /**
@@ -23,6 +30,9 @@ export class StorageService {
    */
   async initialize(): Promise<void> {
     try {
+      if (!this.db) {
+        this.db = new DatabaseManager(this.dbPath);
+      }
       await this.db.initialize();
       this.initialized = true;
       logger.info("Storage service initialized");
@@ -36,7 +46,7 @@ export class StorageService {
    * Ensure storage service is initialized
    */
   private async ensureInitialized(): Promise<void> {
-    if (!this.initialized) {
+    if (!this.initialized || !this.db) {
       await this.initialize();
     }
   }
@@ -45,7 +55,10 @@ export class StorageService {
    * Close storage service
    */
   close(): void {
-    this.db.close();
+    if (this.db) {
+      this.db.close();
+      this.db = null;
+    }
   }
 
   // Goal operations

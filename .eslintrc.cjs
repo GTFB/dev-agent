@@ -24,5 +24,5 @@ module.exports = {
     'no-var': 'error',
     'no-undef': 'off', // TypeScript handles this
   },
-  ignorePatterns: ['dist/', 'node_modules/', '*.js'],
+      ignorePatterns: ['node_modules/', '*.js'],
 };

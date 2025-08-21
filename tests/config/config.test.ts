@@ -9,10 +9,8 @@ describe("ConfigManager", () => {
     configManager = new (ConfigManager as unknown as new () => ConfigManager)();
     // Override the database path for testing to use in-memory
     (configManager as unknown as { configPath: string }).configPath = ":memory:";
-    (configManager as unknown as { db: { close(): void } }).db.close();
-    const Database = require("bun:sqlite").Database;
-    (configManager as unknown as { db: unknown }).db = new Database(":memory:");
-    (configManager as unknown as { ensureTables(): void }).ensureTables();
+    // Initialize the database for testing
+    configManager.initialize();
   });
 
   afterEach(() => {

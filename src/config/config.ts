@@ -6,7 +6,8 @@
  */
 
 import { Database } from "bun:sqlite";
-import { join } from "path";
+import { join, dirname } from "path";
+import { existsSync, readFileSync, mkdirSync } from "fs";
 
 export interface DatabaseConfig {
   path: string;
@@ -65,7 +66,52 @@ export class ConfigManager {
   private configPath: string;
 
   constructor() {
-    this.configPath = join(process.cwd(), "data", ".dev-agent.db");
+    // НЕ создаем БД автоматически! Только сохраняем путь
+    const defaultPath = join(process.cwd(), "data", ".dev-agent.db");
+    let configuredPath: string | undefined;
+
+    // Сначала проверяем переменную окружения (приоритет)
+    if (process.env.DEV_AGENT_DB_PATH) {
+      configuredPath = process.env.DEV_AGENT_DB_PATH;
+    } else {
+      // Пытаемся прочитать .dev-agent.json только если ENV не задан
+      try {
+        const cfgFile = join(process.cwd(), ".dev-agent.json");
+        if (existsSync(cfgFile)) {
+          const raw = readFileSync(cfgFile, "utf8");
+          const json = JSON.parse(raw);
+          const jsonPath = json?.storage?.database?.path;
+          if (typeof jsonPath === "string" && jsonPath.length > 0) {
+            configuredPath = jsonPath;
+          }
+        }
+      } catch {
+        // ignore JSON read errors and fall back
+      }
+    }
+
+    this.configPath = configuredPath || defaultPath;
+    
+    // НЕ создаем БД здесь! БД будет создана только при явном вызове initialize()
+    this.db = null as Database | null; // Временно null
+  }
+
+  /**
+   * Инициализация БД - вызывается только когда нужно
+   */
+  initialize(): void {
+    if (this.db) return; // Уже инициализирована
+    
+    // Ensure directory exists for the database file
+    try {
+      const dirPath = dirname(this.configPath);
+      if (dirPath && !existsSync(dirPath)) {
+        mkdirSync(dirPath, { recursive: true });
+      }
+    } catch {
+      // Ignore directory creation errors
+    }
+
     this.db = new Database(this.configPath);
     this.ensureTables();
   }
@@ -74,6 +120,9 @@ export class ConfigManager {
    * Ensure configuration tables exist
    */
   private ensureTables(): void {
+    if (!this.db) {
+      throw new Error("Database not initialized. Call initialize() first.");
+    }
     // Create config table if it doesn't exist
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS config (
@@ -149,7 +198,7 @@ export class ConfigManager {
   private getDefaultConfig(): AppConfig {
     return {
       database: {
-        path: join(process.cwd(), "data", ".dev-agent.db"),
+        path: process.env.DEV_AGENT_DB_PATH || join(process.cwd(), "data", ".dev-agent.db"),
         type: "sqlite"
       },
       github: undefined,
@@ -188,6 +237,9 @@ export class ConfigManager {
    * Set configuration value
    */
   setConfig(key: string, value: string, type: string = 'string', description?: string, category: string = 'general'): void {
+    if (!this.db) {
+      throw new Error("Database not initialized. Call initialize() first.");
+    }
     const stmt = this.db.prepare(`
       INSERT OR REPLACE INTO config (key, value, type, description, category, updated_at)
       VALUES (?, ?, ?, ?, ?, (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')))
@@ -200,6 +252,9 @@ export class ConfigManager {
    * Get configuration value
    */
   getConfig(key: string, defaultValue?: string): string | undefined {
+    if (!this.db) {
+      throw new Error("Database not initialized. Call initialize() first.");
+    }
     const stmt = this.db.prepare("SELECT value FROM config WHERE key = ?");
     const result = stmt.get(key) as { value: string } | undefined;
     return result?.value || defaultValue;
@@ -209,6 +264,10 @@ export class ConfigManager {
    * Get all configuration for a category
    */
   getConfigByCategory(category: string): Record<string, string> {
+    if (!this.db) {
+      return {};
+    }
+    
     const stmt = this.db.prepare("SELECT key, value FROM config WHERE category = ?");
     const results = stmt.all(category) as Array<{ key: string; value: string }>;
     
@@ -224,6 +283,10 @@ export class ConfigManager {
    * Delete configuration
    */
   deleteConfig(key: string): void {
+    if (!this.db) {
+      throw new Error("Database not initialized. Call initialize() first.");
+    }
+    
     const stmt = this.db.prepare("DELETE FROM config WHERE key = ?");
     stmt.run(key);
   }
@@ -232,6 +295,10 @@ export class ConfigManager {
    * Set LLM provider configuration
    */
   setLLMProvider(provider: string, apiKey: string, model: string, apiBase?: string, config?: Record<string, unknown>): void {
+    if (!this.db) {
+      throw new Error("Database not initialized. Call initialize() first.");
+    }
+    
     const stmt = this.db.prepare(`
       INSERT OR REPLACE INTO llm (provider, api_key, model, api_base, config, updated_at)
       VALUES (?, ?, ?, ?, ?, (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')))
@@ -245,6 +312,10 @@ export class ConfigManager {
    * Get LLM provider configuration
    */
   getLLMProvider(provider: string): { apiKey: string; model: string; apiBase?: string; config?: Record<string, unknown> } | undefined {
+    if (!this.db) {
+      return undefined;
+    }
+    
     const stmt = this.db.prepare("SELECT api_key, model, api_base, config FROM llm WHERE provider = ?");
     const result = stmt.get(provider) as { api_key: string; model: string; api_base?: string; config?: string } | undefined;
     
@@ -264,6 +335,10 @@ export class ConfigManager {
    * Set default LLM provider
    */
   setDefaultLLMProvider(provider: string): void {
+    if (!this.db) {
+      throw new Error("Database not initialized. Call initialize() first.");
+    }
+    
     // Clear all default flags
     this.db.exec("UPDATE llm SET is_default = 0");
     
@@ -276,6 +351,10 @@ export class ConfigManager {
    * Get default LLM provider
    */
   getDefaultLLMProvider(): string | undefined {
+    if (!this.db) {
+      return undefined;
+    }
+    
     const stmt = this.db.prepare("SELECT provider FROM llm WHERE is_default = 1");
     const result = stmt.get() as { provider: string } | undefined;
     return result?.provider;
@@ -285,6 +364,10 @@ export class ConfigManager {
    * Get all LLM providers
    */
   getAllLLMProviders(): Array<{ provider: string; model: string; isDefault: boolean; status: string }> {
+    if (!this.db) {
+      return [];
+    }
+    
     const stmt = this.db.prepare("SELECT provider, model, is_default, status FROM llm ORDER BY is_default DESC, provider");
     const results = stmt.all() as Array<{ provider: string; model: string; is_default: number; status: string }>;
     
@@ -330,6 +413,10 @@ export class ConfigManager {
    * Set GitHub configuration
    */
   setGitHubConfig(config: GitHubConfig): void {
+    if (!this.db) {
+      throw new Error("Database not initialized. Call initialize() first.");
+    }
+    
     this.setConfig('github.token', config.token, 'string', 'GitHub access token', 'github');
     this.setConfig('github.owner', config.owner, 'string', 'GitHub repository owner', 'github');
     this.setConfig('github.repo', config.repo, 'string', 'GitHub repository name', 'github');
@@ -382,13 +469,24 @@ export class ConfigManager {
    * Close database connection
    */
   close(): void {
-    this.db.close();
+    if (this.db) {
+      this.db.close();
+      this.db = null;
+    }
   }
 
   /**
    * Get configuration statistics
    */
   getStats(): { totalConfigs: number; totalLLMProviders: number; categories: string[] } {
+    if (!this.db) {
+      return {
+        totalConfigs: 0,
+        totalLLMProviders: 0,
+        categories: []
+      };
+    }
+    
     const configCount = this.db.prepare("SELECT COUNT(*) as count FROM config").get() as { count: number };
     const llmCount = this.db.prepare("SELECT COUNT(*) as count FROM llm").get() as { count: number };
     const categories = this.db.prepare("SELECT DISTINCT category FROM config").all() as Array<{ category: string }>;
