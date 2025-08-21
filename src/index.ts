@@ -9,9 +9,9 @@ import { Command } from "commander";
 import { StorageService } from "./services/StorageService.js";
 import { GitService } from "./services/GitService.js";
 import { WorkflowService } from "./services/WorkflowService.js";
-import { WorkflowContext, Goal } from "./core/types.js";
+import { WorkflowContext, Goal, DevAgentConfig, GoalStatus } from "./core/types.js";
 import { logger, LogLevel } from "./utils/logger.js";
-import { loadEnvironment } from "./utils/env-loader.js";
+import { loadDatabaseConfig } from "./utils/env-loader.js";
 import { ProjectConfigService } from "./services/ProjectConfigService.js";
 
 // CLI version
@@ -147,13 +147,31 @@ async function main(): Promise<void> {
     .action(async () => {
       try {
         // Load environment configuration first
-        const envConfig = loadEnvironment();
+        loadDatabaseConfig();
         
         // Load project configuration
         const projectConfigService = new ProjectConfigService();
-        let projectConfig: Record<string, unknown> | null = null;
+        let projectConfig: DevAgentConfig | null = null;
         try {
-          projectConfig = await projectConfigService.getFullConfig();
+          const rawConfig = await projectConfigService.getFullConfig();
+          // Convert ProjectConfig to DevAgentConfig
+          projectConfig = {
+            github: {
+              owner: rawConfig.github.owner,
+              repo: rawConfig.github.repo,
+              token: process.env.GITHUB_TOKEN
+            },
+            branches: {
+              main: rawConfig.branches.main,
+              develop: rawConfig.branches.develop,
+              feature_prefix: rawConfig.branches.feature_prefix,
+              release_prefix: rawConfig.branches.release_prefix
+            },
+            goals: {
+              default_status: rawConfig.goals.default_status as GoalStatus,
+              id_pattern: rawConfig.goals.id_pattern
+            }
+          };
         } catch {
           console.log("⚠️  Warning: Could not load .dev-agent.json configuration");
         }
@@ -164,9 +182,9 @@ async function main(): Promise<void> {
           console.log("✅", result.message);
           console.log("\n🎉 Dev Agent initialized successfully!");
           console.log("\n📋 Environment Configuration:");
-          console.log(`   GitHub Token: ${envConfig.GITHUB_TOKEN ? "✅ Configured" : "❌ Not set"}`);
-          console.log(`   OpenAI API: ${envConfig.OPENAI_API_KEY ? "✅ Configured" : "❌ Not set"}`);
-          console.log(`   Google API: ${envConfig.GOOGLE_API_KEY ? "✅ Configured" : "❌ Not set"}`);
+          console.log(`   GitHub Token: ${process.env.GITHUB_TOKEN ? "✅ Configured" : "❌ Not set"}`);
+          console.log(`   OpenAI API: ${process.env.OPENAI_API_KEY ? "✅ Configured" : "❌ Not set"}`);
+          console.log(`   Google API: ${process.env.GOOGLE_API_KEY ? "✅ Configured" : "❌ Not set"}`);
           
           if (projectConfig) {
             console.log("\n📋 Project Configuration (.dev-agent.json):");
@@ -177,7 +195,7 @@ async function main(): Promise<void> {
           }
           
           console.log("\n💡 Next steps:");
-          if (!envConfig.GITHUB_TOKEN) {
+          if (!process.env.GITHUB_TOKEN) {
             console.log("1. Set GITHUB_TOKEN in your .env file for GitHub integration");
           }
           if (!projectConfig) {
@@ -237,8 +255,9 @@ async function main(): Promise<void> {
 
         if (result.success) {
           console.log("✅", result.message);
-          if (result.data) {
-            console.log(`${result.data.key} = ${result.data.value}`);
+          if (result.data && typeof result.data === 'object' && 'key' in result.data && 'value' in result.data) {
+            const configData = result.data as { key: string; value: string };
+            console.log(`${configData.key} = ${configData.value}`);
           }
         } else {
           console.error("❌", result.message);
@@ -405,15 +424,15 @@ async function main(): Promise<void> {
 
         if (result.success) {
           console.log("✅", result.message);
-          if (result.data) {
-            console.log(`Goal ID: ${result.data.goalId}`);
-            console.log(`Title: ${result.data.title}`);
-            console.log(`Status: ${result.data.status}`);
+          if (result.data && typeof result.data === 'object' && 'goalId' in result.data) {
+            const goalData = result.data as { goalId: string; title: string; status: string; validationResults?: Array<{severity: string, message: string, suggestion?: string}> };
+            console.log(`Goal ID: ${goalData.goalId}`);
+            console.log(`Title: ${goalData.title}`);
+            console.log(`Status: ${goalData.status}`);
 
             // Display validation warnings if any
-            if (result.data && typeof result.data === 'object' && 'validationResults' in result.data) {
-              const validationResults = result.data.validationResults as Array<{severity: string, message: string, suggestion?: string}>;
-              const warnings = validationResults.filter(
+            if (goalData.validationResults) {
+              const warnings = goalData.validationResults.filter(
                 (r) => r.severity === "warning",
               );
               if (warnings.length > 0) {
@@ -453,8 +472,9 @@ async function main(): Promise<void> {
 
         if (result.success) {
           console.log("✅", result.message);
-          if (result.data) {
-            displayGoals(result.data.goals, result.data.counts);
+          if (result.data && typeof result.data === 'object' && 'goals' in result.data && 'counts' in result.data) {
+            const goalData = result.data as { goals: Goal[]; counts: Record<string, number> };
+            displayGoals(goalData.goals, goalData.counts);
           }
         } else {
           console.error("❌", result.message);
@@ -479,9 +499,10 @@ async function main(): Promise<void> {
 
         if (result.success) {
           console.log("✅", result.message);
-          if (result.data) {
-            console.log(`Branch: ${result.data.branchName}`);
-            console.log(`Status: ${result.data.status}`);
+          if (result.data && typeof result.data === 'object' && 'branchName' in result.data && 'status' in result.data) {
+            const startData = result.data as { branchName: string; status: string };
+            console.log(`Branch: ${startData.branchName}`);
+            console.log(`Status: ${startData.status}`);
           }
         } else {
           console.error("❌", result.message);
@@ -506,10 +527,11 @@ async function main(): Promise<void> {
 
         if (result.success) {
           console.log("✅", result.message);
-          if (result.data) {
-            console.log(`Goal ID: ${result.data.goalId}`);
-            console.log(`Status: ${result.data.status}`);
-            console.log(`Completed: ${result.data.completedAt}`);
+          if (result.data && typeof result.data === 'object' && 'goalId' in result.data) {
+            const completeData = result.data as { goalId: string; status: string; completedAt: string };
+            console.log(`Goal ID: ${completeData.goalId}`);
+            console.log(`Status: ${completeData.status}`);
+            console.log(`Completed: ${completeData.completedAt}`);
           }
         } else {
           console.error("❌", result.message);
@@ -534,9 +556,10 @@ async function main(): Promise<void> {
 
         if (result.success) {
           console.log("✅", result.message);
-          if (result.data) {
-            console.log(`Goal ID: ${result.data.goalId}`);
-            console.log(`Status: ${result.data.status}`);
+          if (result.data && typeof result.data === 'object' && 'goalId' in result.data) {
+            const stopData = result.data as { goalId: string; status: string };
+            console.log(`Goal ID: ${stopData.goalId}`);
+            console.log(`Status: ${stopData.status}`);
           }
         } else {
           console.error("❌", result.message);
@@ -764,13 +787,14 @@ async function main(): Promise<void> {
 
         if (result.success) {
           console.log("✅", result.message);
-          if (result.data) {
-            if (result.data.cleanedCount > 0) {
-              console.log(`🧹 Cleaned up ${result.data.cleanedCount} completed goals`);
+          if (result.data && typeof result.data === 'object') {
+            const cleanupData = result.data as { cleanedCount?: number; errors?: string[] };
+            if (cleanupData.cleanedCount && cleanupData.cleanedCount > 0) {
+              console.log(`🧹 Cleaned up ${cleanupData.cleanedCount} completed goals`);
             }
-            if (result.data.errors && result.data.errors.length > 0) {
-              console.log(`⚠️  ${result.data.errors.length} errors occurred during cleanup`);
-              result.data.errors.forEach((error: string) => {
+            if (cleanupData.errors && cleanupData.errors.length > 0) {
+              console.log(`⚠️  ${cleanupData.errors.length} errors occurred during cleanup`);
+              cleanupData.errors.forEach((error: string) => {
                 console.error(`  - ${error}`);
               });
             }
@@ -1528,12 +1552,7 @@ async function main(): Promise<void> {
           const { generateUniqueEntityId } = await import(
             "./core/aid-generator.js"
           );
-          const docId = generateUniqueEntityId("D", {
-            prefix: "D",
-            title: title,
-            type: "document",
-            status: "draft",
-          });
+          const docId = generateUniqueEntityId("D");
 
           const tags = options.tags
             ? options.tags.split(",").map((t) => t.trim())
@@ -1617,12 +1636,17 @@ async function main(): Promise<void> {
 
         if (result.success) {
           console.log("✅", result.message);
-          if (result.data) {
-            console.log(`Created: ${result.data.created} goals`);
-            console.log(`Updated: ${result.data.updated} goals`);
-            if (result.data.errors && result.data.errors.length > 0) {
-              console.log(`Errors: ${result.data.errors.length}`);
-              result.data.errors.forEach((error: string) => {
+          if (result.data && typeof result.data === 'object') {
+            const syncData = result.data as { created?: number; updated?: number; errors?: string[] };
+            if (syncData.created !== undefined) {
+              console.log(`Created: ${syncData.created} goals`);
+            }
+            if (syncData.updated !== undefined) {
+              console.log(`Updated: ${syncData.updated} goals`);
+            }
+            if (syncData.errors && syncData.errors.length > 0) {
+              console.log(`Errors: ${syncData.errors.length}`);
+              syncData.errors.forEach((error: string) => {
                 console.error(`  - ${error}`);
               });
             }

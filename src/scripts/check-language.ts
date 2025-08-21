@@ -19,7 +19,7 @@ const TEXT_EXTENSIONS = [
 
 // Files to ignore
 const IGNORE_FILES = [
-  'node_modules', '.git', 'dist', 'build', 'coverage', '.next', '.nuxt',
+  'node_modules', '.git', 'build', 'coverage', '.next', '.nuxt',
   'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'bun.lock'
 ];
 

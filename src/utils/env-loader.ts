@@ -1,94 +1,98 @@
 #!/usr/bin/env bun
 
 /**
- * Environment Variables Loader
- * Loads configuration from .env file and provides typed access
+ * Environment variables loader for Dev Agent
+ * Loads configuration from database.env file
  */
 
-import { config } from "dotenv";
-import { join } from "path";
+import { readFileSync, existsSync } from "fs";
 
-// Load .env file from project root
-config({ path: join(process.cwd(), ".env") });
-
-export interface EnvironmentConfig {
-  // GitHub Configuration (SECRETS)
-  GITHUB_TOKEN?: string;
+/**
+ * Load environment variables from database.env file
+ */
+export function loadDatabaseConfig(): void {
+  const configFile = "G:\\Общие диски\\Altrp\\dev-agent\\.env";
   
-  // LLM Configuration (SECRETS)
+  if (!existsSync(configFile)) {
+    console.log("ℹ️  Файл конфигурации не найден, используем настройки по умолчанию");
+    return;
+  }
+
+  try {
+    const content = readFileSync(configFile, "utf8");
+    const lines = content.split("\n");
+    
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      
+      // Пропускаем комментарии и пустые строки
+      if (trimmedLine.startsWith("#") || !trimmedLine.includes("=")) {
+        continue;
+      }
+      
+      const [key, value] = trimmedLine.split("=", 2);
+      if (key && value) {
+        process.env[key.trim()] = value.trim();
+      }
+    }
+    
+    console.log("✅ Конфигурация базы данных загружена");
+  } catch (error) {
+    console.error("❌ Ошибка при загрузке конфигурации:", error);
+  }
+}
+
+/**
+ * Get database path from environment or default
+ */
+export function getDatabasePath(): string {
+  return process.env.DEV_AGENT_DB_PATH || "data/.dev-agent.db";
+}
+
+/**
+ * Check if custom database path is configured
+ */
+export function hasCustomDatabasePath(): boolean {
+  return !!process.env.DEV_AGENT_DB_PATH;
+}
+
+// Backward-compatible helpers expected by other modules
+export interface EnvironmentConfig {
+  GITHUB_TOKEN?: string;
   OPENAI_API_KEY?: string;
   GOOGLE_API_KEY?: string;
-  
-  // Application Configuration (ENVIRONMENT)
   NODE_ENV?: string;
   LOG_LEVEL?: string;
 }
 
-/**
- * Get environment variable with type safety
- */
 export function getEnv(key: keyof EnvironmentConfig): string | undefined {
-  return process.env[key];
+  return process.env[key as string];
 }
 
-/**
- * Get required environment variable (throws if missing)
- */
 export function getRequiredEnv(key: keyof EnvironmentConfig): string {
   const value = getEnv(key);
   if (!value) {
-    throw new Error(`Required environment variable ${key} is not set`);
+    throw new Error(`Required environment variable ${String(key)} is not set`);
   }
   return value;
 }
 
-/**
- * Check if environment variable is set
- */
 export function hasEnv(key: keyof EnvironmentConfig): boolean {
   return !!getEnv(key);
 }
 
-/**
- * Get all environment variables
- */
 export function getAllEnv(): EnvironmentConfig {
   return {
-    GITHUB_TOKEN: getEnv("GITHUB_TOKEN"),
-    OPENAI_API_KEY: getEnv("OPENAI_API_KEY"),
-    GOOGLE_API_KEY: getEnv("GOOGLE_API_KEY"),
-    NODE_ENV: getEnv("NODE_ENV") || "development",
-    LOG_LEVEL: getEnv("LOG_LEVEL") || "info",
+    GITHUB_TOKEN: process.env.GITHUB_TOKEN,
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    GOOGLE_API_KEY: process.env.GOOGLE_API_KEY,
+    NODE_ENV: process.env.NODE_ENV || "development",
+    LOG_LEVEL: process.env.LOG_LEVEL || "info",
   };
 }
 
-/**
- * Validate required environment variables
- */
-export function validateEnv(): string[] {
-  const errors: string[] = [];
-  
-  // Only validate critical secrets that are absolutely required
-  // Project rules (GITHUB_OWNER, GITHUB_REPO) should come from .dev-agent.json
-  // and are not required in .env for local development
-  
-  // Note: GITHUB_TOKEN is optional for local development without GitHub integration
-  // It will be required only when actually using GitHub features
-  
-  return errors;
-}
-
-/**
- * Load and validate environment
- */
 export function loadEnvironment(): EnvironmentConfig {
-  const config = getAllEnv();
-  const errors = validateEnv();
-  
-  if (errors.length > 0) {
-    console.warn("⚠️  Environment validation warnings:");
-    errors.forEach(error => console.warn(`   - ${error}`));
-  }
-  
-  return config;
+  // Load DB config first (if present)
+  loadDatabaseConfig();
+  return getAllEnv();
 }
