@@ -45,6 +45,7 @@ export class StorageService {
     // DO NOT create DB automatically! Only save the path
     this.db = null as DatabaseManager | null; // Temporarily null
     this.dbPath = finalPath;
+    logger.info(`StorageService initialized with path: ${this.dbPath}`);
   }
 
   /**

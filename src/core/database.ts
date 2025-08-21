@@ -24,7 +24,26 @@ export class DatabaseManager {
   private db: Database | null = null;
 
   constructor(dbPath?: string) {
-    this.dbPath = dbPath || configManager.getDatabaseConfig().path;
+    // Use passed path or try to load from .dev-agent.json first
+    let finalPath = dbPath;
+    
+    if (!finalPath) {
+      try {
+        const { readFileSync, existsSync } = require("fs");
+        if (existsSync('.dev-agent.json')) {
+          const config = JSON.parse(readFileSync('.dev-agent.json', 'utf8'));
+          if (config.storage?.database?.path) {
+            finalPath = config.storage.database.path;
+          }
+        }
+      } catch (error) {
+        // Fall back to configManager if .dev-agent.json read fails
+        finalPath = configManager.getDatabaseConfig().path;
+      }
+    }
+    
+    this.dbPath = finalPath;
+    logger.info(`DatabaseManager initialized with path: ${this.dbPath}`);
   }
 
   /**

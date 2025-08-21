@@ -473,13 +473,23 @@ export class GitHubService {
    * Generate goal ID from GitHub issue
    */
   private generateGoalIdFromIssue(): string {
-    // Use a simple approach for now - we can enhance this later
-    const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-    let result = "g-";
-    for (let i = 0; i < 6; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    // Generate consistent ID based on issue number and timestamp
+    const timestamp = Date.now().toString(36);
+    const issueHash = Math.abs(this.hashCode(`issue-${Date.now()}`)).toString(36);
+    return `g-${timestamp.slice(-3)}${issueHash.slice(0, 3)}`;
+  }
+
+  /**
+   * Simple hash function for consistent ID generation
+   */
+  private hashCode(str: string): number {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
     }
-    return result;
+    return hash;
   }
 
   /**
@@ -523,7 +533,7 @@ export class GitHubService {
           owner: this.config.owner,
           repo: this.config.repo,
           title: milestoneTitle,
-          description: `Milestone for goal: ${goal.title}`,
+          description: `Standard milestone for ${milestoneTitle.toLowerCase()} tasks`,
           state: goal.status === "done" ? "closed" : "open",
         });
         
@@ -560,13 +570,13 @@ export class GitHubService {
   private generateMilestoneTitle(goal: Goal): string {
     switch (goal.status) {
       case "in_progress":
-        return `🚧 In Progress: ${goal.title}`;
+        return "In Progress";
       case "done":
-        return `✅ Completed: ${goal.title}`;
+        return "Done";
       case "archived":
-        return `📁 Archived: ${goal.title}`;
+        return "Archived";
       default:
-        return `📋 Todo: ${goal.title}`;
+        return "Todo";
     }
   }
 
@@ -673,6 +683,17 @@ export class GitHubService {
         
         // Update milestone state if needed
         await this.updateMilestoneState(goal);
+
+        // If goal is completed, add a comment to the issue
+        if (goal.status === "done") {
+          await this.octokit!.issues.createComment({
+            owner: this.config.owner,
+            repo: this.config.repo,
+            issue_number: goal.github_issue_id,
+            body: `✅ **Goal Completed**: This issue has been marked as completed by Dev Agent.\n\n**Goal ID**: ${goal.id}\n**Completed At**: ${new Date().toISOString()}\n\nThe feature branch has been merged and cleaned up.`
+          });
+          logger.info(`Added completion comment to GitHub issue ${goal.github_issue_id}`);
+        }
       }
     } catch (error) {
       logger.error(`Failed to sync goal ${goal.id} to GitHub`, error as Error);

@@ -209,13 +209,8 @@ export class WorkflowService {
    */
   private generateFeatureBranchName(goal: Goal): string {
     const featurePrefix = this.context.config.branches.feature_prefix;
-    const sanitizedTitle = goal.title
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .substring(0, 30);
-
-    return `${featurePrefix}/${goal.id}-${sanitizedTitle}`;
+    // Use only the goal ID for branch naming, not the title
+    return `${featurePrefix}/${goal.id}`;
   }
 
   /**

@@ -26,7 +26,7 @@
   },
   "storage": {
     "database": {
-      "path": "G:/Общие диски/Altrp/dev-agent/database/.dev-agent.db"
+      "path": "G:/Общие диски/Altrp/dev-agent/dev-agent.db"
     },
     "config": {
       "path": "G:/Общие диски/Altrp/dev-agent/config"
