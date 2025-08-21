@@ -22,7 +22,8 @@ dev-agent/                          # PROJECT ROOT
 ## 🔧 Configuration Files (Root Level)
 
 ### Core Configuration
-- **`.dev-agent.json`** - Main project configuration with external storage paths
+- **`config.json`** - Main project configuration with external storage paths
+- **`config.sample.json`** - Sample configuration template
 - **`package.json`** - Dependencies and scripts configuration
 - **`bun.lock`** - Locked dependency versions
 - **`tsconfig.json`** - TypeScript compiler configuration
@@ -48,14 +49,12 @@ docs/
 │   ├── developer-guide.md           # Development setup
 │   ├── structure.md                 # This file - complete structure
 │   ├── task-validation.md           # Task validation system
-│   ├── structure-validation.md      # Structure validation system
+│   ├── ci-cd.md                     # CI/CD pipeline documentation
+│   ├── versioning.md                # Version management guide
 │   └── README.md                    # Documentation index
 │
 ├── 📋 PROTOCOLS
 │   └── goals-enforcer.md            # Meta-protocol for task classification
-│
-├── 🎨 ASSETS
-│   └── coverage-badge.svg           # Test coverage badge (deprecated - now dynamic)
 │
 ├── 📖 API DOCUMENTATION
 │   └── api/                         # Generated TypeDoc API documentation
@@ -88,6 +87,8 @@ src/config/
 ├── llm-config.ts                   # LLM provider configuration
 ├── types.ts                         # Configuration type definitions
 ├── README.md                        # Configuration documentation
+├── validators/                      # Configuration validation
+│   └── ConfigValidator.ts          # ZOD schema validation
 │
 ├── examples/                        # Configuration examples
 │   └── usage-example.ts            # Usage examples
@@ -125,7 +126,7 @@ src/scripts/
 ├── check-language.ts                # Language compliance checker
 ├── check-schema.ts                  # Database schema validation
 ├── config-manager.ts                # Configuration CLI management
-├── generate-coverage-badge.ts       # Coverage badge generation (legacy)
+├── generate-coverage-badge.ts       # Coverage badge generation
 ├── github-manager.ts                # GitHub operations management
 ├── init-db.ts                       # Database initialization
 ├── llm-manager.ts                   # LLM provider management
@@ -197,10 +198,11 @@ scripts/
 - **Commander.js** - CLI framework
 - **bun:sqlite** - Database driver
 - **simple-git** - Git operations
+- **ZOD** - Schema validation library
 
 ## 🗂️ External Storage Configuration
 
-### Storage Paths (configured in `.dev-agent.json`)
+### Storage Paths (configured in `config.json`)
 ```
 G:/Общие диски/Altrp/dev-agent-storage/
 ├── database/                        # SQLite database files
@@ -218,6 +220,7 @@ G:/Общие диски/Altrp/dev-agent-storage/
 - **Build artifacts** - `build/`, `coverage/`
 - **Dependencies** - `node_modules/`
 - **Environment files** - `.env`, `.env.*`
+- **Configuration** - `config.json` (personal config)
 - **IDE files** - `.vscode/`, `.idea/`
 - **OS files** - `.DS_Store`, `Thumbs.db`
 
@@ -240,7 +243,7 @@ G:/Общие диски/Altrp/dev-agent-storage/
 
 ### File Counts by Type
 - **TypeScript (.ts)**: ~50+ files
-- **Markdown (.md)**: ~20+ files
+- **Markdown (.md)**: ~15+ files
 - **JSON (.json)**: ~5+ files
 - **Configuration**: ~10+ files
 - **Documentation**: ~15+ files
@@ -263,6 +266,52 @@ G:/Общие диски/Altrp/dev-agent-storage/
 - **README updates** via CI/CD automation
 - **Coverage badges** updated dynamically
 
+## 🔍 Structure Validation System
+
+The Structure Validation System automatically ensures that this file accurately reflects the current project structure. It runs before each commit and automatically fixes common issues.
+
+### Quick Start
+
+```bash
+# Check structure without making changes
+make validate
+
+# Run all pre-commit checks
+make ci-check
+```
+
+### Validation Rules
+
+#### Required Files
+The following files must be documented:
+- `config.json` - Main configuration
+- `package.json` - Dependencies
+- `bun.lock` - Locked versions
+- `tsconfig.json` - TypeScript config
+- `Makefile` - Build automation
+- `.gitignore` - Git ignore patterns
+
+#### Main Directories
+These directories must exist:
+- `src/` - Source code
+- `tests/` - Test files
+- `docs/` - Documentation
+- `scripts/` - Utility scripts
+- `.github/` - GitHub workflows
+
+#### Forbidden Files
+These files should NOT exist in root:
+- `data/.dev-agent.db` - Old database location
+- `dev-agent.db` - Database file in root
+- `.dev-agent.db` - Database file in root
+
+### How It Works
+
+1. **Structure Scanning** - Scans the entire project directory
+2. **Documentation Parsing** - Reads this file and extracts documented paths
+3. **Validation** - Compares actual structure with documented structure
+4. **Auto-fixing** - Updates "Last Updated" date and adds missing files
+
 ## 📝 Notes
 
 ### Important Considerations
@@ -282,4 +331,4 @@ G:/Общие диски/Altrp/dev-agent-storage/
 
 **Last Updated**: 2025-08-21  
 **Maintained By**: Dev Agent Architecture Team  
-**Version**: 0.2.0
+**Version**: 0.2.1

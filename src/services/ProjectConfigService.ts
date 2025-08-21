@@ -2,7 +2,7 @@
 
 /**
  * Project Configuration Service
- * Reads project rules and configuration from .dev-agent.json file
+ * Reads project rules and configuration from config.json file
  * This follows the "Protocol as Code" principle
  */
 
@@ -63,11 +63,11 @@ export class ProjectConfigService {
   private configPath: string;
 
   constructor() {
-    this.configPath = join(process.cwd(), ".dev-agent.json");
+    this.configPath = join(process.cwd(), "config.json");
   }
 
   /**
-   * Load project configuration from .dev-agent.json
+   * Load project configuration from config.json
    */
   async loadConfig(): Promise<ProjectConfig> {
     if (this.config) {
@@ -78,7 +78,7 @@ export class ProjectConfigService {
       const configContent = await readFile(this.configPath, "utf-8");
       this.config = JSON.parse(configContent) as ProjectConfig;
       
-      logger.info("Project configuration loaded from .dev-agent.json");
+      logger.info("Project configuration loaded from config.json");
       return this.config;
     } catch (error) {
       logger.error("Failed to load project configuration", error as Error);

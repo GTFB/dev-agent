@@ -74,9 +74,9 @@ export class ConfigManager {
     if (process.env.DEV_AGENT_DB_PATH) {
       configuredPath = process.env.DEV_AGENT_DB_PATH;
     } else {
-      // Пытаемся прочитать .dev-agent.json только если ENV не задан
+      // Пытаемся прочитать config.json только если ENV не задан
       try {
-        const cfgFile = join(process.cwd(), ".dev-agent.json");
+        const cfgFile = join(process.cwd(), "config.json");
         if (existsSync(cfgFile)) {
           const raw = readFileSync(cfgFile, "utf8");
           const json = JSON.parse(raw);

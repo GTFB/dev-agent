@@ -5,43 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.2.0-alpha.1] - 2025-08-20
-### 🧪 Pre-Release (ALPHA)
-- This is a pre-release version for testing
-- Features may be incomplete or unstable
-- Please report any issues found
+## [0.2.2] - 2025-08-21
+
+### 🐛 Bug Fixes
+- **StorageService Type Safety**: Fixed TypeScript errors for optional fields
+  - Resolved `undefined` type issues for `github_issue_id`, `branch_name`, and `description`
+  - Added proper null coalescing for database operations
+  - Improved error handling in goal creation and updates
+
+- **GitHub Workflow Fixes**: Corrected release automation
+  - Added missing `outputs` to `create-release` job
+  - Fixed version reference in notification steps
+  - Improved workflow reliability and error handling
 
 ### 🔧 Improvements
-- Pre-release testing and validation
-- Bug fixes and stability improvements
+- **Code Quality**: Enhanced type safety and error handling
+  - Better null handling in database operations
+  - Improved TypeScript compliance
+  - Cleaner error messages and validation
 
+### 🧪 Testing
+- **Test Coverage**: Maintained comprehensive test coverage
+  - All tests passing (229 pass, 0 fail)
+  - Improved error handling test scenarios
+  - Better edge case coverage for ConfigValidator
 
-# Changelog
-
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [0.2.0-alpha.1] - 2025-08-20
-### 🧪 Pre-Release (ALPHA)
-- This is a pre-release version for testing
-- Features may be incomplete or unstable
-- Please report any issues found
-
-### 🔧 Improvements
-- Pre-release testing and validation
-- Bug fixes and stability improvements
-
-
-# Changelog
-
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [0.2.0] - 2025-01-20
+## [0.2.1] - 2025-08-21
 
 ### ✨ New Features
 - **Configuration Management System**: Complete refactor of configuration architecture
@@ -49,11 +38,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Configuration providers for project, environment, and database settings
   - Type-safe configuration interfaces with full TypeScript support
   - Singleton ConfigurationManager with caching and validation
+  - **ZOD Validation**: Added comprehensive schema validation for config.json
 
 - **Project Structure Reorganization**: Improved file organization
-  - Moved configuration files to `config/` directory
-  - Moved database and data files to `data/` directory
-  - Removed empty directories from repository
+  - Renamed `.dev-agent.json` to `config.json` for clarity
+  - Added `config.sample.json` template
+  - Moved database and data files to external storage
   - Added project structure validation
 
 - **Version Management System**: Automated version control
@@ -61,11 +51,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Automatic version updates across all project files
   - CHANGELOG.md generation and maintenance
   - GitHub Actions workflow for release automation
-  - **Pre-release support**: Alpha, Beta, and RC versions
 
 ### 🔧 Improvements
 - **Enhanced Security**: Better separation of secrets and configuration
-  - Environment variables isolated in `config/.env`
+  - Environment variables isolated in `.env`
   - Database files protected from accidental creation in root
   - Improved `.gitignore` rules for sensitive files
 
@@ -98,40 +87,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🧪 Testing
 - **Test Suite**: Comprehensive test coverage for all components
-- **Configuration Tests**: Tests for all configuration providers
-- **Validation Tests**: Tests for configuration validation logic
-- **Integration Tests**: End-to-end configuration loading tests
+- **ZOD Validation**: Added runtime configuration validation
+- **Structure Validation**: Automated project structure checks
 
-### 🔄 Migration
-- **Backward Compatibility**: Old configuration system still supported
-- **Migration Guide**: Step-by-step migration instructions
-- **Deprecation Warnings**: Clear guidance on deprecated features
-- **Example Configurations**: Sample configurations for common use cases
+## [0.2.0-alpha.1] - 2025-08-20
 
----
+### 🧪 Pre-Release (ALPHA)
+- This is a pre-release version for testing
+- Features may be incomplete or unstable
+- Please report any issues found
 
-## Version History
-
-- **0.2.0** - Complete configuration system refactor with version management
-- **0.1.0** - Initial project setup
-- **Future versions** will be automatically managed by the version management system
-
-## Contributing
-
-When contributing to this project, please follow the [Conventional Commits](https://www.conventionalcommits.org/) specification for commit messages. This ensures that the changelog can be automatically generated and maintained.
-
-### Commit Types
-
-- `feat:` - New features
-- `fix:` - Bug fixes
-- `docs:` - Documentation changes
-- `style:` - Code style changes (formatting, etc.)
-- `refactor:` - Code refactoring
-- `test:` - Adding or updating tests
-- `chore:` - Maintenance tasks
-
-### Breaking Changes
-
-Breaking changes should be marked with `!:` in the commit message and will automatically trigger a major version bump.
-
-Example: `feat!: breaking change description`
+### 🔧 Improvements
+- Pre-release testing and validation
+- Bug fixes and stability improvements

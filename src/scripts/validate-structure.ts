@@ -19,8 +19,18 @@ interface StructureRule {
 const PROJECT_STRUCTURE_RULES: StructureRule[] = [
   // Configuration files should be in root (new structure)
   {
-    path: ".dev-agent.json",
+    path: "config.json",
     description: "Project configuration file with external storage paths",
+    required: true
+  },
+  {
+    path: "config.sample.json",
+    description: "Sample configuration template",
+    required: true
+  },
+  {
+    path: "package.json",
+    description: "Package configuration",
     required: true
   },
   {
@@ -50,20 +60,7 @@ const PROJECT_STRUCTURE_RULES: StructureRule[] = [
     required: true
   },
 
-  // Package configuration should be in root
-  {
-    path: "package.json",
-    description: "Package configuration",
-    required: true
-  },
-
   // Forbidden files in root (old structure remnants)
-  {
-    path: "config/.dev-agent.json",
-    description: "Old config location (FORBIDDEN - moved to root)",
-    required: false,
-    forbidden: true
-  },
   {
     path: "data/.dev-agent.db",
     description: "Old database location (FORBIDDEN - moved to external storage)",

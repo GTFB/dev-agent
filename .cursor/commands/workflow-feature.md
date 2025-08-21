@@ -8,6 +8,8 @@ Systematically develop new functionality, from selecting a task in the database 
    - **Start a new task:** Automatically create a `feature/g-XXXXXX-description` branch, update the selected `todo` task's status to `in_progress`, **and change its milestone on GitHub to "In Progress"**.
 
 2.  **Implement & Document**
+   - Before starting the task, propose an algorithm of how you are going to solve it.
+   - After plan approval, break it down into a technical to-do checklist.
    - Write code and TSDoc documentation within the current working branch.
    - Regularly run quality checks (`make quality`).
    - **Log result in DB:** After development is complete, add a brief summary of the work done to the corresponding field of the task in the database.

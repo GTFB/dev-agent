@@ -67,14 +67,6 @@ make task-validate TASK="Database migration" DESC="Add user table with indexes" 
 | **CI/CD** | GitHub Actions with commit message validation | Automated task validation |
 | **Planning** | `make task-validate TASK="..." > plan.md` | Generate execution plans |
 
-## 📚 Advanced Features
-
-| Feature | Description |
-|---------|-------------|
-| **Custom Rules** | Extend validation through `ArchitecturePrinciple` interface |
-| **Context Analysis** | Git status, project structure, existing goals, documentation state |
-| **Impact Mapping** | Component analysis, dependency tracking, interface changes |
-
 ## 🚨 Troubleshooting
 
 | Issue | Solution |

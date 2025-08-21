@@ -32,7 +32,7 @@ class VersionManager {
 
   constructor() {
     this.projectRoot = process.cwd();
-    this.configPath = join(this.projectRoot, "config", ".dev-agent.json");
+    this.configPath = join(this.projectRoot, "config.json");
     this.readmePath = join(this.projectRoot, "README.md");
     this.changelogPath = join(this.projectRoot, "docs", "CHANGELOG.md");
   }
@@ -98,7 +98,7 @@ class VersionManager {
   }
 
   /**
-   * Update version in .dev-agent.json
+   * Update version in config.json
    */
   private async updateConfigVersion(newVersion: string): Promise<void> {
     try {
@@ -109,7 +109,7 @@ class VersionManager {
       config.last_updated = new Date().toISOString();
       
       await writeFile(this.configPath, JSON.stringify(config, null, 2));
-      logger.info(`✅ Updated version in config/.dev-agent.json to ${newVersion}`);
+      logger.info(`✅ Updated version in config.json to ${newVersion}`);
     } catch (error) {
       logger.error("Failed to update config version:", error as Error);
       throw error;

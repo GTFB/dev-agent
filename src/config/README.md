@@ -31,7 +31,7 @@ If we store database connection details in the database itself, the application 
 The system uses a **priority-based layered approach**:
 
 1. **Project Configuration** (Priority: 100)
-   - Source: `config/.dev-agent.json` file
+   - Source: `config.json` file
    - Contains: Project rules, GitHub settings, branch conventions
    - **Versioned with code** (Protocol as Code principle)
    - **Shared across team** through Git
@@ -53,7 +53,7 @@ The system uses a **priority-based layered approach**:
 ```
 dev-agent/
 ├── config/                  # Configuration files
-│   ├── .dev-agent.json     # Project rules (versioned)
+│   ├── config.json     # Project rules (versioned)
 │   └── .env                # Secrets (gitignored)
 ├── data/                    # Data and runtime files
 │   ├── .dev-agent.db       # Database (gitignored)
@@ -74,7 +74,7 @@ dev-agent/
 ## Providers
 
 #### ProjectConfigProvider
-- Loads configuration from `config/.dev-agent.json`
+- Loads configuration from `config.json`
 - Validates project structure
 - Provides typed access to project settings
 

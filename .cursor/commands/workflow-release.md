@@ -9,7 +9,10 @@ An interactive process for creating a release branch with automatic version dete
    - **Suggest version**: Automatically suggest a `major`, `minor`, or `patch` update.
    - **Request user confirmation**: "Suggested version: `x.y.z`. Confirm? (Yes/No/Enter custom)".
    - **Create `release/x.y.z` branch** based on the confirmed version.
-   - Update version in project files and create a commit.
+   - **Update and commit project files:**
+     - Bump the version in `package.json` and `config.sample.json`.
+     - Generate a new version section in `CHANGELOG.md` with release notes.
+     - Update version badges or references in `README.md`.
 
 2.  **Publication Gate (Decision Gate)**
    - **Request publication decision**: "Publish this version directly to `main` (skipping QA)? (Yes/No)".
@@ -25,4 +28,4 @@ An interactive process for creating a release branch with automatic version dete
 - [ ] `release/x.y.z` branch created
 - [ ] Publication decision has been made
 - [ ] (If Yes) Proceeded to the release finalization protocol
-- [ ] (If No) Branch handed off to QA, protocol paused```
+- [ ] (If No) Branch handed off to QA, protocol paused

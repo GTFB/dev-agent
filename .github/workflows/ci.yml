@@ -38,19 +38,19 @@ jobs:
       - name: Run tests with coverage
         run: bun test --coverage
         
-             - name: Generate coverage report
-         run: bun run test:coverage:badge
+      - name: Generate coverage report
+        run: bun run test:coverage:badge
+        
+      - name: Update coverage badge in README
+        run: bun run scripts/update-coverage-badge.ts
          
-       - name: Update coverage badge in README
-         run: bun run scripts/update-coverage-badge.ts
-         
-       - name: Commit coverage badge update
-         run: |
-           git config --local user.email "action@github.com"
-           git config --local user.name "GitHub Action"
-           git add README.md
-           git commit -m "📊 Update coverage badges [skip ci]" || exit 0
-           git push
+      - name: Commit coverage badge update
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add README.md
+          git commit -m "📊 Update coverage badges [skip ci]" || exit 0
+          git push
           
       - name: Check test coverage threshold
         id: coverage
@@ -104,8 +104,8 @@ jobs:
           #   exit 1
           # fi
           
-          if [ ! -f "config/.dev-agent.json" ]; then
-            echo "❌ config/.dev-agent.json missing"
+          if [ ! -f "config.json" ]; then
+            echo "❌ config.json missing"
             exit 1
           fi
           

@@ -56,7 +56,7 @@ dev-agent/                  # PROJECT ROOT
 │   ├── Makefile           # Build automation
 │   ├── .eslintrc.cjs      # ESLint configuration
 │   ├── .prettierrc        # Prettier configuration
-│   └── .dev-agent.json    # Dev Agent configuration
+│   └── config.json    # Dev Agent configuration
 │
 ├── 📁 SOURCE CODE
 │   └── src/               # All source code

@@ -1,16 +1,76 @@
 #!/usr/bin/env bun
 
+import { z } from "zod";
+
 /**
  * Configuration Types and Interfaces
  * Centralized type definitions for all configuration layers
  */
 
-export interface BaseConfig {
-  readonly source: 'project' | 'environment' | 'database' | 'default';
-  readonly priority: number; // Higher number = higher priority
-}
+// ZOD Schemas for configuration validation
+export const GitHubConfigSchema = z.object({
+  owner: z.string().min(1, "GitHub owner cannot be empty"),
+  repo: z.string().min(1, "GitHub repository cannot be empty")
+});
 
-export interface ProjectConfig extends BaseConfig {
+export const BranchesConfigSchema = z.object({
+  main: z.string().min(1, "Main branch name cannot be empty"),
+  develop: z.string().min(1, "Develop branch name cannot be empty"),
+  feature_prefix: z.string().min(1, "Feature prefix cannot be empty"),
+  release_prefix: z.string().min(1, "Release prefix cannot be empty")
+});
+
+export const GoalsConfigSchema = z.object({
+  default_status: z.string().min(1, "Default status cannot be empty"),
+  id_pattern: z.string().min(1, "ID pattern cannot be empty")
+});
+
+export const WorkflowConfigSchema = z.object({
+  auto_sync: z.boolean(),
+  sync_interval: z.number().positive("Sync interval must be positive")
+});
+
+export const ValidationConfigSchema = z.object({
+  strict_language: z.boolean(),
+  auto_translate: z.boolean()
+});
+
+export const StorageConfigSchema = z.object({
+  database: z.object({
+    path: z.string().min(1, "Database path cannot be empty")
+  }),
+  config: z.object({
+    path: z.string().min(1, "Config path cannot be empty")
+  }),
+  logs: z.object({
+    path: z.string().min(1, "Logs path cannot be empty")
+  })
+});
+
+export const ConfigSchema = z.object({
+  name: z.string().min(1, "Project name cannot be empty"),
+  version: z.string().min(1, "Version cannot be empty"),
+  description: z.string().min(1, "Description cannot be empty"),
+  github: GitHubConfigSchema,
+  branches: BranchesConfigSchema,
+  goals: GoalsConfigSchema,
+  workflow: WorkflowConfigSchema,
+  validation: ValidationConfigSchema,
+  storage: StorageConfigSchema,
+  last_updated: z.string().datetime("Last updated must be a valid datetime")
+});
+
+// TypeScript types derived from ZOD schemas
+export type GitHubConfig = z.infer<typeof GitHubConfigSchema>;
+export type BranchesConfig = z.infer<typeof BranchesConfigSchema>;
+export type GoalsConfig = z.infer<typeof GoalsConfigSchema>;
+export type WorkflowConfig = z.infer<typeof WorkflowConfigSchema>;
+export type ValidationConfig = z.infer<typeof ValidationConfigSchema>;
+export type StorageConfig = z.infer<typeof StorageConfigSchema>;
+export type Config = z.infer<typeof ConfigSchema>;
+
+// Legacy types for backward compatibility
+export interface ProjectConfig {
   source: 'project';
   priority: 100;
   
@@ -46,7 +106,7 @@ export interface ProjectConfig extends BaseConfig {
   };
 }
 
-export interface EnvironmentConfig extends BaseConfig {
+export interface EnvironmentConfig {
   source: 'environment';
   priority: 200;
   
@@ -62,7 +122,7 @@ export interface EnvironmentConfig extends BaseConfig {
   LOG_LEVEL?: string;
 }
 
-export interface DatabaseConfig extends BaseConfig {
+export interface DatabaseConfig {
   source: 'database';
   priority: 300;
   
@@ -76,7 +136,7 @@ export interface DatabaseConfig extends BaseConfig {
   ssl?: boolean;
 }
 
-export interface LLMConfig extends BaseConfig {
+export interface LLMConfig {
   source: 'database';
   priority: 300;
   
@@ -87,26 +147,7 @@ export interface LLMConfig extends BaseConfig {
   temperature: number;
 }
 
-export interface GitHubConfig extends BaseConfig {
-  source: 'database';
-  priority: 300;
-  
-  token: string;
-  owner: string;
-  repo: string;
-  baseUrl?: string;
-}
-
-export interface StorageConfig extends BaseConfig {
-  source: 'database';
-  priority: 300;
-  
-  dataDir: string;
-  tempDir: string;
-  backupDir: string;
-}
-
-export interface LoggingConfig extends BaseConfig {
+export interface LoggingConfig {
   source: 'database';
   priority: 300;
   
@@ -120,19 +161,18 @@ export interface AppConfig {
   environment: EnvironmentConfig;
   database: DatabaseConfig;
   llm: LLMConfig;
-  github?: GitHubConfig;
   storage: StorageConfig;
   logging: LoggingConfig;
 }
 
-export interface ConfigurationProvider<T extends BaseConfig> {
+export interface ConfigurationProvider<T> {
   load(): Promise<T>;
   validate(config: T): boolean;
   getPriority(): number;
   getSource(): string;
 }
 
-export interface ConfigurationValidator<T extends BaseConfig> {
+export interface ConfigurationValidator<T> {
   validate(config: T): { isValid: boolean; errors: string[] };
   getSchema(): object;
 }

@@ -24,22 +24,30 @@ export class DatabaseManager {
   private db: Database | null = null;
 
   constructor(dbPath?: string) {
-    // Use passed path or try to load from .dev-agent.json first
+    // Use passed path or try to load from config.json first
     let finalPath = dbPath;
     
     if (!finalPath) {
       try {
         const { readFileSync, existsSync } = require("fs");
-        if (existsSync('.dev-agent.json')) {
-          const config = JSON.parse(readFileSync('.dev-agent.json', 'utf8'));
+        if (existsSync('config.json')) {
+          const config = JSON.parse(readFileSync('config.json', 'utf8'));
           if (config.storage?.database?.path) {
             finalPath = config.storage.database.path;
           }
         }
-      } catch (error) {
-        // Fall back to configManager if .dev-agent.json read fails
-        finalPath = configManager.getDatabaseConfig().path;
+      } catch {
+        // Fall back to configManager if config.json read fails
+        const fallbackPath = configManager.getDatabaseConfig().path;
+        if (fallbackPath) {
+          finalPath = fallbackPath;
+        }
       }
+    }
+    
+    // Ensure we always have a valid path
+    if (!finalPath) {
+      finalPath = ":memory:"; // Default to in-memory database
     }
     
     this.dbPath = finalPath;
@@ -140,31 +148,31 @@ export class DatabaseManager {
   /**
    * Execute SQL statement
    */
-  run(sql: string, params: unknown[] = []): void {
+  run(sql: string, params: (string | number | boolean | null | Uint8Array)[] = []): void {
     if (!this.db) {
       throw new Error("Database not initialized");
     }
-    this.db.prepare(sql).run(...(params as unknown[]));
+    this.db.prepare(sql).run(...params);
   }
 
   /**
    * Get single row
    */
-  get<T>(sql: string, params: unknown[] = []): T | undefined {
+  get<T>(sql: string, params: (string | number | boolean | null | Uint8Array)[] = []): T | undefined {
     if (!this.db) {
       throw new Error("Database not initialized");
     }
-    return this.db.prepare(sql).get(...(params as unknown[])) as T | undefined;
+    return this.db.prepare(sql).get(...params) as T | undefined;
   }
 
   /**
    * Get multiple rows
    */
-  all<T>(sql: string, params: unknown[] = []): T[] {
+  all<T>(sql: string, params: (string | number | boolean | null | Uint8Array)[] = []): T[] {
     if (!this.db) {
       throw new Error("Database not initialized");
     }
-    return this.db.prepare(sql).all(...(params as unknown[])) as T[];
+    return this.db.prepare(sql).all(...params) as T[];
   }
 
   /**

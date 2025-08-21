@@ -5,37 +5,86 @@
  * Loads configuration from config/.dev-agent.json file
  */
 
-import { readFile } from "fs/promises";
 import { join } from "path";
-import { ProjectConfig, ConfigurationProvider } from "../types.js";
 import { logger } from "../../utils/logger.js";
+import { ProjectConfig } from "../types.js";
+import { ConfigValidator } from "../validators/ConfigValidator.js";
 
-export class ProjectConfigProvider implements ConfigurationProvider<ProjectConfig> {
-  private config: ProjectConfig | null = null;
-  private readonly configPath: string;
+/**
+ * Loads configuration from config.json file
+ */
+export class ProjectConfigProvider {
+  private configPath: string;
 
   constructor() {
-    this.configPath = join(process.cwd(), "config", ".dev-agent.json");
+    this.configPath = join(process.cwd(), "config.json");
   }
 
-  async load(): Promise<ProjectConfig> {
-    if (this.config) {
-      return this.config;
-    }
-
+  async load(): Promise<ProjectConfig | null> {
     try {
-      const configContent = await readFile(this.configPath, "utf-8");
-      this.config = JSON.parse(configContent) as ProjectConfig;
-      
-      // Add metadata
-      this.config.source = 'project';
-      this.config.priority = 100;
-      
-      logger.info("Project configuration loaded from config/.dev-agent.json");
-      return this.config;
+      // Check if config file exists
+      if (!await Bun.file(this.configPath).exists()) {
+        logger.warn("Config file not found, using defaults");
+        return null;
+      }
+
+      // Read and parse config file
+      const configContent = await Bun.file(this.configPath).text();
+      const config = JSON.parse(configContent);
+
+      // Validate configuration with ZOD
+      const validation = ConfigValidator.validate(config);
+      if (!validation.success) {
+        logger.error("❌ Configuration validation failed:");
+        logger.error(ConfigValidator.formatErrors(validation.errors));
+        throw new Error("Invalid configuration file");
+      }
+
+      // Convert validated config to ProjectConfig
+      const projectConfig: ProjectConfig = {
+        source: 'project',
+        priority: 100,
+        github: {
+          owner: validation.data.github.owner,
+          repo: validation.data.github.repo
+        },
+        branches: {
+          main: validation.data.branches.main,
+          develop: validation.data.branches.develop,
+          feature_prefix: validation.data.branches.feature_prefix,
+          release_prefix: validation.data.branches.release_prefix
+        },
+        goals: {
+          default_status: validation.data.goals.default_status,
+          id_pattern: validation.data.goals.id_pattern
+        },
+        workflow: {
+          auto_sync: validation.data.workflow.auto_sync,
+          sync_interval: validation.data.workflow.sync_interval
+        },
+        validation: {
+          strict_language: validation.data.validation.strict_language,
+          auto_translate: validation.data.validation.auto_translate
+        },
+        storage: {
+          database: {
+            path: validation.data.storage.database.path
+          },
+          config: {
+            path: validation.data.storage.config.path
+          },
+          logs: {
+            path: validation.data.storage.logs.path
+          }
+        }
+      };
+
+      logger.info("Project configuration loaded from config.json");
+      return projectConfig;
+
     } catch (error) {
       logger.error("Failed to load project configuration", error as Error);
-      throw new Error(`Failed to load project configuration from ${this.configPath}: ${error instanceof Error ? error.message : String(error)}`);
+      return null;
     }
   }
 

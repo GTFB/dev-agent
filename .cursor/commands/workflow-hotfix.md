@@ -1,17 +1,20 @@
 # Hotfix Protocol
 
 ## Overview
-A rapid fix for a critical bug discovered in production, followed by integration into `main` and `develop`.
+A rapid fix for a critical bug in production, followed by integration into `main` and `develop`.
 
 ## Steps
 1.  **Initialize Hotfix**
    - **Create a `hotfix/g-XXXXXX` branch from `main`**.
    - Create a task in the DB for tracking.
 
-2.  **Fix & Quality Assurance**
+2.  **Fix & Versioning**
+   - Before starting the task, propose an algorithm of how you are going to solve it.
+   - After plan approval, break it down into a technical to-do checklist.
    - Implement the code fix.
    - **Write a test that reproduces and fixes the bug.**
    - Run the full quality gate (`make quality`).
+   - **Increment the patch version** in `package.json`, `config.sample.json`, and update `CHANGELOG.md`.
 
 3.  **Create Pull Request**
    - Push the hotfix branch to the remote repository.
