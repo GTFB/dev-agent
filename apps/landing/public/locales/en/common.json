@@ -1,0 +1,110 @@
+{
+  "navigation": {
+    "home": "Home",
+    "blog": "Blog",
+    "docs": "Documentation",
+    "about": "About"
+  },
+  "homepage": {
+    "title": "Welcome to lnd-boilerplate",
+    "subtitle": "A starter kit for creating high-performance, interactive, and offline-capable content platforms",
+    "description": "lnd-boilerplate is a foundation for building websites where User Experience (UX), Developer Experience (DX), and performance are top priorities.",
+    "features": {
+      "title": "Key Features",
+      "nextjs": "Next.js + Nextra - Hybrid rendering with file-based routing",
+      "typescript": "TypeScript - Full type safety across the entire application",
+      "tailwind": "Tailwind CSS + Shadcn/UI - Utility-first CSS with composable components",
+      "pwa": "PWA Support - Progressive Web App with offline capabilities",
+      "i18n": "Internationalization - Multi-language support with RTL layouts",
+      "search": "Search Integration - Typesense-powered search with typo tolerance",
+      "auth": "Authentication - Next-auth.js with OAuth providers",
+      "cms": "Content Management - Git-based CMS with Sveltia"
+    },
+    "gettingStarted": {
+      "title": "Getting Started",
+      "clone": "Clone the repository",
+      "install": "Install dependencies",
+      "dev": "Start development server",
+      "browser": "Open your browser"
+    }
+  },
+  "about": {
+    "title": "About lnd-boilerplate",
+    "mission": {
+      "title": "Our Mission",
+      "description": "lnd-boilerplate is designed to be the ultimate starting point for developers who want to build content platforms that prioritize:",
+      "performance": "Performance - Lightning-fast loading and smooth interactions",
+      "ux": "User Experience - Intuitive interfaces that work seamlessly",
+      "dx": "Developer Experience - Clean, maintainable code with modern tooling",
+      "accessibility": "Accessibility - Inclusive design that works for everyone",
+      "offline": "Offline Capability - Content that's always available"
+    },
+    "philosophy": {
+      "title": "Technology Philosophy",
+      "description": "We believe in using the right tool for the job. Our stack is carefully chosen to provide:",
+      "modern": "Modern Development - Latest stable versions of all dependencies",
+      "typesafety": "Type Safety - Full TypeScript coverage for better DX",
+      "performance_dev": "Performance - Optimized builds with modern bundling",
+      "scalability": "Scalability - Monorepo structure that grows with your project",
+      "standards": "Standards - Web standards and best practices"
+    }
+  },
+  "blog": {
+    "title": "Blog",
+    "welcome": "Welcome to the lnd-boilerplate blog! Here you'll find insights, tutorials, and updates about building high-performance content platforms.",
+    "latestPosts": "Latest Posts",
+    "categories": "Categories",
+    "archive": "Archive",
+    "search": "Search Posts",
+    "subscribe": "Subscribe"
+  },
+  "docs": {
+    "title": "Documentation",
+    "welcome": "Welcome to the lnd-boilerplate documentation! This guide will help you understand how to use and customize the platform.",
+    "quickStart": "Quick Start",
+    "installation": "Installation",
+    "development": "Development",
+    "building": "Building",
+    "projectStructure": "Project Structure",
+    "designSystem": "Design System",
+    "configuration": "Configuration",
+    "deployment": "Deployment",
+    "pwaFeatures": "PWA Features",
+    "searchIntegration": "Search Integration",
+    "internationalization": "Internationalization",
+    "testing": "Testing",
+    "apiReference": "API Reference",
+    "contributing": "Contributing",
+    "support": "Support"
+  },
+  "footer": {
+    "description": "A starter kit for creating high-performance, interactive, and offline-capable content platforms. Built with Next.js, Nextra, and modern web technologies.",
+    "quickLinks": "Quick Links",
+    "connect": "Connect",
+    "copyright": "© {{year}} lnd-boilerplate. All rights reserved."
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "view": "View",
+    "close": "Close",
+    "open": "Open",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "reset": "Reset"
+  }
+}
