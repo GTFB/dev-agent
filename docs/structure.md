@@ -180,10 +180,12 @@ scripts/
 
 ### GitHub Actions
 ```
-.github/workflows/
-├── ci.yml                           # Main CI/CD pipeline (main/develop branches)
-├── release.yml                      # Release management workflow
-└── release-staging.yml              # Release branch staging workflow
+# Note: .github directory is optional and may not exist in all installations
+# When present, contains:
+# ├── workflows/                     # GitHub Actions workflows
+# │   ├── ci.yml                     # Main CI/CD pipeline (main/develop branches)
+# │   ├── release.yml                # Release management workflow
+# │   └── release-staging.yml        # Release branch staging workflow
 ```
 
 ## 📦 Dependencies Structure
@@ -204,17 +206,18 @@ scripts/
 
 ### Storage Paths (configured in `config.json`)
 ```
-G:/Общие диски/Altrp/dev-agent-storage/
-├── database/                        # SQLite database files
-├── logs/                           # Application logs
-├── config/                         # Configuration files
-└── backups/                        # Database backups
+# Note: External storage paths are configurable
+# Example structure:
+# ├── database/                      # SQLite database files
+# ├── logs/                         # Application logs
+# ├── config/                       # Configuration files
+# └── backups/                      # Database backups
 ```
 
 ## 🔒 Git Ignore Patterns
 
 ### Excluded Files and Directories
-- **External storage** - `G:/Общие диски/Altrp/dev-agent-storage/`
+- **External storage** - External storage directories (configurable)
 - **Database files** - `*.db`, `*.db-wal`, `*.db-shm`
 - **Logs** - `logs/`, `*.log`
 - **Build artifacts** - `build/`, `coverage/`
@@ -297,11 +300,11 @@ These directories must exist:
 - `tests/` - Test files
 - `docs/` - Documentation
 - `scripts/` - Utility scripts
-- `.github/` - GitHub workflows
+# Note: .github/ is optional and may not exist in all installations
 
 #### Forbidden Files
 These files should NOT exist in root:
-- `data/.dev-agent.db` - Old database location
+- `database.db` - Database file in root
 - `dev-agent.db` - Database file in root
 - `.dev-agent.db` - Database file in root
 
@@ -329,6 +332,6 @@ These files should NOT exist in root:
 
 ---
 
-**Last Updated**: 2025-08-21  
+**Last Updated**: 2025-08-23  
 **Maintained By**: Dev Agent Architecture Team  
-**Version**: 0.2.1
+**Version**: 0.3.0

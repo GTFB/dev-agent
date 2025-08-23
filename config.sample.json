@@ -1,6 +1,6 @@
 {
   "name": "dev-agent",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Dev Agent - CLI assistant for the High-Efficiency Standard Operating Protocol",
   "github": {
     "owner": "your-org",
@@ -26,7 +26,7 @@
   },
   "storage": {
     "database": {
-      "path": "./data/dev-agent.db"
+      "path": "./database.db"
     },
     "config": {
       "path": "./data/config"
@@ -35,5 +35,5 @@
       "path": "./data/logs"
     }
   },
-  "last_updated": "2025-08-21T21:00:00.000Z"
+  "last_updated": "2025-08-23T14:35:00.000Z"
 }

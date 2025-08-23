@@ -114,7 +114,7 @@ describe("ConfigManager", () => {
     test("should get default database configuration when not set", () => {
       const dbConfig = configManager.getDatabaseConfig();
       expect(dbConfig.type).toBe("sqlite");
-      expect(dbConfig.path).toContain("dev-agent.db");
+      expect(dbConfig.path).toContain("database.db");
     });
 
     test("should get GitHub configuration", () => {
@@ -142,7 +142,7 @@ describe("ConfigManager", () => {
     test("should get project configuration", () => {
       const projectConfig = configManager.getProjectConfig();
       expect(projectConfig.name).toBe("Dev Agent");
-      expect(projectConfig.version).toBe("2.0.0");
+      expect(projectConfig.version).toBe("0.3.0");
       expect(projectConfig.license).toBe("MIT");
     });
 

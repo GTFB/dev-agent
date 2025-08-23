@@ -65,16 +65,16 @@ export class ConfigManager {
   private db: Database;
   private configPath: string;
 
-  constructor() {
-    // НЕ создаем БД автоматически! Только сохраняем путь
-    const defaultPath = join(process.cwd(), "data", ".dev-agent.db");
+    constructor() {
+    // DO NOT create DB automatically! Only save the path
+    const defaultPath = join(process.cwd(), "database.db");
     let configuredPath: string | undefined;
 
-    // Сначала проверяем переменную окружения (приоритет)
+    // First check environment variable (priority)
     if (process.env.DEV_AGENT_DB_PATH) {
       configuredPath = process.env.DEV_AGENT_DB_PATH;
     } else {
-      // Пытаемся прочитать config.json только если ENV не задан
+      // Try to read config.json only if ENV is not set
       try {
         const cfgFile = join(process.cwd(), "config.json");
         if (existsSync(cfgFile)) {
@@ -92,15 +92,15 @@ export class ConfigManager {
 
     this.configPath = configuredPath || defaultPath;
     
-    // НЕ создаем БД здесь! БД будет создана только при явном вызове initialize()
-    this.db = null as Database | null; // Временно null
+    // DO NOT create DB here! DB will be created only on explicit initialize() call
+    this.db = null as Database | null; // Temporarily null
   }
 
   /**
-   * Инициализация БД - вызывается только когда нужно
+   * Database initialization - called only when needed
    */
   initialize(): void {
-    if (this.db) return; // Уже инициализирована
+    if (this.db) return; // Already initialized
     
     // Ensure directory exists for the database file
     try {
@@ -197,10 +197,10 @@ export class ConfigManager {
    */
   private getDefaultConfig(): AppConfig {
     return {
-      database: {
-        path: process.env.DEV_AGENT_DB_PATH || join(process.cwd(), "data", ".dev-agent.db"),
-        type: "sqlite"
-      },
+             database: {
+         path: process.env.DEV_AGENT_DB_PATH || join(process.cwd(), "database.db"),
+         type: "sqlite"
+       },
       github: undefined,
       llm: {
         defaultProvider: "openai",
@@ -213,14 +213,14 @@ export class ConfigManager {
         maxTokens: 4096,
         temperature: 0.7
       },
-      project: {
-        name: "Dev Agent",
-        version: "2.0.0",
-        description: "CLI assistant for automating the High-Efficiency Standard Operating Protocol",
-        author: "Dev Agent Team",
-        license: "MIT",
-        repository: "https://github.com/dev-agent/dev-agent"
-      },
+             project: {
+         name: "Dev Agent",
+         version: "0.3.0",
+         description: "CLI assistant for automating the High-Efficiency Standard Operating Protocol",
+         author: "Dev Agent Team",
+         license: "MIT",
+         repository: "https://github.com/dev-agent/dev-agent"
+       },
       logging: {
         level: "info",
         console: true
@@ -385,10 +385,10 @@ export class ConfigManager {
   getDatabaseConfig(): DatabaseConfig {
     const config = this.getConfigByCategory('database');
     
-    return {
-      path: config['database.path'] || join(process.cwd(), "data", ".dev-agent.db"),
-      type: (config['database.type'] as 'sqlite' | 'postgresql' | 'mysql') || 'sqlite'
-    };
+         return {
+       path: config['database.path'] || join(process.cwd(), "database.db"),
+       type: (config['database.type'] as 'sqlite' | 'postgresql' | 'mysql') || 'sqlite'
+     };
   }
 
   /**
@@ -431,14 +431,14 @@ export class ConfigManager {
   getProjectConfig(): ProjectConfig {
     const config = this.getConfigByCategory('project');
     
-    return {
-      name: config['project.name'] || "Dev Agent",
-      version: config['project.version'] || "2.0.0",
-      description: config['project.description'] || "CLI assistant for automating the High-Efficiency Standard Operating Protocol",
-      author: config['project.author'] || "Dev Agent Team",
-      license: config['project.license'] || "MIT",
-      repository: config['project.repository'] || "https://github.com/dev-agent/dev-agent"
-    };
+         return {
+       name: config['project.name'] || "Dev Agent",
+       version: config['project.version'] || "0.3.0",
+       description: config['project.description'] || "CLI assistant for automating the High-Efficiency Standard Operating Protocol",
+       author: config['project.author'] || "Dev Agent Team",
+       license: config['project.license'] || "MIT",
+       repository: config['project.repository'] || "https://github.com/dev-agent/dev-agent"
+     };
   }
 
   /**

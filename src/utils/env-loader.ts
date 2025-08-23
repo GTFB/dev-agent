@@ -11,10 +11,10 @@ import { readFileSync, existsSync } from "fs";
  * Load environment variables from database.env file
  */
 export function loadDatabaseConfig(): void {
-  const configFile = "G:\\Общие диски\\Altrp\\dev-agent\\.env";
+  const configFile = "G:\\Common\\Altrp\\dev-agent\\.env";
   
   if (!existsSync(configFile)) {
-    console.log("ℹ️  Файл конфигурации не найден, используем настройки по умолчанию");
+    console.log("ℹ️  Configuration file not found, using default settings");
     return;
   }
 
@@ -25,7 +25,7 @@ export function loadDatabaseConfig(): void {
     for (const line of lines) {
       const trimmedLine = line.trim();
       
-      // Пропускаем комментарии и пустые строки
+      // Skip comments and empty lines
       if (trimmedLine.startsWith("#") || !trimmedLine.includes("=")) {
         continue;
       }
@@ -36,9 +36,9 @@ export function loadDatabaseConfig(): void {
       }
     }
     
-    console.log("✅ Конфигурация базы данных загружена");
+    console.log("✅ Database configuration loaded");
   } catch (error) {
-    console.error("❌ Ошибка при загрузке конфигурации:", error);
+    console.error("❌ Error loading configuration:", error);
   }
 }
 
@@ -46,7 +46,7 @@ export function loadDatabaseConfig(): void {
  * Get database path from environment or default
  */
 export function getDatabasePath(): string {
-  return process.env.DEV_AGENT_DB_PATH || "data/.dev-agent.db";
+  return process.env.DEV_AGENT_DB_PATH || "./database.db";
 }
 
 /**

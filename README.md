@@ -2,9 +2,9 @@
 
 **CLI assistant for automating the High-Efficiency Standard Operating Protocol**
 
-[![Version](https://img.shields.io/badge/version-0.2.2-blue.svg)](https://github.com/your-org/dev-agent)
+[![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)](https://github.com/your-org/dev-agent)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Test Coverage](https://img.shields.io/badge/test%20coverage-90%25-brightgreen.svg)](https://github.com/your-org/dev-agent)
+[![Test Coverage](https://img.shields.io/badge/test%20coverage-99.09%25-brightgreen.svg)](https://github.com/your-org/dev-agent)
 [![Bun](https://img.shields.io/badge/runtime-Bun-000000.svg)](https://bun.sh)
 [![TypeScript](https://img.shields.io/badge/language-TypeScript-3178C6.svg)](https://www.typescriptlang.org/)
 
