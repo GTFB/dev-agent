@@ -6,15 +6,35 @@
  */
 
 import { readFileSync, existsSync } from "fs";
+import { join } from "path";
 
 /**
  * Load environment variables from database.env file
  */
 export function loadDatabaseConfig(): void {
-  const configFile = "G:\\Common\\Altrp\\dev-agent\\.env";
+  // Try to load from config.json first
+  const configPath = join(process.cwd(), "config.json");
   
-  if (!existsSync(configFile)) {
-    console.log("ℹ️  Configuration file not found, using default settings");
+  if (existsSync(configPath)) {
+    try {
+      const configContent = readFileSync(configPath, "utf8");
+      const config = JSON.parse(configContent);
+      
+      if (config.storage?.database?.path) {
+        process.env.DEV_AGENT_DB_PATH = config.storage.database.path;
+        console.log(`✅ Database path loaded from config.json: ${config.storage.database.path}`);
+        return;
+      }
+    } catch (error) {
+      console.error("❌ Error reading config.json:", error);
+    }
+  }
+  
+  // Fallback to .env file
+  const envFile = join(process.cwd(), ".env");
+  
+  if (!existsSync(envFile)) {
+    console.log("ℹ️  No configuration found, using default settings");
     return;
   }
 

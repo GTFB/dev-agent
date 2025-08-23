@@ -20,6 +20,7 @@ help:
 	@echo "  dev-sync        Sync with GitHub (HARD ALGORITHM)"
 	@echo "  dev-goals-list  List all goals"
 	@echo "  dev-goals-create Create new goal (TITLE='title')"
+	@echo "  dev-goals-update Update goal (ID='goal-id' STATUS='status')"
 	@echo "  dev-goals-delete Delete goal (ID='goal-id')"
 	@echo "  dev-config-set  Set config (KEY='key' VALUE='value')"
 	@echo "  dev-config-get  Get config (KEY='key')"
@@ -105,6 +106,10 @@ dev-goals-create:
 dev-goals-delete:
 	@echo "Deleting goal..."
 	@bun run src/index.ts goal delete "$(ID)"
+
+dev-goals-update:
+	@echo "Updating goal..."
+	@bun run src/index.ts goal update-status "$(ID)" "$(STATUS)"
 
 dev-config-set:
 	@echo "Setting configuration..."

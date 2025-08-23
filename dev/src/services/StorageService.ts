@@ -32,9 +32,27 @@ export class StorageService {
     } else if (process.env.DEV_AGENT_DB_PATH) {
       this.dbPath = process.env.DEV_AGENT_DB_PATH;
     } else {
-      // Skip database operations if no custom path is configured
-      console.log('📊 No custom database path configured, skipping StorageService initialization');
-      this.dbPath = ":memory:";
+      // Try to load from config.json
+      try {
+        const configPath = join(process.cwd(), "config.json");
+        if (existsSync(configPath)) {
+          const configContent = readFileSync(configPath, "utf8");
+          const config = JSON.parse(configContent);
+          if (config.storage?.database?.path) {
+            this.dbPath = config.storage.database.path;
+            console.log(`✅ Database path loaded from config.json: ${this.dbPath}`);
+          } else {
+            console.log('📊 No database path in config.json, using in-memory database');
+            this.dbPath = ":memory:";
+          }
+        } else {
+          console.log('📊 No config.json found, using in-memory database');
+          this.dbPath = ":memory:";
+        }
+      } catch (error) {
+        console.log('📊 Error reading config.json, using in-memory database');
+        this.dbPath = ":memory:";
+      }
     }
 
     this.dbManager = new DatabaseManager(this.dbPath);
