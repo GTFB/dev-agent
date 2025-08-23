@@ -1,0 +1,72 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "about": "Acerca de",
+    "blog": "Blog",
+    "docs": "Documentación",
+    "contact": "Contacto"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "view": "Ver",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "close": "Cerrar",
+    "open": "Abrir",
+    "yes": "Sí",
+    "no": "No",
+    "back": "Atrás",
+    "continue": "Continuar",
+    "submit": "Enviar"
+  },
+  "theme": {
+    "light": "Claro",
+    "dark": "Oscuro",
+    "system": "Sistema",
+    "toggleTheme": "Cambiar tema"
+  },
+  "language": {
+    "en": "English",
+    "ru": "Русский",
+    "es": "Español",
+    "switchLanguage": "Cambiar idioma"
+  },
+  "footer": {
+    "copyright": "© 2024 lnd-boilerplate. Todos los derechos reservados.",
+    "madeWith": "Hecho con ❤️ usando Next.js y TypeScript",
+    "quickLinks": "Enlaces rápidos",
+    "socialMedia": "Redes sociales",
+    "newsletter": "Boletín informativo",
+    "subscribe": "Suscribirse",
+    "emailPlaceholder": "Tu correo electrónico"
+  },
+  "search": {
+    "placeholder": "Buscar en el sitio...",
+    "noResults": "No se encontraron resultados",
+    "searching": "Buscando...",
+    "results": "Resultados de búsqueda"
+  },
+  "pwa": {
+    "install": "Instalar aplicación",
+    "update": "Actualización disponible",
+    "offline": "Sin conexión",
+    "online": "En línea",
+    "sync": "Sincronizar cambios"
+  },
+  "errors": {
+    "somethingWentWrong": "Algo salió mal",
+    "pageNotFound": "Página no encontrada",
+    "serverError": "Error del servidor",
+    "networkError": "Error de red",
+    "tryAgain": "Intentar de nuevo"
+  }
+}

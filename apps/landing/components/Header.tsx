@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageToggle } from './LanguageToggle';
 import { Search } from './Search';
+import { LoginButton } from './auth/LoginButton';
 import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
 
@@ -41,11 +42,12 @@ export function Header() {
             ))}
           </nav>
 
-          {/* Right side - Search, Language toggle, Theme toggle and mobile menu button */}
+          {/* Right side - Search, Language toggle, Theme toggle, Login and mobile menu button */}
           <div className="flex items-center space-x-4">
             <Search />
             <LanguageToggle />
             <ThemeToggle />
+            <LoginButton />
             
             {/* Mobile menu button */}
             <button

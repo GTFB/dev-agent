@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Sveltia CMS Admin Panel for lnd-boilerplate" />
+  <title>lnd-boilerplate - Content Management</title>
+  
+  <!-- Sveltia CMS -->
+  <script src="https://unpkg.com/@sveltia/cms@0.99.1/dist/sveltia-cms.js"></script>
+  
+  <!-- Custom styles -->
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f8fafc;
+    }
+    
+    .cms-header {
+      background: #1e293b;
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .cms-logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+    
+    .cms-nav {
+      display: flex;
+      gap: 1rem;
+    }
+    
+    .cms-nav a {
+      color: #94a3b8;
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      transition: all 0.2s;
+    }
+    
+    .cms-nav a:hover {
+      color: white;
+      background: #334155;
+    }
+    
+    .cms-nav a.active {
+      color: white;
+      background: #3b82f6;
+    }
+    
+    .cms-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    
+    .cms-welcome {
+      background: white;
+      border-radius: 0.5rem;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .cms-welcome h1 {
+      margin: 0 0 1rem 0;
+      color: #1e293b;
+    }
+    
+    .cms-welcome p {
+      color: #64748b;
+      line-height: 1.6;
+      margin: 0;
+    }
+    
+    .cms-features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .cms-feature {
+      background: white;
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .cms-feature h3 {
+      margin: 0 0 0.5rem 0;
+      color: #1e293b;
+    }
+    
+    .cms-feature p {
+      color: #64748b;
+      margin: 0;
+      line-height: 1.5;
+    }
+    
+    .cms-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    
+    .cms-btn {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    
+    .cms-btn:hover {
+      background: #2563eb;
+      transform: translateY(-1px);
+    }
+    
+    .cms-btn.secondary {
+      background: #64748b;
+    }
+    
+    .cms-btn.secondary:hover {
+      background: #475569;
+    }
+    
+    .cms-btn svg {
+      width: 1rem;
+      height: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <header class="cms-header">
+    <div class="cms-logo">lnd-boilerplate CMS</div>
+    <nav class="cms-nav">
+      <a href="#" class="active">Dashboard</a>
+      <a href="#/collections/blog">Blog</a>
+      <a href="#/collections/docs">Docs</a>
+      <a href="#/collections/pages">Pages</a>
+      <a href="#/collections/authors">Authors</a>
+      <a href="#/collections/categories">Categories</a>
+      <a href="#/collections/settings">Settings</a>
+    </nav>
+  </header>
+  
+  <main class="cms-container">
+    <div class="cms-welcome">
+      <h1>Welcome to lnd-boilerplate Content Management</h1>
+      <p>
+        This is your central hub for managing all content across your website. 
+        Create, edit, and organize blog posts, documentation, and pages with ease.
+      </p>
+    </div>
+    
+    <div class="cms-features">
+      <div class="cms-feature">
+        <h3>📝 Blog Management</h3>
+        <p>
+          Create and manage blog posts with rich markdown editing, 
+          categories, tags, and featured images.
+        </p>
+      </div>
+      
+      <div class="cms-feature">
+        <h3>📚 Documentation</h3>
+        <p>
+          Organize your documentation with categories and ordering. 
+          Perfect for technical guides and tutorials.
+        </p>
+      </div>
+      
+      <div class="cms-feature">
+        <h3>👥 Author Profiles</h3>
+        <p>
+          Manage author information, bios, and social media links 
+          for your content contributors.
+        </p>
+      </div>
+      
+      <div class="cms-feature">
+        <h3>⚙️ Site Settings</h3>
+        <p>
+          Configure your site title, description, logo, and 
+          social media links from one central location.
+        </p>
+      </div>
+    </div>
+    
+    <div class="cms-actions">
+      <a href="#/collections/blog/new" class="cms-btn">
+        <svg fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+        </svg>
+        New Blog Post
+      </a>
+      
+      <a href="#/collections/docs/new" class="cms-btn">
+        <svg fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
+        </svg>
+        New Document
+      </a>
+      
+      <a href="#/collections/authors/new" class="cms-btn secondary">
+        <svg fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+        </svg>
+        Add Author
+      </a>
+      
+      <a href="#/collections/settings" class="cms-btn secondary">
+        <svg fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+        </svg>
+        Site Settings
+      </a>
+    </div>
+  </main>
+  
+  <script>
+    // Initialize Sveltia CMS
+    if (typeof SveltiaCMS !== 'undefined') {
+      SveltiaCMS.registerPreviewTemplate('blog', BlogPostPreview);
+      SveltiaCMS.registerPreviewTemplate('docs', DocsPreview);
+      SveltiaCMS.registerPreviewTemplate('pages', PagePreview);
+    }
+    
+    // Preview templates
+    function BlogPostPreview(entry) {
+      return `
+        <div style="padding: 20px; font-family: sans-serif;">
+          <h1>${entry.getIn(['data', 'title'])}</h1>
+          <p><strong>Date:</strong> ${entry.getIn(['data', 'date'])}</p>
+          <p><strong>Author:</strong> ${entry.getIn(['data', 'author'])}</p>
+          <p><strong>Category:</strong> ${entry.getIn(['data', 'category'])}</p>
+          <div>${entry.getIn(['data', 'body'])}</div>
+        </div>
+      `;
+    }
+    
+    function DocsPreview(entry) {
+      return `
+        <div style="padding: 20px; font-family: sans-serif;">
+          <h1>${entry.getIn(['data', 'title'])}</h1>
+          <p><strong>Category:</strong> ${entry.getIn(['data', 'category'])}</p>
+          <p><strong>Order:</strong> ${entry.getIn(['data', 'order'])}</p>
+          <div>${entry.getIn(['data', 'body'])}</div>
+        </div>
+      `;
+    }
+    
+    function PagePreview(entry) {
+      return `
+        <div style="padding: 20px; font-family: sans-serif;">
+          <h1>${entry.getIn(['data', 'title'])}</h1>
+          <div>${entry.getIn(['data', 'body'])}</div>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
