@@ -1,0 +1,30 @@
+{
+  "name": "lnd-boilerplate",
+  "version": "0.1.0",
+  "description": "A starter kit for creating high-performance, interactive, and offline-capable content platforms",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "format": "turbo run format",
+    "test": "turbo run test",
+    "clean": "turbo run clean",
+    "type-check": "turbo run type-check"
+  },
+  "devDependencies": {
+    "@turbo/gen": "^1.12.4",
+    "turbo": "^1.12.4",
+    "typescript": "^5.9.2",
+    "@types/node": "^20.0.0"
+  },
+  "packageManager": "bun@1.2.20",
+  "engines": {
+    "node": ">=18.0.0",
+    "bun": ">=1.0.0"
+  }
+}
