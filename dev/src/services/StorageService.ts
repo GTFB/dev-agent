@@ -34,7 +34,7 @@ export class StorageService {
     } else {
       // Skip database operations if no custom path is configured
       console.log('📊 No custom database path configured, skipping StorageService initialization');
-      return;
+      this.dbPath = ":memory:";
     }
 
     this.dbManager = new DatabaseManager(this.dbPath);

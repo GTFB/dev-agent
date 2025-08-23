@@ -26,13 +26,13 @@
   },
   "storage": {
     "database": {
-      "path": "./database.db"
+      "path": ".PATH/database.db"
     },
     "config": {
-      "path": "./data/config"
+      "path": ".PATH/config"
     },
     "logs": {
-      "path": "./data/logs"
+      "path": ".PATH/logs"
     }
   },
   "last_updated": "2025-08-23T14:35:00.000Z"
