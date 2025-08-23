@@ -4,10 +4,10 @@ node_modules/
 .pnp.js
 
 # Production builds
-/build
-/.next/
-/out/
-/dist/
+build/
+.next/
+out/
+dist/
 
 # Runtime data
 .env
