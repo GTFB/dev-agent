@@ -1,7 +1,6 @@
 {
   "index": "Introduction",
-  "getting-started": "Getting Started",
-  "features": "Features",
-  "advanced": "Advanced",
-  "api": "API Reference"
+  "about": "About",
+  "blog": "Blog",
+  "docs": "Documentation"
 }

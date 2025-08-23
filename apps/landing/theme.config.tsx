@@ -1,7 +1,11 @@
 import { DocsThemeConfig } from 'nextra-theme-docs'
+import { ThemeToggle } from './components/ThemeToggle'
 
 const config: DocsThemeConfig = {
   logo: <span>lnd-boilerplate</span>,
+  navbar: {
+    extraContent: <ThemeToggle />,
+  },
   project: {
     link: 'https://github.com/GTFB/lnd-boilerplate',
   },

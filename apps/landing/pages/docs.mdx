@@ -1,0 +1,160 @@
+import { Layout } from '../components/Layout';
+
+<Layout>
+
+# Documentation
+
+Welcome to the lnd-boilerplate documentation! This guide will help you understand how to use and customize the platform.
+
+## 📚 Quick Start
+
+### Installation
+```bash
+git clone https://github.com/GTFB/lnd-boilerplate.git
+cd lnd-boilerplate
+make install
+```
+
+### Development
+```bash
+make dev
+```
+
+### Building
+```bash
+make build
+```
+
+## 🏗️ Project Structure
+
+```
+lnd-boilerplate/
+├── apps/
+│   └── landing/           # Main Next.js application
+├── packages/
+│   ├── ui/               # Design system components
+│   └── utils/            # Utility functions
+└── dev/                  # Development tools
+```
+
+## 🎨 Design System
+
+Our design system is built on top of Tailwind CSS and provides:
+
+- **Consistent Components**: Pre-built, accessible components
+- **Theme Support**: Light and dark mode out of the box
+- **Responsive Design**: Mobile-first approach
+- **Customization**: Easy to modify and extend
+
+### Using Components
+
+```tsx
+import { Button } from '@lnd-boilerplate/ui';
+
+export function MyComponent() {
+  return (
+    <Button variant="primary" size="lg">
+      Click me
+    </Button>
+  );
+}
+```
+
+## 🔧 Configuration
+
+### Tailwind CSS
+The project uses Tailwind CSS v4 with a custom configuration:
+
+```js
+// tailwind.config.js
+module.exports = {
+  content: [
+    './pages/**/*.{js,ts,jsx,tsx,mdx}',
+    '../../packages/ui/src/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  darkMode: 'class',
+  // ... custom theme
+}
+```
+
+### Environment Variables
+Create a `.env.local` file for local development:
+
+```bash
+# .env.local
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+## 🚀 Deployment
+
+### Vercel (Recommended)
+1. Connect your GitHub repository
+2. Set environment variables
+3. Deploy automatically on push
+
+### Netlify
+1. Connect your repository
+2. Set build command: `make build`
+3. Set publish directory: `apps/landing/.next`
+
+## 📱 PWA Features
+
+The platform includes Progressive Web App capabilities:
+
+- **Service Worker**: Offline functionality
+- **App Manifest**: Installable on devices
+- **Background Sync**: Offline actions queuing
+
+## 🔍 Search Integration
+
+Typesense integration provides:
+
+- **Instant Search**: Real-time search results
+- **Typo Tolerance**: Fuzzy matching
+- **Faceted Search**: Filter by categories
+- **Custom Relevance**: Configurable ranking
+
+## 🌍 Internationalization
+
+Multi-language support with:
+
+- **File-based Routing**: `/blog/post.en.mdx`
+- **RTL Support**: Right-to-left languages
+- **Dynamic Loading**: Locale-specific content
+
+## 🧪 Testing
+
+```bash
+# Run tests
+make test
+
+# Run with coverage
+make test-coverage
+
+# Type checking
+make type-check
+```
+
+## 📖 API Reference
+
+### Components
+- [Button](/docs/components/button)
+- [Card](/docs/components/card)
+- [Input](/docs/components/input)
+
+### Utilities
+- [Formatters](/docs/utils/formatters)
+- [Validation](/docs/utils/validation)
+- [Hooks](/docs/utils/hooks)
+
+## 🤝 Contributing
+
+We welcome contributions! See our [Contributing Guide](/docs/contributing) for details.
+
+## 📞 Support
+
+- **GitHub Issues**: [Report bugs](https://github.com/GTFB/lnd-boilerplate/issues)
+- **Discussions**: [Ask questions](https://github.com/GTFB/lnd-boilerplate/discussions)
+- **Documentation**: [Improve docs](https://github.com/GTFB/lnd-boilerplate/pulls)
+
+</Layout>

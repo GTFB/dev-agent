@@ -12,11 +12,22 @@
     "clean": "rm -rf .next"
   },
   "dependencies": {
+    "@radix-ui/react-dropdown-menu": "^2.1.16",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-switch": "^1.2.6",
+    "@tailwindcss/postcss": "^4.1.12",
+    "autoprefixer": "^10.4.21",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.541.0",
     "next": "^14.0.0",
     "nextra": "^2.13.0",
     "nextra-theme-docs": "^2.13.0",
+    "postcss": "^8.5.6",
     "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react-dom": "^18.0.0",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss": "^4.1.12"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
