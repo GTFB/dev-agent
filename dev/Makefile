@@ -108,7 +108,7 @@ dev-goals-delete:
 	@bun run src/index.ts goal delete "$(ID)"
 
 dev-goals-update:
-	@echo "Updating goal..."
+	@echo "Updating goal (updated)..."
 	@bun run src/index.ts goal update-status "$(ID)" "$(STATUS)"
 
 dev-config-set:

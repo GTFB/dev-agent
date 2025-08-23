@@ -40,7 +40,7 @@ export class StorageService {
           const config = JSON.parse(configContent);
           if (config.storage?.database?.path) {
             this.dbPath = config.storage.database.path;
-            console.log(`✅ Database path loaded from config.json: ${this.dbPath}`);
+            console.log(`✅ Database path loaded from config.json: ${this.dbPath} (updated)`);
           } else {
             console.log('📊 No database path in config.json, using in-memory database');
             this.dbPath = ":memory:";

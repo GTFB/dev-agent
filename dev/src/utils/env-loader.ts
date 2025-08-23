@@ -22,7 +22,7 @@ export function loadDatabaseConfig(): void {
       
       if (config.storage?.database?.path) {
         process.env.DEV_AGENT_DB_PATH = config.storage.database.path;
-        console.log(`✅ Database path loaded from config.json: ${config.storage.database.path}`);
+        console.log(`✅ Database path loaded from config.json: ${config.storage.database.path} (updated)`);
         return;
       }
     } catch (error) {
