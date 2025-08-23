@@ -1,5 +1,7 @@
 import { Header } from './Header';
 import { Footer } from './Footer';
+import { OfflineIndicator } from './OfflineIndicator';
+import { PWAInstallPrompt, PWAUpdatePrompt } from './PWAInstallPrompt';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -13,6 +15,9 @@ export function Layout({ children }: LayoutProps) {
         {children}
       </main>
       <Footer />
+      <OfflineIndicator />
+      <PWAInstallPrompt />
+      <PWAUpdatePrompt />
     </div>
   );
 }
