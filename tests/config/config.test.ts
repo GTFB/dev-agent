@@ -6,9 +6,10 @@ describe("ConfigManager", () => {
 
   beforeEach(() => {
     // Create a test instance with in-memory database
-    configManager = new (ConfigManager as unknown as new () => ConfigManager)();
     // Override the database path for testing to use in-memory
-    (configManager as unknown as { configPath: string }).configPath = ":memory:";
+    const testConfigManager = new (ConfigManager as unknown as new () => ConfigManager)();
+    (testConfigManager as unknown as { configPath: string }).configPath = ":memory:";
+    configManager = testConfigManager;
     // Initialize the database for testing
     configManager.initialize();
   });

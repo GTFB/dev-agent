@@ -7,8 +7,10 @@
 
 import { Database } from 'bun:sqlite';
 import { join } from 'path';
+import { existsSync } from 'fs';
 
-const DB_PATH = join(process.cwd(), 'data', '.dev-agent.db');
+// Database path - use environment variable or skip database operations
+const DB_PATH = process.env.DEV_AGENT_DB_PATH || join(process.cwd(), 'data', '.dev-agent.db');
 
 interface GitHubConfig {
   owner: string;
@@ -27,9 +29,20 @@ interface BranchConfig {
 }
 
 class GitHubManager {
-  private db: Database;
+  private db: Database | null = null;
 
   constructor() {
+    // Skip database operations if no custom path is configured
+    if (!process.env.DEV_AGENT_DB_PATH) {
+      console.log('📊 No custom database path configured, skipping GitHub manager initialization');
+      return;
+    }
+
+    if (!existsSync(DB_PATH)) {
+      console.log('📊 Database not found, skipping GitHub manager initialization');
+      return;
+    }
+
     this.db = new Database(DB_PATH);
     this.ensureTables();
   }
@@ -225,7 +238,7 @@ class GitHubManager {
   }
 
   close(): void {
-    this.db.close();
+    this.db?.close();
   }
 }
 

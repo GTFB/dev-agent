@@ -25,37 +25,19 @@ export class StorageService {
   private dbManager: DatabaseManager;
   private configPath: string;
 
-  constructor(storagePath?: string) {
-    this.configPath = join(process.cwd(), "config.json");
-    
-    // Priority: passed path -> environment variable -> path from config.json -> in-memory for tests
-    let dbPath = storagePath;
-    
-    if (!dbPath) {
-      // Try to load path from config.json
-      if (existsSync(this.configPath)) {
-        try {
-          const config = JSON.parse(readFileSync(this.configPath, 'utf8'));
-          
-          // Validate configuration with ZOD
-          const validation = ConfigValidator.validate(config);
-          if (validation.success && validation.data.storage?.database?.path) {
-            dbPath = validation.data.storage.database.path;
-            logger.info(`Database path loaded from config.json: ${dbPath}`);
-          }
-        } catch {
-          logger.warn("Failed to read config.json, using default path");
-        }
-      }
-    }
-    
-    // Fall back to configManager if config.json read fails
-    if (!dbPath) {
-      dbPath = process.env.DEV_AGENT_DB_PATH || './data/dev-agent.db';
-      logger.info(`Using default database path: ${dbPath}`);
+  constructor(dbPath?: string) {
+    // Use passed path or try to load from environment variable
+    if (dbPath) {
+      this.dbPath = dbPath;
+    } else if (process.env.DEV_AGENT_DB_PATH) {
+      this.dbPath = process.env.DEV_AGENT_DB_PATH;
+    } else {
+      // Skip database operations if no custom path is configured
+      console.log('📊 No custom database path configured, skipping StorageService initialization');
+      return;
     }
 
-    this.dbManager = new DatabaseManager(dbPath);
+    this.dbManager = new DatabaseManager(this.dbPath);
   }
 
   /**

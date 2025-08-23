@@ -170,10 +170,9 @@ describe("StorageService", () => {
     });
 
     it("should find goal by GitHub issue ID", async () => {
-      // Clear existing data first
-      await storageService.close();
-      storageService = new StorageService();
-      await storageService.initialize();
+      // Use in-memory database for isolation
+      const testStorageService = new StorageService(":memory:");
+      await testStorageService.initialize();
       
       const goalId = `g-test-${Date.now()}`;
       const uniqueIssueId = Date.now(); // Use timestamp as unique issue ID
@@ -185,12 +184,14 @@ describe("StorageService", () => {
         github_issue_id: uniqueIssueId,
       };
 
-      await storageService.createGoal(goal);
-      const foundGoal = await storageService.findGoalByGitHubIssue(uniqueIssueId);
+      await testStorageService.createGoal(goal);
+      const foundGoal = await testStorageService.findGoalByGitHubIssue(uniqueIssueId);
 
       expect(foundGoal).toBeDefined();
       expect(foundGoal!.id).toBe(goalId);
       expect(foundGoal!.github_issue_id).toBe(uniqueIssueId);
+      
+      await testStorageService.close();
     });
 
     it("should find goal by branch name", async () => {

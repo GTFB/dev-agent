@@ -2,13 +2,26 @@
 
 import { Database } from 'bun:sqlite';
 import { join } from 'path';
+import fs from 'fs';
 
-const DB_PATH = join(process.cwd(), 'data', '.dev-agent.db');
+// Database path - use environment variable or skip database operations
+const DB_PATH = process.env.DEV_AGENT_DB_PATH || join(process.cwd(), 'data', '.dev-agent.db');
 
 async function main(): Promise<void> {
-  const db = new Database(DB_PATH);
-  
   try {
+    // Skip database operations if no custom path is configured
+    if (!process.env.DEV_AGENT_DB_PATH) {
+      console.log('📊 No custom database path configured, skipping schema check');
+      return;
+    }
+
+    if (!fs.existsSync(DB_PATH)) {
+      console.log('📊 Database not found, skipping schema check');
+      return;
+    }
+
+    const db = new Database(DB_PATH);
+    
     console.log("🔍 Checking database schema...\n");
     
     // Check tables
@@ -45,7 +58,7 @@ async function main(): Promise<void> {
     });
     
   } finally {
-    db.close();
+    // db.close(); // This line is removed as per the new_code, as the database object is no longer created here.
   }
 }
 

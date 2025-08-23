@@ -10,6 +10,12 @@ import { configManager } from "../config/config.js";
 
 async function main() {
   try {
+    // Skip database operations if no custom path is configured
+    if (!process.env.DEV_AGENT_DB_PATH) {
+      console.log('📊 No custom database path configured, skipping database initialization');
+      return;
+    }
+
     console.log("🚀 Initializing Dev Agent Database...");
     
     // Get database configuration

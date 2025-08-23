@@ -23,14 +23,20 @@ const IGNORE_FILES = [
   'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'bun.lock'
 ];
 
-// Database path
-const DB_PATH = path.join(process.cwd(), 'data', '.dev-agent.db');
+// Database path - use environment variable or skip database operations
+const DB_PATH = process.env.DEV_AGENT_DB_PATH || path.join(process.cwd(), 'data', '.dev-agent.db');
 
 /**
  * Pre-install configurations in database
  */
 function preInstallConfigs(): void {
   try {
+    // Skip database operations if no custom path is configured
+    if (!process.env.DEV_AGENT_DB_PATH) {
+      console.log('📊 No custom database path configured, skipping config pre-installation');
+      return;
+    }
+
     if (!fs.existsSync(DB_PATH)) {
       console.log('📊 Database not found, skipping config pre-installation');
       return;

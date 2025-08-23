@@ -7,8 +7,10 @@
 
 import { Database } from 'bun:sqlite';
 import { join } from 'path';
+import { existsSync } from 'fs';
 
-const DB_PATH = join(process.cwd(), 'data', '.dev-agent.db');
+// Database path - use environment variable or skip database operations
+const DB_PATH = process.env.DEV_AGENT_DB_PATH || join(process.cwd(), 'data', '.dev-agent.db');
 
 interface LLMProvider {
   provider: string;
@@ -21,14 +23,29 @@ interface LLMProvider {
 }
 
 class LLMManager {
-  private db: Database;
+  private db: Database | null = null;
 
   constructor() {
+    // Skip database operations if no custom path is configured
+    if (!process.env.DEV_AGENT_DB_PATH) {
+      console.log('📊 No custom database path configured, skipping LLM manager initialization');
+      return;
+    }
+
+    if (!existsSync(DB_PATH)) {
+      console.log('📊 Database not found, skipping LLM manager initialization');
+      return;
+    }
+
     this.db = new Database(DB_PATH);
     this.ensureTable();
   }
 
   private ensureTable(): void {
+    if (!this.db) {
+      console.log('❌ Database not initialized, cannot ensure table.');
+      return;
+    }
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS llm (
         provider TEXT PRIMARY KEY NOT NULL,
@@ -52,6 +69,10 @@ class LLMManager {
     config?: Record<string, unknown>;
     setAsDefault?: boolean;
   } = {}): void {
+    if (!this.db) {
+      console.log('❌ Database not initialized, cannot add provider.');
+      return;
+    }
     const {
       apiBase,
       config,
@@ -82,6 +103,10 @@ class LLMManager {
   }
 
   removeProvider(provider: string): void {
+    if (!this.db) {
+      console.log('❌ Database not initialized, cannot remove provider.');
+      return;
+    }
     const stmt = this.db.prepare("DELETE FROM llm WHERE provider = ?");
     const result = stmt.run(provider);
     
@@ -93,6 +118,10 @@ class LLMManager {
   }
 
   setDefaultProvider(provider: string): void {
+    if (!this.db) {
+      console.log('❌ Database not initialized, cannot set default provider.');
+      return;
+    }
     this.db.exec("UPDATE llm SET is_default = 0");
     const stmt = this.db.prepare("UPDATE llm SET is_default = 1 WHERE provider = ?");
     const result = stmt.run(provider);
@@ -105,6 +134,10 @@ class LLMManager {
   }
 
   listProviders(): void {
+    if (!this.db) {
+      console.log('❌ Database not initialized, cannot list providers.');
+      return;
+    }
     const stmt = this.db.prepare(`
       SELECT provider, model, is_default, status, api_base, created_at
       FROM llm ORDER BY is_default DESC, provider
@@ -137,6 +170,10 @@ class LLMManager {
   }
 
   testProvider(provider: string): void {
+    if (!this.db) {
+      console.log('❌ Database not initialized, cannot test provider.');
+      return;
+    }
     const stmt = this.db.prepare("SELECT * FROM llm WHERE provider = ?");
     const result = stmt.get(provider) as LLMProvider | undefined;
     
@@ -155,6 +192,10 @@ class LLMManager {
   }
 
   updateProviderConfig(provider: string, updates: Partial<LLMProvider>): void {
+    if (!this.db) {
+      console.log('❌ Database not initialized, cannot update provider config.');
+      return;
+    }
     const current = this.db.prepare("SELECT * FROM llm WHERE provider = ?").get(provider) as LLMProvider | undefined;
     if (!current) {
       console.log(`❌ Provider not found: ${provider}`);
@@ -196,7 +237,9 @@ class LLMManager {
   }
 
   close(): void {
-    this.db.close();
+    if (this.db) {
+      this.db.close();
+    }
   }
 }
 

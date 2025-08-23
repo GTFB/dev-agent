@@ -37,11 +37,8 @@ export class DatabaseManager {
           }
         }
       } catch {
-        // Fall back to configManager if config.json read fails
-        const fallbackPath = configManager.getDatabaseConfig().path;
-        if (fallbackPath) {
-          finalPath = fallbackPath;
-        }
+        // Don't fall back to configManager to avoid database initialization
+        // Just use in-memory as default
       }
     }
     
