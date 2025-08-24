@@ -5,7 +5,7 @@ Systematically develop new functionality, from selecting a task in the database 
 
 ## Steps
 1. **Determine Task for Work**
-   - **Start a new task:** Automatically create a `feature/g-XXXXXX-description` branch, update the selected `todo` task's status to `in_progress`, **and change its milestone on GitHub to "In Progress"**.
+   - **Start a new task:** Automatically create a `feature/g-XXXXXX` branch, update the selected `todo` task's status to `in_progress`, **and change its milestone on GitHub to "In Progress"**.
 
 2.  **Implement & Document**
    - Before starting the task, propose an algorithm of how you are going to solve it.
