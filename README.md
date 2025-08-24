@@ -1,109 +1,163 @@
-# lnd-boilerplate
+# Dev Agent 🚀
 
-A starter kit for creating **high-performance**, **interactive**, and **offline-capable** content platforms.
+**CLI assistant for automating the High-Efficiency Standard Operating Protocol**
 
-## 🚀 What is lnd-boilerplate?
+[![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)](https://github.com/your-org/dev-agent)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Test Coverage](https://img.shields.io/badge/test%20coverage-99.09%25-brightgreen.svg)](https://github.com/your-org/dev-agent)
+[![Bun](https://img.shields.io/badge/runtime-Bun-000000.svg)](https://bun.sh)
+[![TypeScript](https://img.shields.io/badge/language-TypeScript-3178C6.svg)](https://www.typescriptlang.org/)
 
-`lnd-boilerplate` is a foundation for building websites where User Experience (UX), Developer Experience (DX), and performance are top priorities. The product implements an **Offline-First** philosophy, providing users with uninterrupted access to content regardless of network connection quality.
+## 🎯 What is Dev Agent?
 
-## ✨ Key Features
+Dev Agent automates and standardizes the complete software development lifecycle according to the **High-Efficiency Standard Operating Protocol**.
 
-- **Next.js + Nextra** - Hybrid rendering (SSG/ISR) with file-based routing
-- **TypeScript** - Full type safety across the entire application
-- **Tailwind CSS + Shadcn/UI** - Utility-first CSS with composable components
-- **PWA Support** - Progressive Web App with offline capabilities
-- **Internationalization** - Multi-language support with RTL layouts
-- **Search Integration** - Typesense-powered search with typo tolerance
-- **Authentication** - Next-auth.js with OAuth providers
-- **Content Management** - Git-based CMS with Sveltia
+## 🚀 Quick Start
 
-## 🏗️ Architecture
-
-Built as a monorepo managed by **Turborepo** to ensure maximum code reusability:
-
-```
-/lnd-boilerplate/
-├── apps/
-│   └── landing/               # Main Next.js/Nextra application
-├── packages/
-│   ├── ui/                    # Design system and reusable components
-│   └── utils/                 # Common utilities and hooks
-└── dev/                       # Tooling (dev-agent subtree)
+### 1. Add Dev Agent as Subtree
+```bash
+git subtree add --prefix=dev https://github.com/GTFB/dev-agent.git main --squash
 ```
 
-## 🚦 Getting Started
+### 2. Setup Configuration & Environment
+```bash
+cp dev/config.sample.json config.json
+make env-setup
+```
 
-### Prerequisites
+### 3. Setup Storage & Database
+```bash
+make db-init
+```
 
-- **Node.js** 18.0.0 or higher
-- **Bun** 1.0.0 or higher (recommended package manager)
+### 4. Initialize Dev Agent
+```bash
+make dev-init
+```
 
-### Installation
+### 5. Protect Critical Branches
+```bash
+make protect-branches
+```
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/GTFB/lnd-boilerplate.git
-   cd lnd-boilerplate
-   ```
+### 6. Create Your First Task
+```bash
+make dev-goals-create TITLE="Create initial commit"
+```
 
-2. **Install dependencies**
-   ```bash
-   bun install
-   ```
+## 🛠️ Core Commands
 
-3. **Start development server**
-   ```bash
-   bun run dev
-   ```
+```bash
+# Goal Management
+make dev-goals-create TITLE="Task title"
+make dev-goals-list
+make dev-goals-delete ID="goal-id"
 
-4. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
+# Configuration
+make dev-config-set KEY="workflow.auto_sync" VALUE="false"
+make dev-config-get KEY="workflow.auto_sync"
+make dev-config-list
+
+**Note**: `config set` is for runtime configuration, not GitHub settings. GitHub integration is configured via `config.json`.
+
+**Examples of runtime config**:
+```bash
+make dev-config-set KEY="workflow.auto_sync" VALUE="false"    # Disable auto-sync
+make dev-config-set KEY="validation.strict_language" VALUE="false"  # Disable strict language
+make dev-config-set KEY="workflow.sync_interval" VALUE="600"  # Set sync interval to 10 minutes
+```
+
+# Development
+make test
+make build
+
+# Branch Protection
+make protect-branches
+git protect
+```
+
+## 🔧 GitHub Configuration
+
+**Important**: GitHub integration is configured via `config.json`, not environment variables:
+
+```json
+{
+  "github": {
+    "owner": "your-org",
+    "repo": "your-project"
+  }
+}
+```
+
+**For secrets** (tokens, API keys), use `.env` file:
+```env
+GITHUB_TOKEN=your_token_here
+OPENAI_API_KEY=your_key_here
+```
+
+**Setup process**:
+```bash
+make env-setup          # Create .env template
+# Copy config.sample.json to config.json and edit github.owner and github.repo
+# Edit .env file with your actual tokens
+```
+
+## 💾 Storage Configuration
+
+**Important**: Storage paths are configured in `config.json`:
+
+```json
+{
+  "storage": {
+    "database": {
+      "path": "./data/dev-agent.db"
+    },
+    "config": {
+      "path": "./data/config"
+    },
+    "logs": {
+      "path": "./data/logs"
+    }
+  }
+}
+```
+
+**Setup storage**:
+```bash
+# 1. Copy sample configuration
+cp config.sample.json config.json
+
+# 2. Edit config.json with your storage paths
+# Use relative paths (./data/) or absolute paths (G:/path/to/storage/)
+
+# 3. Initialize storage directories
+make db-init
+```
+
+**Storage locations**:
+- **Database**: SQLite database file
+- **Config**: Runtime configuration files
+- **Logs**: Application and workflow logs
+
+## 🛡️ Branch Protection
+
+**CRITICAL**: Protect your branches immediately after installation:
+
+```bash
+make protect-branches
+```
+
+This prevents accidental deletion of `main` and `develop` branches.
 
 ## 📚 Documentation
 
-- [Technical Specification](./TECH_SPEC.md) - Detailed technical requirements
-- [Getting Started](./apps/landing/pages/getting-started.mdx) - Setup and configuration
-- [Features](./apps/landing/pages/features.mdx) - Detailed feature overview
-- [Advanced](./apps/landing/pages/advanced.mdx) - Advanced usage and customization
-- [API Reference](./apps/landing/pages/api.mdx) - Component and utility documentation
-
-## 🛠️ Development
-
-### Available Scripts
-
-- `bun run dev` - Start development server
-- `bun run build` - Build all packages and applications
-- `bun run lint` - Run ESLint across all packages
-- `bun run format` - Format code with Prettier
-- `bun run test` - Run tests across all packages
-- `bun run type-check` - Run TypeScript type checking
-
-### Package Structure
-
-- **`apps/landing`** - Main Next.js application with Nextra
-- **`packages/ui`** - Reusable React components and design system
-- **`packages/utils`** - Common utilities, hooks, and helper functions
+- **[Developer Guide](docs/developer-guide.md)** - Setup and contribution
+- **[API Reference](docs/api/)** - Auto-generated API docs
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-### Development Workflow
-
-1. Create a feature branch: `git checkout -b feature/your-feature-name`
-2. Make your changes
-3. Run quality checks: `bun run lint && bun run type-check`
-4. Commit your changes: `git commit -m "feat: add your feature"`
-5. Push and create a Pull Request
+See [Developer Guide](docs/developer-guide.md) for contribution details.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- [Next.js](https://nextjs.org/) - React framework
-- [Nextra](https://nextra.site/) - Documentation framework
-- [Turborepo](https://turbo.build/) - Monorepo build system
-- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
-- [Shadcn/ui](https://ui.shadcn.com/) - Component library
+MIT License - see [LICENSE](LICENSE) file.
