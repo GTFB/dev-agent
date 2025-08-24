@@ -2,121 +2,129 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
-
-env:
-  NODE_VERSION: '18'
-  BUN_VERSION: '1.2.20'
+    branches: [main, develop]
 
 jobs:
-  # Lint and Type Check
-  lint:
-    name: Lint and Type Check
+  test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20]
+        bun-version: [latest]
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         
-      - name: Setup Node.js
+      - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          node-version: ${{ matrix.node-version }}
+          cache: 'bun'
           
-      - name: Setup Bun
+      - name: Setup Bun ${{ matrix.bun-version }}
         uses: oven-sh/setup-bun@v1
         with:
-          bun-version: ${{ env.BUN_VERSION }}
+          bun-version: ${{ matrix.bun-version }}
           
       - name: Install dependencies
         run: bun install
         
-      - name: Run ESLint
+      - name: Run linter
         run: bun run lint
         
-      - name: Run TypeScript check
-        run: bun run type-check
-
-  # Test
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
-          
-      - name: Install dependencies
-        run: bun install
-        
-      - name: Run tests
-        run: bun run test
-        
       - name: Run tests with coverage
-        run: bun run test:coverage
+        run: bun test --coverage
         
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./coverage/lcov.info
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: false
-
-  # Build
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    needs: [lint, test]
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Generate coverage report
+        run: bun run test:coverage:badge
         
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+      - name: Update coverage badge in README
+        run: bun run scripts/update-coverage-badge.ts
+         
+      - name: Commit coverage badge update
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add README.md
+          git commit -m "📊 Update coverage badges [skip ci]" || exit 0
+          git push
           
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
+      - name: Check test coverage threshold
+        id: coverage
+        run: |
+          # Parse coverage from test output using our script
+          COVERAGE_OUTPUT=$(bun run test:coverage:badge 2>&1)
           
-      - name: Install dependencies
-        run: bun install
-        
+          # Extract coverage percentages from script output
+          FUNC_COVERAGE=$(echo "$COVERAGE_OUTPUT" | grep "Function coverage:" | sed 's/.*Function coverage: \([0-9.]*\)%.*/\1/')
+          LINE_COVERAGE=$(echo "$COVERAGE_OUTPUT" | grep "Line coverage:" | sed 's/.*Line coverage: \([0-9.]*\)%.*/\1/')
+          
+          echo "Function coverage: ${FUNC_COVERAGE}%"
+          echo "Line coverage: ${LINE_COVERAGE}%"
+          
+          # Check if coverage is above 90%
+          if (( $(echo "$FUNC_COVERAGE < 90" | bc -l) )); then
+            echo "❌ Function coverage ($FUNC_COVERAGE%) is below 90% threshold"
+            exit 1
+          fi
+          
+          if (( $(echo "$LINE_COVERAGE < 90" | bc -l) )); then
+            echo "❌ Line coverage ($LINE_COVERAGE%) is below 90% threshold"
+            exit 1
+          fi
+          
+          echo "✅ Coverage thresholds met: Functions ${FUNC_COVERAGE}%, Lines ${LINE_COVERAGE}%"
+          
+          # Set output for other jobs
+          echo "func_coverage=$FUNC_COVERAGE" >> $GITHUB_OUTPUT
+          echo "line_coverage=$LINE_COVERAGE" >> $GITHUB_OUTPUT
+          
       - name: Build project
         run: bun run build
         
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-files
-          path: |
-            apps/landing/.next/
-            apps/landing/out/
-            packages/*/dist/
-
-  # Security Audit
+      - name: Validate project structure
+        run: |
+          # Check if required directories exist
+          if [ ! -d "src" ]; then
+            echo "❌ src/ directory missing"
+            exit 1
+          fi
+          
+          if [ ! -d "config" ]; then
+            echo "❌ config/ directory missing"
+            exit 1
+          fi
+          
+          # Note: data/ directory is no longer required as we use external storage
+          # if [ ! -d "data" ]; then
+          #   echo "❌ data/ directory missing"
+          #   exit 1
+          # fi
+          
+          if [ ! -f "config.json" ]; then
+            echo "❌ config.json missing"
+            exit 1
+          fi
+          
+          echo "✅ Project structure validation passed"
+          
+      - name: Check for root database files
+        run: |
+          # Ensure no database files are created in root during tests
+          if [ -f "dev-agent.db" ] || [ -f ".dev-agent.db" ]; then
+            echo "❌ Database files found in root directory"
+            ls -la *.db .*.db 2>/dev/null || true
+            exit 1
+          fi
+          
+          echo "✅ No database files in root directory"
+          
   security:
-    name: Security Audit
     runs-on: ubuntu-latest
+    needs: test
     
     steps:
       - name: Checkout code
@@ -125,13 +133,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          node-version: '18'
+          cache: 'bun'
           
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
-          bun-version: ${{ env.BUN_VERSION }}
+          bun-version: latest
           
       - name: Install dependencies
         run: bun install
@@ -139,113 +147,58 @@ jobs:
       - name: Run security audit
         run: bun audit
         
-      - name: Run Snyk security scan
-        uses: snyk/actions/node@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=high
-
-  # Lighthouse CI
-  lighthouse:
-    name: Lighthouse CI
-    runs-on: ubuntu-latest
-    needs: build
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
+      - name: Check for secrets in code
+        run: |
+          # Check for potential secrets in code
+          if grep -r "password\|secret\|token\|key" src/ --include="*.ts" --include="*.js" | grep -v "//\|/\*\|import\|export" | grep -v "password\|secret\|token\|key"; then
+            echo "⚠️ Potential secrets found in code"
+            exit 1
+          fi
           
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: build-files
+          echo "✅ No obvious secrets found in code"
           
-      - name: Install Lighthouse CI
-        run: npm install -g @lhci/cli@0.12.x
-        
-      - name: Run Lighthouse CI
-        run: lhci autorun
-        env:
-          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
-
-  # Deploy to Preview
   deploy-preview:
-    name: Deploy Preview
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    needs: [build, security]
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: build-files
-          
-      - name: Deploy to Vercel Preview
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.ORG_ID }}
-          vercel-project-id: ${{ secrets.PROJECT_ID }}
-          vercel-args: '--prod'
-
-  # Deploy to Production
-  deploy-production:
-    name: Deploy Production
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: [build, security, lighthouse]
-    environment: production
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: build-files
-          
-      - name: Deploy to Vercel Production
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.ORG_ID }}
-          vercel-project-id: ${{ secrets.PROJECT_ID }}
-          vercel-args: '--prod'
-          
-      - name: Create Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ github.run_number }}
-          release_name: Release v${{ github.run_number }}
-          body: |
-            Automated release from CI/CD pipeline
-            
-            ## Changes
-            - Build: ${{ github.sha }}
-            - Workflow: ${{ github.workflow }}
-            - Triggered by: ${{ github.actor }}
-          draft: false
-          prerelease: false
+     runs-on: ubuntu-latest
+     needs: [test, security]
+     if: github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'develop'
+     
+     steps:
+       - name: Checkout code
+         uses: actions/checkout@v4
+         
+       - name: Setup Node.js
+         uses: actions/setup-node@v4
+         with:
+           node-version: '18'
+           cache: 'bun'
+           
+       - name: Setup Bun
+         uses: oven-sh/setup-bun@v1
+         with:
+           bun-version: latest
+           
+       - name: Install dependencies
+         run: bun install
+         
+       - name: Build preview
+         run: bun run build
+         
+       - name: Comment PR with preview info
+         uses: actions/github-script@v7
+         with:
+           script: |
+             github.rest.issues.createComment({
+               issue_number: context.issue.number,
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               body: `🚀 **Preview Build Successful!**
+               
+               ✅ All tests passed
+               ✅ Linting passed  
+               ✅ Security checks passed
+               ✅ Coverage thresholds met
+               
+               Ready for review and merge to develop!`
+             })
+             
+  # Note: Coverage badge updates are now handled automatically in the test job

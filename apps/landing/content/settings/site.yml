@@ -1,9 +1,0 @@
-title: "lnd-boilerplate"
-description: "Modern landing page boilerplate with Next.js, TypeScript, and Tailwind CSS"
-url: "http://localhost:3000"
-logo: "/images/logo.svg"
-favicon: "/images/favicon.ico"
-social:
-  twitter: "@lndboilerplate"
-  github: "lnd-boilerplate"
-  linkedin: "lnd-boilerplate"

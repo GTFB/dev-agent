@@ -1,110 +1,176 @@
-# lnd-boilerplate Makefile
-# Проксирование команд dev-agent и собственные команды проекта
+# Dev Agent Makefile
 
-.PHONY: help dev-help dev-init dev-goals-create dev-goals-list dev-goals-update dev-goals-delete dev-workflow-feature dev-workflow-release dev-workflow-hotfix dev-sync dev-validate dev-build dev-test dev-clean install build type-check lint format
+.PHONY: help test test-coverage build clean validate ci-check docs-generate task-validate dev-init dev-sync dev-goals-list dev-goals-create protect-branches restore-branches
 
-# Основные команды проекта
-help: ## Показать справку по всем командам
-	@echo "🚀 lnd-boilerplate - Available Commands:"
+help:
+	@echo "Dev Agent - Available Commands:"
 	@echo ""
-	@echo "📦 Project Commands:"
-	@echo "  install      - Install all dependencies"
-	@echo "  build        - Build all packages"
-	@echo "  type-check   - Run TypeScript type checking"
-	@echo "  lint         - Run ESLint across all packages"
-	@echo "  format       - Format code with Prettier"
-	@echo "  clean        - Clean build artifacts"
+	@echo "Development Commands:"
+	@echo "  test            Run test suite"
+	@echo "  test-coverage   Run tests with coverage report"
+	@echo "  build           Build the project"
+	@echo "  clean           Clean build artifacts"
+	@echo "  validate        Validate project structure"
+	@echo "  ci-check        Run all CI checks locally"
+	@echo "  docs-generate   Generate API documentation"
+	@echo "  task-validate   Validate task and generate execution plan"
 	@echo ""
-	@echo "🛠️  Dev Agent Commands:"
-	@echo "  dev-help     - Show dev-agent help"
-	@echo "  dev-init     - Initialize dev-agent"
-	@echo "  dev-goals-*  - Manage goals (create, list, update, delete)"
-	@echo "  dev-workflow-* - Workflow commands (feature, release, hotfix)"
-	@echo "  dev-sync     - Sync with remote repository"
-	@echo "  dev-validate - Validate project structure"
-	@echo "  dev-build    - Build dev-agent"
-	@echo "  dev-test     - Run dev-agent tests"
-	@echo "  dev-clean    - Clean dev-agent build artifacts"
+	@echo "Dev Agent Commands:"
+	@echo "  project-init    Show project initialization usage"
+	@echo "  project-init-custom Initialize new Dev Agent project (PATH='path')"
+	@echo "  dev-init        Initialize Dev Agent project
+	@echo "  dev-sync        Sync with GitHub (HARD ALGORITHM)"
+	@echo "  dev-goals-list  List all goals"
+	@echo "  dev-goals-create Create new goal (TITLE='title')"
+	@echo "  dev-goals-update Update goal (ID='goal-id' STATUS='status')"
+	@echo "  dev-goals-delete Delete goal (ID='goal-id')"
+	@echo "  dev-config-set  Set config (KEY='key' VALUE='value')"
+	@echo "  dev-config-get  Get config (KEY='key')"
+	@echo "  dev-config-list List all config"
 	@echo ""
-	@echo "💡 Usage: make <command>"
+	@echo "Database & Environment:"
+	@echo "  db-init         Initialize database"
+	@echo "  env-setup       Create .env file template"
+	@echo ""
+	@echo "Branch Protection Commands:"
+	@echo "  protect-branches Check protection for critical branches"
+	@echo "  restore-branches Restore any missing critical branches"
 
-# Проксирование команд dev-agent
-dev-help: ## Показать справку dev-agent
-	@cd dev && make help
+test:
+	bun test
 
-dev-init: ## Инициализировать dev-agent
-	@cd dev && make dev-init
+test-coverage:
+	@echo "Running tests with coverage..."
+	bun test --coverage
 
-dev-goals-create: ## Создать новую цель
-	@cd dev && make dev-goals-create
-
-dev-goals-list: ## Список всех целей
-	@cd dev && make dev-goals-list
-
-dev-goals-update: ## Обновить цель
-	@cd dev && make dev-goals-update
-
-dev-goals-delete: ## Удалить цель
-	@cd dev && make dev-goals-delete
-
-dev-workflow-feature: ## Запустить workflow для feature
-	@cd dev && make dev-workflow-feature
-
-dev-workflow-release: ## Запустить workflow для release
-	@cd dev && make dev-workflow-release
-
-dev-workflow-hotfix: ## Запустить workflow для hotfix
-	@cd dev && make dev-workflow-hotfix
-
-dev-sync: ## Синхронизировать с remote
-	@cd dev && make dev-sync
-
-dev-validate: ## Валидировать проект
-	@cd dev && make dev-validate
-
-dev-build: ## Собрать dev-agent
-	@cd dev && make dev-build
-
-dev-test: ## Запустить тесты dev-agent
-	@cd dev && make dev-test
-
-dev-clean: ## Очистить dev-agent
-	@cd dev && make dev-clean
-
-# Команды проекта
-install: ## Установить все зависимости
-	@echo "📦 Installing dependencies..."
-	bun install
-
-build: ## Собрать все пакеты
-	@echo "🏗️ Building all packages..."
+build:
 	bun run build
 
-type-check: ## Проверить типы TypeScript
-	@echo "🔍 Running TypeScript type checking..."
-	bun run type-check
+clean:
+	@echo "Cleaning up build artifacts..."
+	@if exist build rmdir /s /q build
 
-lint: ## Запустить ESLint
-	@echo "🧹 Running ESLint..."
-	bun run lint
+validate:
+	bun run src/scripts/validate-structure.ts
 
-format: ## Форматировать код с Prettier
-	@echo "✨ Formatting code with Prettier..."
-	bun run format
+ci-check:
+	@echo "Running CI checks locally..."
+	bun install
+	bun test --coverage
+	bun run build
+	bun run src/scripts/validate-structure.ts
+	@echo "Cleaning up build artifacts..."
+	make clean
+	@echo "All CI checks passed!"
 
-clean: ## Очистить артефакты сборки
-	@echo "🧹 Cleaning build artifacts..."
-	bun run clean
-	@echo "🗑️ Removing dist folders..."
-	rm -rf packages/*/dist
-	@echo "✅ Cleanup complete!"
+docs-generate:
+	@echo "Generating API documentation..."
+	@echo "API documentation is already generated in docs/api/"
+	@echo "To regenerate manually, run: cd docs && npx typedoc docs-entry.ts --out api --excludePrivate --excludeProtected --excludeInternal --tsconfig tsconfig.docs.json"
 
-# Специальные команды для создания задач по ТЗ
-create-tech-spec-tasks: ## Создать все задачи по ТЗ в dev-agent
-	@echo "📋 Creating TECH_SPEC.md tasks in dev-agent..."
-	@cd dev && make dev-goals-create TITLE="Phase 1: Foundation and Structure" DESCRIPTION="Monorepo initialization with Turborepo, structure creation, tooling setup, and base Next.js application" STATUS="completed"
-	@cd dev && make dev-goals-create TITLE="Phase 2: Design System and Content" DESCRIPTION="UI setup with Tailwind CSS, theme implementation, Sveltia CMS integration, and marketing blocks development" STATUS="todo"
-	@cd dev && make dev-goals-create TITLE="Phase 3: Advanced Features" DESCRIPTION="Internationalization (i18n), search integration with Typesense, authentication with Next-auth.js, and community features" STATUS="todo"
-	@cd dev && make dev-goals-create TITLE="Phase 4: Offline Mode and PWA" DESCRIPTION="PWA setup with next-pwa, Dexie.js integration, React Query configuration, and offline testing" STATUS="todo"
-	@cd dev && make dev-goals-create TITLE="Phase 5: Observability and CI/CD" DESCRIPTION="Monitoring integration (GlitchTip, Plausible), CI/CD workflow setup, and deployment automation" STATUS="todo"
-	@echo "✅ All TECH_SPEC.md tasks created successfully!"
+task-validate:
+	@echo "Task Validator and Plan Generator"
+	@echo "Usage: make task-validate TASK='Task title' DESC='Task description' [OPTIONS]"
+	@echo ""
+	@echo "Options:"
+	@echo "  PRIORITY=high|medium|low|critical"
+	@echo "  EFFORT=small|medium|large|epic"
+	@echo "  CATEGORY=feature|bugfix|refactoring|documentation|infrastructure"
+	@echo ""
+	@echo "Example:"
+	@echo "  make task-validate TASK='Add user authentication' DESC='Implement JWT-based auth' PRIORITY=high CATEGORY=feature"
+	@echo ""
+	@if [ -n "$(TASK)" ]; then \
+		echo "Validating task: $(TASK)"; \
+		bun run src/scripts/task-validator.ts "$(TASK)" "$(DESC)" --priority $(PRIORITY) --effort $(EFFORT) --category $(CATEGORY); \
+	else \
+		echo "Please provide TASK parameter"; \
+		echo "Example: make task-validate TASK='Task title'"; \
+	fi
+
+# Dev Agent Commands
+project-init:
+	@echo "Initializing new Dev Agent project..."
+	@echo "Usage: powershell -ExecutionPolicy Bypass -File scripts/project-init.ps1 'G:\Общие диски\Altrp'"
+	@echo "Or use: make project-init-custom PATH='G:\Общие диски\Altrp'"
+
+project-init-custom:
+	@echo "Running project initialization for: $(PATH)"
+	@powershell -ExecutionPolicy Bypass -File scripts/project-init.ps1 "$(PATH)"
+
+dev-init:
+	@echo "Initializing Dev Agent project..."
+	@bun run src/index.ts init
+
+dev-sync:
+	@echo "Syncing with GitHub (HARD ALGORITHM)..."
+	@bun run src/index.ts sync
+
+dev-goals-list:
+	@echo "Listing all goals..."
+	@bun run src/index.ts goal list
+
+dev-goals-create:
+	@echo "Creating new goal..."
+	@bun run src/index.ts goal create "$(TITLE)"
+
+dev-goals-delete:
+	@echo "Deleting goal..."
+	@bun run src/index.ts goal delete "$(ID)"
+
+dev-goals-update:
+	@echo "Updating goal (updated)..."
+	@bun run src/index.ts goal update-status "$(ID)" "$(STATUS)"
+
+dev-config-set:
+	@echo "Setting configuration..."
+	@bun run src/index.ts config set "$(KEY)" "$(VALUE)"
+
+dev-config-get:
+	@echo "Getting configuration..."
+	@bun run src/index.ts config get "$(KEY)"
+
+dev-config-list:
+	@echo "Listing all configuration..."
+	@bun run src/index.ts config list
+
+# Branch Protection Commands
+protect-branches:
+	@echo "Checking critical branch protection..."
+	@powershell -ExecutionPolicy Bypass -File scripts/protect-branches.ps1
+
+restore-branches:
+	@echo "Restoring critical branches if needed..."
+	@echo "Checking main branch..."
+	@git rev-parse --verify main >/dev/null 2>&1 && ( \
+		echo "Main branch exists" \
+	) || ( \
+		echo "Creating main branch from origin/main..."; \
+		git checkout -b main origin/main; \
+		echo "Main branch restored!" \
+	)
+	@echo "Checking develop branch..."
+	@git rev-parse --verify develop >/dev/null 2>&1 && ( \
+		echo "Develop branch exists" \
+	) || ( \
+		echo "Creating develop branch from origin/develop..."; \
+		git checkout -b develop origin/develop; \
+		echo "Develop branch restored!" \
+	)
+
+# Database & Environment
+db-init:
+	@echo "Initializing database..."
+	@bun run scripts/init-storage.ts
+
+env-setup:
+	@echo "Setting up environment file..."
+	@if not exist .env ( \
+		echo "Creating .env file..."; \
+		echo "# Dev Agent Environment Variables" > .env; \
+		echo "GITHUB_TOKEN=your_token_here" >> .env; \
+		echo "OPENAI_API_KEY=your_key_here" >> .env; \
+		echo ".env file created. Please update with your actual values." \
+	) else ( \
+		echo ".env file already exists" \
+	)

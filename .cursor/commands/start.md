@@ -5,7 +5,7 @@ An interactive startup and readiness check for the Architect, beginning with env
 
 ## Steps
 1.  **Environment Verification (Pre-flight Check)**
-   - Read the external storage path from the `config.json` file (key `storage`).
+   - Read the external storage path from the `config.json` file (key `storage`). If the file is missing, run to **[create it](../../scripts/project-init.ps1)**.
    - Verify that the directory at this path exists.
    - Verify that the `.env` file and the database file (`.dev-agent.db`) exist within it.
    - **On failure:** Abort execution and report the specific issue (e.g., "Storage directory not found" or ".env file is missing").
