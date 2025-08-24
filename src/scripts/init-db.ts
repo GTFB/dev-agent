@@ -8,22 +8,27 @@
 import { DatabaseManager } from "../core/database.js";
 import { configManager } from "../config/config.js";
 
+// Extend global interfaces for Bun
+declare global {
+  interface ImportMeta {
+    main?: boolean;
+  }
+  
+  const Bun: {
+    exit: (code: number) => never;
+  };
+}
+
 async function main() {
   try {
-    // Skip database operations if no custom path is configured
-    if (!process.env.DEV_AGENT_DB_PATH) {
-      console.log('📊 No custom database path configured, skipping database initialization');
-      return;
-    }
-
     console.log("🚀 Initializing Dev Agent Database...");
     
     // Get database configuration
     const dbConfig = configManager.getDatabaseConfig();
     console.log(`📊 Database: ${dbConfig.type} at ${dbConfig.path}`);
     
-    // Initialize database with external path
-    const dbPath = process.env.DEV_AGENT_DB_PATH || dbConfig.path;
+    // Initialize database with path from config
+    const dbPath = dbConfig.path;
     console.log(`🔧 Using database path: ${dbPath}`);
     const dbManager = new DatabaseManager(dbPath);
     await dbManager.initialize();
@@ -58,7 +63,7 @@ async function main() {
     
   } catch (error) {
     console.error("❌ Failed to initialize database:", error);
-    process.exit(1);
+    Bun.exit(1);
   }
 }
 
