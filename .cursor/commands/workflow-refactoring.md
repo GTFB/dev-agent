@@ -5,7 +5,7 @@ Systematically improve existing code with a focus on safety through testing and 
 
 ## Steps
 1.  **Preparation & Analysis**
-   - **Start task:** Automatically create a `refactor/g-XXXXXX-description` branch and update the task's status to `in_progress`.
+   - **Start task:** Automatically create a `refactor/g-XXXXXX` branch and update the task's status to `in_progress`.
 
 2.  **Iterative Refactoring**
    - Before starting the task, propose an algorithm of how you are going to solve it.
