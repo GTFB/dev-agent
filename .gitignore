@@ -2,12 +2,17 @@
 node_modules/
 .pnp
 .pnp.js
+bun.lockb
 
 # Production builds
 build/
 .next/
 out/
 dist/
+.nuxt/
+
+# Turborepo
+.turbo/
 
 # Runtime data
 .env
@@ -15,6 +20,7 @@ dist/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.*.local
 
 # Logs
 npm-debug.log*
@@ -22,6 +28,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 lerna-debug.log*
+*.log
 
 # Runtime data
 pids
@@ -67,14 +74,8 @@ jspm_packages/
 .yarn-integrity
 
 # parcel-bundler cache (https://parceljs.org/)
-.cache
-.parcel-cache
-
-# Next.js build output
-.next
-
-# Nuxt.js build / generate output
-.nuxt
+.cache/
+.parcel-cache/
 
 # Storybook build outputs
 .out
@@ -110,9 +111,6 @@ Thumbs.db
 *.iml
 *.ipr
 *.iws
-
-# Turborepo
-.turbo/
 
 # Vercel
 .vercel
