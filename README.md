@@ -110,13 +110,10 @@ make env-setup          # Create .env template
 {
   "storage": {
     "database": {
-      "path": "./data/dev-agent.db"
+      "path": "PATH/dev-agent.db"
     },
     "config": {
-      "path": "./data/config"
-    },
-    "logs": {
-      "path": "./data/logs"
+      "path": "PATH/.env"
     }
   }
 }
